@@ -1,7 +1,7 @@
 # FROPOREC: From POJOs to Records
-Froporec is a java library which provides the @GenerateRecord annotation, allowing a developer to generate Java Record classes from an existing POJO classes, without having to write the Recodrd classes manually.
+Froporec is a java library which provides the @GenerateRecord annotation, allowing a developer to generate Java Record classes from existing POJO classes, without having to write the Record classes manually.
 
-Pitch Video
+Pitch Video:
 https://youtu.be/IC0aS_biaMs
 
 How to Install ?
