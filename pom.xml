@@ -31,7 +31,7 @@
     <developers>
         <developer>
             <name>Mohamed Ashraf Bayor</name>
-            <organization>Froporec.org</organization>
+            <!--<organization>Froporec.org</organization>-->
             <organizationUrl>http://froporec.org/</organizationUrl>
         </developer>
     </developers>
