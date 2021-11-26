@@ -19,7 +19,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.froporec.processor;
+package org.froporec;
 
 import com.google.auto.service.AutoService;
 import org.froporec.generator.RecordSourceFileGenerator;
@@ -64,7 +64,6 @@ public class GenerateRecordProcessor extends AbstractProcessor {
                 continue;
             }
             Set<? extends Element> allAnnotatedElements = roundEnv.getElementsAnnotatedWith(annotation);
-            System.out.println(">>>>>>>> annotatedElements >>>>>>>>>>>" + allAnnotatedElements);
             processAnnotatedClasses(allAnnotatedElements); // process all annotated classes
             processAnnotatedClassAttributes(allAnnotatedElements); // process all annotated class attributes (fields)
             processAnnotatedMethodParams(allAnnotatedElements); // process all annotated method parameters
@@ -79,7 +78,6 @@ public class GenerateRecordProcessor extends AbstractProcessor {
                 .filter(element -> !element.getClass().isSealed())
                 .filter(element -> ElementKind.CLASS.equals(element.getKind()))
                 .collect(Collectors.toSet());
-        System.out.println(">>>>>>>> annotatedClasses >>>>>>>>>>>" + annotatedClasses);
         annotatedClasses.forEach(annotatedClass -> processAnnotatedElement(annotatedClass, allAnnotatedElements));
     }
 
@@ -89,7 +87,6 @@ public class GenerateRecordProcessor extends AbstractProcessor {
                 .filter(element -> !ElementKind.ENUM_CONSTANT.equals(element.getKind()))
                 .map(element -> processingEnv.getTypeUtils().asElement(element.asType()))
                 .collect(Collectors.toSet());
-        System.out.println(">>>>>>>> annotatedClassAttributes >>>>>>>>>>>" + annotatedClassAttributes);
         annotatedClassAttributes.forEach(annotatedMethod -> processAnnotatedElement(annotatedMethod, allAnnotatedElements));
     }
 
@@ -98,7 +95,6 @@ public class GenerateRecordProcessor extends AbstractProcessor {
                 .filter(element -> ElementKind.PARAMETER.equals(element.getKind()))
                 .map(element -> processingEnv.getTypeUtils().asElement(element.asType()))
                 .collect(Collectors.toSet());
-        System.out.println(">>>>>>>> annotatedParams >>>>>>>>>>>" + annotatedParams);
         annotatedParams.forEach(annotatedParam -> processAnnotatedElement(annotatedParam, allAnnotatedElements));
     }
 
@@ -107,10 +103,8 @@ public class GenerateRecordProcessor extends AbstractProcessor {
                 .filter(element -> element.getSimpleName().toString().startsWith("get") || element.getSimpleName().toString().startsWith("is"))
                 .filter(element -> !element.getSimpleName().toString().startsWith("getClass"))
                 .toList();
-        System.out.println(">>>>>>>>gettersList>>>>>>>>>>>" + gettersList);
         var className = ((TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())).getQualifiedName().toString();
         var gettersMap = gettersList.stream().collect(Collectors.toMap(getter -> getter.getSimpleName().toString(), getter -> ((ExecutableType) getter.asType()).getReturnType().toString()));
-        System.out.println(">>>>>>>>gettersMap>>>>>>>>>>>" + gettersMap);
         try {
             new RecordSourceFileGenerator(processingEnv, allAnnotatedElements).writeRecordSourceFile(className, gettersList, gettersMap);
             log.info(() -> "\t> Successfully generated " + className + "Record");

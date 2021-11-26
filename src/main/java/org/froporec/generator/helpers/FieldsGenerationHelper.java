@@ -53,7 +53,6 @@ public class FieldsGenerationHelper {
         this.processingEnvironment = processingEnvironment;
         this.allAnnotatedElementsTypes = allAnnotatedElementsTypes;
         this.collectionsGenerationHelper = new CollectionsGenerationHelper(this.allAnnotatedElementsTypes);
-        System.out.println("^^^^^^^^^^^^"+ allAnnotatedElementsTypes);
     }
 
     /**

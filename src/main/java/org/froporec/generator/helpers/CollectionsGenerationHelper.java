@@ -112,7 +112,7 @@ public class CollectionsGenerationHelper {
         SET("Set"),
         MAP("Map");
         private final String collectionName;
-        SupportedCollectionTypes(String collectionName) {
+        SupportedCollectionTypes(final String collectionName) {
             this.collectionName = collectionName;
         }
     }

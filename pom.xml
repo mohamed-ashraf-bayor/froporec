@@ -8,9 +8,7 @@
     <packaging>jar</packaging>
 
     <name>Froporec</name>
-    <description>Froporec is a java library which provides the @GenerateRecord annotation, allowing a developer to
-        generate Java Record classes from existing POJO classes, without having to write the Record classes manually
-    </description>
+    <description>Automatically generate Java Record classes from your existing POJO classes using the @GenerateRecord annotation provided by Froporec</description>
     <url>http://froporec.org</url>
 
     <licenses>
@@ -37,6 +35,8 @@
     </developers>
 
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.release>17</maven.compiler.release>
         <auto-service.version>1.0.1</auto-service.version>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>

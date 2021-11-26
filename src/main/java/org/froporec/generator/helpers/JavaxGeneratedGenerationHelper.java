@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2021 Mohamed Ashraf Bayor
- *
+ * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * <p>
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- *
+ * <p>
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -21,11 +21,13 @@
  */
 package org.froporec.generator.helpers;
 
-import org.froporec.processor.GenerateRecordProcessor;
+import org.froporec.GenerateRecordProcessor;
 
-import javax.annotation.processing.ProcessingEnvironment;
-
-import java.time.LocalDateTime;
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Properties;
 
 import static java.lang.String.format;
 
@@ -34,15 +36,7 @@ import static java.lang.String.format;
  */
 public class JavaxGeneratedGenerationHelper {
 
-    private final ProcessingEnvironment processingEnvironment;
-
-    /**
-     * Constructor for JavaxGeneratedBlockGenerationHelper
-     * @param processingEnvironment needed to access sourceversion and other useful info
-     */
-    public JavaxGeneratedGenerationHelper(final ProcessingEnvironment processingEnvironment) {
-        this.processingEnvironment = processingEnvironment;
-    }
+    private static final String DEFAULT_APP_VERSION = "1.1.0";
 
     /**
      * Generates the @javax.annotation.processing.Generated annotation section including the value, date and comments attributes for that annotation
@@ -50,11 +44,26 @@ public class JavaxGeneratedGenerationHelper {
      */
     public void buildGeneratedAnnotationSection(final StringBuilder recordClassContent) {
         recordClassContent.append(format("""
-                @javax.annotation.processing.Generated(value = "%s", date = "%s", comments = "version: %s")
-                """
+                        @javax.annotation.processing.Generated(
+                            value = "%s",
+                            date = "%s",
+                            comments = "version: %s"
+                        )
+                        """
                 , GenerateRecordProcessor.class.getName()
-                , LocalDateTime.now()
-                , getClass().getPackage().getImplementationVersion() + " >><< " + processingEnvironment.getSourceVersion()
+                , ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                , getAppVersion()
         ));
+    }
+
+    private String getAppVersion() {
+        final Properties properties = new Properties();
+        InputStream in = this.getClass().getClassLoader().getResourceAsStream("application.properties");
+        try {
+            properties.load(in);
+        } catch (IOException e) {
+            return DEFAULT_APP_VERSION;
+        }
+        return properties.getProperty("info.app.version");
     }
 }

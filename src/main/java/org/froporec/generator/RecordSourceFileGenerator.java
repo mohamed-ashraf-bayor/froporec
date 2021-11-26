@@ -69,7 +69,7 @@ public class RecordSourceFileGenerator {
         this.allAnnotatedElementsTypes = buildAllAnnotatedElementsTypes(allAnnotatedElements);
         this.fieldsGenerationHelper = new FieldsGenerationHelper(this.processingEnvironment, this.allAnnotatedElementsTypes);
         this.customConstructorGenerationHelper = new CustomConstructorGenerationHelper(this.processingEnvironment, this.allAnnotatedElementsTypes);
-        this.javaxGeneratedGenerationHelper = new JavaxGeneratedGenerationHelper(this.processingEnvironment);
+        this.javaxGeneratedGenerationHelper = new JavaxGeneratedGenerationHelper();
     }
 
     private Set<String> buildAllAnnotatedElementsTypes(Set<? extends Element> allAnnotatedElements) {
@@ -110,7 +110,7 @@ public class RecordSourceFileGenerator {
         // listing all attributes next to the record name
         recordClassContent.append('(');
         fieldsGenerationHelper.buildRecordFieldsFromGettersList(recordClassContent, getterMap, gettersList);
-        recordClassContent.append(") {\n\n");
+        recordClassContent.append(") {\n");
         // Custom 1 arg constructor statement
         customConstructorGenerationHelper.buildRecordCustom1ArgConstructor(recordClassContent, qualifiedClassName, simpleClassName, getterMap, gettersList);
         // no additional content: close the body of the class

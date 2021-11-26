@@ -59,7 +59,7 @@ import java.lang.annotation.Target;
  * @author Mohamed Ashraf Bayor
  */
 @Retention(RetentionPolicy.SOURCE)
-@Target({ElementType.TYPE, ElementType.FIELD, ElementType.PARAMETER, ElementType.LOCAL_VARIABLE, ElementType.TYPE_USE})
+@Target({ElementType.TYPE, ElementType.FIELD, ElementType.PARAMETER})
 @Documented
 public @interface GenerateRecord {
 }
