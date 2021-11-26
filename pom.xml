@@ -8,7 +8,7 @@
     <packaging>jar</packaging>
 
     <name>Froporec</name>
-    <description>Automatically generate Java Record classes from your existing POJO classes using the @GenerateRecord annotation provided by Froporec</description>
+    <description>Turn your POJOs into fully immutable Record objects with Froporec annotation processor</description>
     <url>http://froporec.org</url>
 
     <licenses>

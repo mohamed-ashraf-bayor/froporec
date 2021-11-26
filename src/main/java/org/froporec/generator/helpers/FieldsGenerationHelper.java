@@ -46,7 +46,8 @@ public class FieldsGenerationHelper {
 
     /**
      * Constructor of FieldsGenerationHelper
-     * @param processingEnvironment needed to access sourceversion and other useful info
+     *
+     * @param processingEnvironment     needed to access sourceversion and other useful info
      * @param allAnnotatedElementsTypes all annotated elements in the client program
      */
     public FieldsGenerationHelper(final ProcessingEnvironment processingEnvironment, final Set<String> allAnnotatedElementsTypes) {
@@ -57,49 +58,42 @@ public class FieldsGenerationHelper {
 
     /**
      * Builds the list of fields' block of the record class. ex: int a, String s, Person p
+     *
      * @param recordClassContent content being built, containing the record source string
-     * @param gettersMap map containing getters names as keys and their corresponding types as values. ex: {getAge=int, getSchool=org.froporec.data1.School, getLastname=java.lang.String}
-     * @param gettersList list of public getters of the POJO class being processed. ex:[getLastname(), getAge(), getMark(), getGrade(), getSchool()]
+     * @param gettersMap         map containing getters names as keys and their corresponding types as values. ex: {getAge=int, getSchool=org.froporec.data1.School, getLastname=java.lang.String}
+     * @param gettersList        list of public getters of the POJO class being processed. ex:[getLastname(), getAge(), getMark(), getGrade(), getSchool()]
      */
     public void buildRecordFieldsFromGettersList(final StringBuilder recordClassContent, final Map<String, String> gettersMap, final List<? extends Element> gettersList) {
         gettersList.forEach(getter -> {
             var getterAsString = getter.toString();
-            var getterNameWithoutParenthesis = getterAsString.substring(0, getterAsString.indexOf('('));
-            var getterReturnTypeStringFromMap = gettersMap.get(getterNameWithoutParenthesis);
+            var getterReturnTypeFromMap = gettersMap.get(getterAsString.substring(0, getterAsString.indexOf('(')));
             var getterReturnTypeElementOpt = Optional.ofNullable(processingEnvironment.getTypeUtils().asElement(((ExecutableType) getter.asType()).getReturnType())); // for collections, Element.toString() will NOT return the generic part
-            // var recordFieldsListFormat = "%s %s%s, "; // type field1stLetter fieldNameAfter1stLetter
             if (getterReturnTypeElementOpt.isEmpty()) {
                 // primitives
-                buildSingleField(recordClassContent, getterAsString, getterReturnTypeStringFromMap, false);
+                buildSingleField(recordClassContent, getterAsString, getterReturnTypeFromMap, false);
             } else {
                 // non-primitives
-                if (allAnnotatedElementsTypes.contains(getterReturnTypeElementOpt.get().toString())) {
-                    // if the type has already been annotated somewhere else in the code, the field type is the corresponding generated record class
-                    buildSingleField(recordClassContent, getterAsString, getterReturnTypeStringFromMap, true);
-                } else {
-                    // if not annotated and not a collection then keep the received type as is
-                    buildSingleField(recordClassContent, getterAsString, getterReturnTypeStringFromMap, false);
-                }
+                // if the type has already been annotated somewhere else in the code, the field type is the corresponding generated record class
+                // if not annotated and not a collection then keep the received type as is
+                buildSingleField(recordClassContent, getterAsString, getterReturnTypeFromMap, allAnnotatedElementsTypes.contains(getterReturnTypeElementOpt.get().toString()));
             }
         });
         recordClassContent.deleteCharAt(recordClassContent.length() - 1).deleteCharAt(recordClassContent.length() - 1);
     }
 
-    private void buildSingleField(final StringBuilder recordClassContent, final String getterAsString, final String getterReturnTypeStringFromMap, final boolean processAsRecord) {
-        final String recordFieldsListFormat = "%s %s%s, "; // type field1stLetter fieldNameAfter1stLetter
+    private void buildSingleField(final StringBuilder recordClassContent, final String getterAsString, final String getterReturnTypeFromMap, final boolean processAsRecord) {
+        final String recordFieldsListFormat = "%s %s, "; // type fieldName
         if (getterAsString.startsWith("get")) {
-            var getterFieldNonBoolean1stLetter = getterAsString.substring(3, 4).toLowerCase();
-            var getterFieldNonBooleanAfter1stLetter = getterAsString.substring(4, getterAsString.indexOf('('));
+            var getterFieldNonBoolean = getterAsString.substring(3, 4).toLowerCase() + getterAsString.substring(4, getterAsString.indexOf('('));
             // if the type of the field being processed is a collection process it differently and return
-            if (collectionsGenerationHelper.isCollectionWithGeneric(getterReturnTypeStringFromMap)) {
-                recordClassContent.append(format(recordFieldsListFormat, collectionsGenerationHelper.replaceGenericWithRecordClassNameIfAny(getterReturnTypeStringFromMap), getterFieldNonBoolean1stLetter, getterFieldNonBooleanAfter1stLetter));
+            if (collectionsGenerationHelper.isCollectionWithGeneric(getterReturnTypeFromMap)) {
+                recordClassContent.append(format(recordFieldsListFormat, collectionsGenerationHelper.replaceGenericWithRecordClassNameIfAny(getterReturnTypeFromMap), getterFieldNonBoolean));
                 return;
             }
-            recordClassContent.append(format(recordFieldsListFormat, processAsRecord ? getterReturnTypeStringFromMap + RECORD : getterReturnTypeStringFromMap, getterFieldNonBoolean1stLetter, getterFieldNonBooleanAfter1stLetter));
+            recordClassContent.append(format(recordFieldsListFormat, processAsRecord ? getterReturnTypeFromMap + RECORD : getterReturnTypeFromMap, getterFieldNonBoolean));
         } else if (getterAsString.startsWith("is")) {
-            var getterFieldBoolean1stLetter = getterAsString.substring(2, 3).toLowerCase();
-            var getterFieldBooleanAfter1stLetter = getterAsString.substring(3, getterAsString.indexOf('('));
-            recordClassContent.append(format(recordFieldsListFormat, processAsRecord ? getterReturnTypeStringFromMap + RECORD : getterReturnTypeStringFromMap, getterFieldBoolean1stLetter, getterFieldBooleanAfter1stLetter));
+            var getterFieldBoolean = getterAsString.substring(2, 3).toLowerCase() + getterAsString.substring(3, getterAsString.indexOf('('));
+            recordClassContent.append(format(recordFieldsListFormat, getterReturnTypeFromMap, getterFieldBoolean));
         }
     }
 }

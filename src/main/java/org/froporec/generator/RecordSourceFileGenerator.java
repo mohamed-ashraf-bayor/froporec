@@ -38,9 +38,7 @@ import java.util.stream.Collectors;
 import static java.lang.String.format;
 
 /**
- * class in charge of building the record class string content and write it to the generated record file
- *
- * @author Mohamed Ashraf Bayor
+ * Class in charge of building the record class string content and write it to the generated record source file
  */
 public class RecordSourceFileGenerator {
 
@@ -61,8 +59,9 @@ public class RecordSourceFileGenerator {
 
     /**
      * Constructor of RecordClassGenerator
-     * @param processingEnvironment - the processing environment needed to getTypeUtil() and getFile() methods
-     * @param allAnnotatedElements - all annotated elements in the client program
+     *
+     * @param processingEnvironment the processing environment needed to getTypeUtil() and getFile() methods
+     * @param allAnnotatedElements  all annotated elements in the client program
      */
     public RecordSourceFileGenerator(final ProcessingEnvironment processingEnvironment, final Set<? extends Element> allAnnotatedElements) {
         this.processingEnvironment = processingEnvironment;
@@ -80,9 +79,10 @@ public class RecordSourceFileGenerator {
 
     /**
      * Builds content of the record class and writes it to the filesystem
-     * @param className qualified name of the POJO class being processed. ex: org.froporec.data1.Person
+     *
+     * @param className   qualified name of the POJO class being processed. ex: org.froporec.data1.Person
      * @param gettersList list of public getters of the POJO class being processed. ex:[getLastname(), getAge(), getMark(), getGrade(), getSchool()]
-     * @param getterMap map containing getters names as keys and their corresponding types as values. ex: {getAge=int, getSchool=org.froporec.data1.School, getLastname=java.lang.String}
+     * @param getterMap   map containing getters names as keys and their corresponding types as values. ex: {getAge=int, getSchool=org.froporec.data1.School, getLastname=java.lang.String}
      * @throws IOException only a "severe" error happens while writing the file to the filesystem. Cases of already existing files are not treated as errors
      */
     public void writeRecordSourceFile(final String className, final List<? extends Element> gettersList, final Map<String, String> getterMap) throws IOException {
@@ -96,9 +96,7 @@ public class RecordSourceFileGenerator {
     private String buildRecordClassContent(final String qualifiedClassName, final List<? extends Element> gettersList, final Map<String, String> getterMap) {
         var recordClassContent = new StringBuilder();
         int lastDot = qualifiedClassName.lastIndexOf('.');
-        var simpleClassName = qualifiedClassName.substring(lastDot + 1);
-        var recordQualifiedClassName = qualifiedClassName + RECORD;
-        var recordSimpleClassName = recordQualifiedClassName.substring(lastDot + 1);
+        var recordSimpleClassName = (qualifiedClassName + RECORD).substring(lastDot + 1);
         // package statement
         String packageName = lastDot > 0 ? qualifiedClassName.substring(0, lastDot) : null;
         Optional.ofNullable(packageName).ifPresent(name -> recordClassContent.append(format("package %s;%n%n", name)));
@@ -112,7 +110,7 @@ public class RecordSourceFileGenerator {
         fieldsGenerationHelper.buildRecordFieldsFromGettersList(recordClassContent, getterMap, gettersList);
         recordClassContent.append(") {\n");
         // Custom 1 arg constructor statement
-        customConstructorGenerationHelper.buildRecordCustom1ArgConstructor(recordClassContent, qualifiedClassName, simpleClassName, getterMap, gettersList);
+        customConstructorGenerationHelper.buildRecordCustom1ArgConstructor(recordClassContent, qualifiedClassName, getterMap, gettersList);
         // no additional content: close the body of the class
         recordClassContent.append('}');
         return recordClassContent.toString();

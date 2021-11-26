@@ -40,6 +40,7 @@ public class JavaxGeneratedGenerationHelper {
 
     /**
      * Generates the @javax.annotation.processing.Generated annotation section including the value, date and comments attributes for that annotation
+     *
      * @param recordClassContent content being built, containing the record source string
      */
     public void buildGeneratedAnnotationSection(final StringBuilder recordClassContent) {

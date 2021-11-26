@@ -1,5 +1,5 @@
 # FROPOREC: From POJOs to Records
-Automatically generate Java Record classes from your existing POJO classes using the @GenerateRecord annotation provided by Froporec
+Turn your POJOs into fully immutable Record objects with Froporec annotation processor (min. Java 17 required)
 
 Pitch Video:
 https://youtu.be/IC0aS_biaMs
