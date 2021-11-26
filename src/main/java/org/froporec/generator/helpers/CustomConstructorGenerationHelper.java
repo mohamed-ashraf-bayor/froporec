@@ -71,14 +71,10 @@ public class CustomConstructorGenerationHelper {
         recordClassContent.append(format("\tpublic %s%s(%s %s) {%n", simpleClassName, RECORD, qualifiedClassName, fieldName)); // line declaring the constructor
         recordClassContent.append("\t\tthis("); // calling canonical constructor
         // building canonical constructor content
-        System.out.println("^^^^^^^^allAnnotatedElementsTypes: " + allAnnotatedElementsTypes);
         gettersList.forEach(getter -> {
             var getterAsString = getter.toString();
-            System.out.println("^^^^^^^^getterAsString: " + getterAsString);
             var getterReturnTypeFromMap = gettersMap.get(getterAsString.substring(0, getterAsString.indexOf('(')));
-            System.out.println("^^^^^^^^getterReturnTypeFromMap: " + getterReturnTypeFromMap);
             var getterReturnTypeElementOpt = Optional.ofNullable(processingEnvironment.getTypeUtils().asElement(((ExecutableType) getter.asType()).getReturnType()));
-            System.out.println("^^^^^^^^getterReturnTypeElementOpt: " + getterReturnTypeElementOpt);
             // if the pojo constructor param is another pojo, check if it's been annotated. if yes, use the corresponding generated record class
             if (getterReturnTypeElementOpt.isEmpty()) {
                 // primitives
@@ -96,7 +92,6 @@ public class CustomConstructorGenerationHelper {
 
     private void buildCanonicalConstructorCallSingleParameter(final StringBuilder recordClassContent, final String fieldName, final String getterAsString, final String getterReturnTypeFromMap, final boolean processAsRecord) {
         if (getterAsString.startsWith("get")) {
-            var getterFieldNonBoolean = getterAsString.substring(3, 4).toLowerCase() + getterAsString.substring(4, getterAsString.indexOf('('));
             if (collectionsGenerationHelper.isCollectionWithGeneric(getterReturnTypeFromMap)) {
                 recordClassContent.append(collectionsGenerationHelper.generateCollectionFieldMappingIfGenericIsAnnotated(fieldName, getterAsString, getterReturnTypeFromMap));
             } else {
