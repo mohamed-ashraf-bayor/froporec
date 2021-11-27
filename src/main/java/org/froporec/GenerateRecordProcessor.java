@@ -44,9 +44,10 @@ import java.util.stream.Collectors;
 import static java.lang.String.format;
 
 /**
- * FroPoRec annotation processor class . Picks up and processes all elements (classes, fields, generic types and method params) annotated with @GenerateRecord
- * The order of processing is: classes, then fields, generic types and then the method parameters
- * For each element a Record class is generated. If the generated class already exists (in case the corresponding pojo has been annotated more than once), the generation process will be skipped
+ * FroPoRec annotation processor class. Picks up and processes all elements (classes, fields and method params) annotated with @GenerateRecord<br>
+ * The order of processing is: classes, then fields and then the method parameters<br>
+ * For each element a Record class is generated. If the generated class already exists (in case the corresponding pojo has been annotated more than once), 
+ * the generation process will be skipped
  */
 @SupportedAnnotationTypes("org.froporec.GenerateRecord")
 @SupportedSourceVersion(SourceVersion.RELEASE_17)
@@ -101,15 +102,15 @@ public class GenerateRecordProcessor extends AbstractProcessor {
                 .filter(element -> element.getSimpleName().toString().startsWith("get") || element.getSimpleName().toString().startsWith("is"))
                 .filter(element -> !element.getSimpleName().toString().startsWith("getClass"))
                 .toList();
-        var className = ((TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())).getQualifiedName().toString();
+        var qualifiedClassName = ((TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())).getQualifiedName().toString();
         var gettersMap = gettersList.stream().collect(Collectors.toMap(getter -> getter.getSimpleName().toString(), getter -> ((ExecutableType) getter.asType()).getReturnType().toString()));
         try {
-            new RecordSourceFileGenerator(processingEnv, allAnnotatedElements).writeRecordSourceFile(className, gettersList, gettersMap);
-            log.info(() -> "\t> Successfully generated " + className + "Record");
+            new RecordSourceFileGenerator(processingEnv, allAnnotatedElements).writeRecordSourceFile(qualifiedClassName, gettersList, gettersMap);
+            log.info(() -> "\t> Successfully generated " + qualifiedClassName + "Record");
         } catch (FilerException e) {
-            // Skipped generating " + className + "Record - file already exists"
+            // Skipped generating " + qualifiedClassName + "Record - file already exists"
         } catch (IOException e) {
-            log.log(Level.SEVERE, format("Error generating %sRecord", className), e);
+            log.log(Level.SEVERE, format("Error generating %sRecord", qualifiedClassName), e);
         }
     }
 }

@@ -56,7 +56,6 @@ import java.lang.annotation.Target;
  *
  * Important Note: the annotation should be used ONLY on POJO classes created in your own project. Any other types (including the JVMs) are not supported
  *
- * @author Mohamed Ashraf Bayor
  */
 @Retention(RetentionPolicy.SOURCE)
 @Target({ElementType.TYPE, ElementType.FIELD, ElementType.PARAMETER})

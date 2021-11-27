@@ -33,38 +33,34 @@ import static java.lang.String.format;
 import static org.froporec.generator.RecordSourceFileGenerator.RECORD;
 
 /**
- * Builds the custom 1 arg constructor for the record class being generated
+ * Builds the custom 1 arg constructor section for the record class being generated.
+ * Starts with public RecordName(list of fields) and includes a call to the canonical constructor inside the body of the custom constructor<br>
+ * The generateRecord() method params map MUST contain the following parameters names:<br>
+ * qualifiedClassName @see {@link CodeGenerator#QUALIFIED_CLASS_NAME}<br>
+ * gettersMap         @see {@link CodeGenerator#GETTERS_MAP}<br>
+ * gettersList        @see {@link CodeGenerator#GETTERS_LIST}<br>
  */
-public class CustomConstructorGenerationHelper {
+public final class CustomConstructorGenerator implements CodeGenerator {
 
     private final ProcessingEnvironment processingEnvironment;
 
     private final Set<String> allAnnotatedElementsTypes;
 
-    private final CollectionsGenerationHelper collectionsGenerationHelper;
+    private final SupportedCollectionsMappingLogicGenerator collectionsGenerator;
 
     /**
      * Constructor of CustomConstructorGenerationHelper
      *
-     * @param processingEnvironment     the processing environment needed to getTypeUtil() and getFile() methods
+     * @param processingEnvironment     the processing environment needed to use getTypeUtils() and getFiler() methods
      * @param allAnnotatedElementsTypes all annotated elements in the client program
      */
-    public CustomConstructorGenerationHelper(final ProcessingEnvironment processingEnvironment, final Set<String> allAnnotatedElementsTypes) {
+    public CustomConstructorGenerator(final ProcessingEnvironment processingEnvironment, final Set<String> allAnnotatedElementsTypes) {
         this.processingEnvironment = processingEnvironment;
         this.allAnnotatedElementsTypes = allAnnotatedElementsTypes;
-        this.collectionsGenerationHelper = new CollectionsGenerationHelper(this.allAnnotatedElementsTypes);
+        this.collectionsGenerator = new CollectionsGenerator(this.allAnnotatedElementsTypes);
     }
 
-    /**
-     * Builds the custom 1 arg constructor section for the record class being generated.
-     * Starts with public RecordName(list of fields) and includes a call to the canonical constructor inside the body of the custom constructor
-     *
-     * @param recordClassContent content being built, containing the record source string
-     * @param qualifiedClassName qualified class name
-     * @param gettersMap         map containing getters names as keys and their corresponding types as values. ex: {getAge=int, getSchool=org.froporec.data1.School, getLastname=java.lang.String}
-     * @param gettersList        list of public getters of the POJO class being processed. ex:[getLastname(), getAge(), getMark(), getGrade(), getSchool()]
-     */
-    public void buildRecordCustom1ArgConstructor(final StringBuilder recordClassContent, final String qualifiedClassName, final Map<String, String> gettersMap, final List<? extends Element> gettersList) {
+    private void buildRecordCustom1ArgConstructor(final StringBuilder recordClassContent, final String qualifiedClassName, final Map<String, String> gettersMap, final List<? extends Element> gettersList) {
         var simpleClassName = qualifiedClassName.substring(qualifiedClassName.lastIndexOf('.') + 1);
         var fieldName = simpleClassName.substring(0, 1).toLowerCase() + simpleClassName.substring(1); // simpleClassName starting with lowercase char
         // %s = simple class name , %s = "Record" , %s = pojo class qualified name , %s = field name
@@ -92,8 +88,8 @@ public class CustomConstructorGenerationHelper {
 
     private void buildCanonicalConstructorCallSingleParameter(final StringBuilder recordClassContent, final String fieldName, final String getterAsString, final String getterReturnTypeFromMap, final boolean processAsRecord) {
         if (getterAsString.startsWith("get")) {
-            if (collectionsGenerationHelper.isCollectionWithGeneric(getterReturnTypeFromMap)) {
-                recordClassContent.append(collectionsGenerationHelper.generateCollectionFieldMappingIfGenericIsAnnotated(fieldName, getterAsString, getterReturnTypeFromMap));
+            if (collectionsGenerator.isCollectionWithGeneric(getterReturnTypeFromMap)) {
+                collectionsGenerator.generateCollectionFieldMappingIfGenericIsAnnotated(recordClassContent, fieldName, getterAsString, getterReturnTypeFromMap);
             } else {
                 if (processAsRecord) {
                     recordClassContent.append(format("new %s%s(%s.%s), ", getterReturnTypeFromMap, RECORD, fieldName, getterAsString));
@@ -106,5 +102,14 @@ public class CustomConstructorGenerationHelper {
         } else if (getterAsString.startsWith("is")) {
             recordClassContent.append(format("%s.%s, ", fieldName, getterAsString));
         }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public void generateCode(StringBuilder recordClassContent, Map<String, Object> params) {
+        final String qualifiedClassName = (String) params.get(CodeGenerator.QUALIFIED_CLASS_NAME);
+        final Map<String, String> gettersMap = (Map<String, String>) params.get(CodeGenerator.GETTERS_MAP);
+        final List<? extends Element> gettersList = (List<? extends Element>) params.get(CodeGenerator.GETTERS_LIST);
+        buildRecordCustom1ArgConstructor(recordClassContent, qualifiedClassName, gettersMap, gettersList);
     }
 }

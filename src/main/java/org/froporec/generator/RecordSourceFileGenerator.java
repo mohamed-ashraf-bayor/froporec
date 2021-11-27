@@ -21,9 +21,10 @@
  */
 package org.froporec.generator;
 
-import org.froporec.generator.helpers.CustomConstructorGenerationHelper;
-import org.froporec.generator.helpers.FieldsGenerationHelper;
-import org.froporec.generator.helpers.JavaxGeneratedGenerationHelper;
+import org.froporec.generator.helpers.CustomConstructorGenerator;
+import org.froporec.generator.helpers.FieldsGenerator;
+import org.froporec.generator.helpers.JavaxGeneratedGenerator;
+import org.froporec.generator.helpers.CodeGenerator;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
@@ -36,14 +37,17 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
+import static org.froporec.generator.helpers.CodeGenerator.GETTERS_LIST;
+import static org.froporec.generator.helpers.CodeGenerator.GETTERS_MAP;
+import static org.froporec.generator.helpers.CodeGenerator.QUALIFIED_CLASS_NAME;
 
 /**
- * Class in charge of building the record class string content and write it to the generated record source file
+ * Builds the record class string content and writes it to the generated record source file
  */
 public class RecordSourceFileGenerator {
 
     /**
-     * "Record" constant
+     * "Record" string constant
      */
     public static final String RECORD = "Record";
 
@@ -51,14 +55,14 @@ public class RecordSourceFileGenerator {
 
     private final Set<String> allAnnotatedElementsTypes;
 
-    private final FieldsGenerationHelper fieldsGenerationHelper;
+    private final CodeGenerator javaxGeneratedGenerator;
 
-    private final CustomConstructorGenerationHelper customConstructorGenerationHelper;
+    private final CodeGenerator fieldsGenerator;
 
-    private final JavaxGeneratedGenerationHelper javaxGeneratedGenerationHelper;
+    private final CodeGenerator customConstructorGenerator;
 
     /**
-     * Constructor of RecordClassGenerator
+     * Constructor of RecordSourceFileGenerator
      *
      * @param processingEnvironment the processing environment needed to getTypeUtil() and getFile() methods
      * @param allAnnotatedElements  all annotated elements in the client program
@@ -66,9 +70,9 @@ public class RecordSourceFileGenerator {
     public RecordSourceFileGenerator(final ProcessingEnvironment processingEnvironment, final Set<? extends Element> allAnnotatedElements) {
         this.processingEnvironment = processingEnvironment;
         this.allAnnotatedElementsTypes = buildAllAnnotatedElementsTypes(allAnnotatedElements);
-        this.fieldsGenerationHelper = new FieldsGenerationHelper(this.processingEnvironment, this.allAnnotatedElementsTypes);
-        this.customConstructorGenerationHelper = new CustomConstructorGenerationHelper(this.processingEnvironment, this.allAnnotatedElementsTypes);
-        this.javaxGeneratedGenerationHelper = new JavaxGeneratedGenerationHelper();
+        this.fieldsGenerator = new FieldsGenerator(this.processingEnvironment, this.allAnnotatedElementsTypes);
+        this.customConstructorGenerator = new CustomConstructorGenerator(this.processingEnvironment, this.allAnnotatedElementsTypes);
+        this.javaxGeneratedGenerator = new JavaxGeneratedGenerator();
     }
 
     private Set<String> buildAllAnnotatedElementsTypes(Set<? extends Element> allAnnotatedElements) {
@@ -78,16 +82,16 @@ public class RecordSourceFileGenerator {
     }
 
     /**
-     * Builds content of the record class and writes it to the filesystem
+     * Builds the content of the record class and writes it to the filesystem
      *
-     * @param className   qualified name of the POJO class being processed. ex: org.froporec.data1.Person
-     * @param gettersList list of public getters of the POJO class being processed. ex:[getLastname(), getAge(), getMark(), getGrade(), getSchool()]
-     * @param getterMap   map containing getters names as keys and their corresponding types as values. ex: {getAge=int, getSchool=org.froporec.data1.School, getLastname=java.lang.String}
-     * @throws IOException only a "severe" error happens while writing the file to the filesystem. Cases of already existing files are not treated as errors
+     * @param qualifiedClassName qualified name of the POJO class being processed. ex: org.froporec.data1.Person
+     * @param gettersList        list of public getters of the POJO class being processed. ex:[getLastname(), getAge(), getMark(), getGrade(), getSchool()]
+     * @param getterMap          map containing getters names as keys and their corresponding types as values. ex: {getAge=int, getSchool=org.froporec.data1.School, getLastname=java.lang.String}
+     * @throws IOException only if a "severe" error happens while writing the file to the filesystem. Cases of already existing files are not treated as errors
      */
-    public void writeRecordSourceFile(final String className, final List<? extends Element> gettersList, final Map<String, String> getterMap) throws IOException {
-        var recordClassFile = processingEnvironment.getFiler().createSourceFile(className + RECORD); // if file already exists, this line throws an IOException
-        var recordClassString = buildRecordClassContent(className, gettersList, getterMap);
+    public void writeRecordSourceFile(final String qualifiedClassName, final List<? extends Element> gettersList, final Map<String, String> getterMap) throws IOException {
+        var recordClassFile = processingEnvironment.getFiler().createSourceFile(qualifiedClassName + RECORD); // if file already exists, this line throws a FilerException
+        var recordClassString = buildRecordClassContent(qualifiedClassName, gettersList, getterMap);
         try (PrintWriter out = new PrintWriter(recordClassFile.openWriter())) {
             out.println(recordClassString);
         }
@@ -100,17 +104,17 @@ public class RecordSourceFileGenerator {
         // package statement
         String packageName = lastDot > 0 ? qualifiedClassName.substring(0, lastDot) : null;
         Optional.ofNullable(packageName).ifPresent(name -> recordClassContent.append(format("package %s;%n%n", name)));
-        // javax.annotation.processing.Generated block
-        javaxGeneratedGenerationHelper.buildGeneratedAnnotationSection(recordClassContent);
+        // javax.annotation.processing.Generated section
+        javaxGeneratedGenerator.generateCode(recordClassContent, null);
         // record definition statement: public record ... with all attributes listed
         recordClassContent.append(format("public %s ", RECORD.toLowerCase()));
         recordClassContent.append(recordSimpleClassName);
         // listing all attributes next to the record name
         recordClassContent.append('(');
-        fieldsGenerationHelper.buildRecordFieldsFromGettersList(recordClassContent, getterMap, gettersList);
+        fieldsGenerator.generateCode(recordClassContent, Map.of(GETTERS_MAP, getterMap, GETTERS_LIST, gettersList));
         recordClassContent.append(") {\n");
         // Custom 1 arg constructor statement
-        customConstructorGenerationHelper.buildRecordCustom1ArgConstructor(recordClassContent, qualifiedClassName, getterMap, gettersList);
+        customConstructorGenerator.generateCode(recordClassContent, Map.of(QUALIFIED_CLASS_NAME, qualifiedClassName, GETTERS_MAP, getterMap, GETTERS_LIST, gettersList));
         // no additional content: close the body of the class
         recordClassContent.append('}');
         return recordClassContent.toString();

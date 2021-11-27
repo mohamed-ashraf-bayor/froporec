@@ -27,23 +27,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 import java.util.Properties;
 
 import static java.lang.String.format;
 
 /**
- * Class dedicated to generating the value, date and comments data for the @javax.annotation.processing.Generated annotation
+ * Generates the @javax.annotation.processing.Generated annotation section at the top of the generated record class with the attributes: value, date and comments<br>
+ * The generateRecord() method params map is not required
  */
-public class JavaxGeneratedGenerationHelper {
+public final class JavaxGeneratedGenerator implements CodeGenerator {
 
     private static final String DEFAULT_APP_VERSION = "1.1.0";
 
-    /**
-     * Generates the @javax.annotation.processing.Generated annotation section including the value, date and comments attributes for that annotation
-     *
-     * @param recordClassContent content being built, containing the record source string
-     */
-    public void buildGeneratedAnnotationSection(final StringBuilder recordClassContent) {
+    private void buildGeneratedAnnotationSection(final StringBuilder recordClassContent) {
         recordClassContent.append(format("""
                         @javax.annotation.processing.Generated(
                             value = "%s",
@@ -66,5 +63,10 @@ public class JavaxGeneratedGenerationHelper {
             return DEFAULT_APP_VERSION;
         }
         return properties.getProperty("info.app.version");
+    }
+
+    @Override
+    public void generateCode(final StringBuilder recordClassContent, final Map<String, Object> params) {
+        buildGeneratedAnnotationSection(recordClassContent);
     }
 }

@@ -33,16 +33,19 @@ import static java.lang.String.format;
 import static org.froporec.generator.RecordSourceFileGenerator.RECORD;
 
 /**
- * Dedicated to builds the list of fields of the record class being generated. ex: int a, String s, Person p
- * Considerations will be made for fields whose types have also annotated
+ * Builds the list of fields of the record class being generated. ex: int a, String s, Person p<br>
+ * Considerations will be made for fields whose types have also been annotated<br>
+ * The generateRecord() method params map MUST contain the following parameters names:<br>
+ * gettersMap         @see {@link CodeGenerator#GETTERS_MAP}<br>
+ * gettersList        @see {@link CodeGenerator#GETTERS_LIST}<br>
  */
-public class FieldsGenerationHelper {
+public final class FieldsGenerator implements CodeGenerator {
 
     private final ProcessingEnvironment processingEnvironment;
 
     private final Set<String> allAnnotatedElementsTypes;
 
-    private final CollectionsGenerationHelper collectionsGenerationHelper;
+    private final SupportedCollectionsFieldsGenerator collectionsGenerator;
 
     /**
      * Constructor of FieldsGenerationHelper
@@ -50,20 +53,13 @@ public class FieldsGenerationHelper {
      * @param processingEnvironment     needed to access sourceversion and other useful info
      * @param allAnnotatedElementsTypes all annotated elements in the client program
      */
-    public FieldsGenerationHelper(final ProcessingEnvironment processingEnvironment, final Set<String> allAnnotatedElementsTypes) {
+    public FieldsGenerator(final ProcessingEnvironment processingEnvironment, final Set<String> allAnnotatedElementsTypes) {
         this.processingEnvironment = processingEnvironment;
         this.allAnnotatedElementsTypes = allAnnotatedElementsTypes;
-        this.collectionsGenerationHelper = new CollectionsGenerationHelper(this.allAnnotatedElementsTypes);
+        this.collectionsGenerator = new CollectionsGenerator(this.allAnnotatedElementsTypes);
     }
 
-    /**
-     * Builds the list of fields' block of the record class. ex: int a, String s, Person p
-     *
-     * @param recordClassContent content being built, containing the record source string
-     * @param gettersMap         map containing getters names as keys and their corresponding types as values. ex: {getAge=int, getSchool=org.froporec.data1.School, getLastname=java.lang.String}
-     * @param gettersList        list of public getters of the POJO class being processed. ex:[getLastname(), getAge(), getMark(), getGrade(), getSchool()]
-     */
-    public void buildRecordFieldsFromGettersList(final StringBuilder recordClassContent, final Map<String, String> gettersMap, final List<? extends Element> gettersList) {
+    private void buildRecordFieldsFromGettersList(final StringBuilder recordClassContent, final Map<String, String> gettersMap, final List<? extends Element> gettersList) {
         gettersList.forEach(getter -> {
             var getterAsString = getter.toString();
             var getterReturnTypeFromMap = gettersMap.get(getterAsString.substring(0, getterAsString.indexOf('(')));
@@ -83,11 +79,11 @@ public class FieldsGenerationHelper {
 
     private void buildSingleField(final StringBuilder recordClassContent, final String getterAsString, final String getterReturnTypeFromMap, final boolean processAsRecord) {
         final String recordFieldsListFormat = "%s %s, "; // type fieldName
+        var getterFieldNonBoolean = getterAsString.substring(3, 4).toLowerCase() + getterAsString.substring(4, getterAsString.indexOf('('));
         if (getterAsString.startsWith("get")) {
-            var getterFieldNonBoolean = getterAsString.substring(3, 4).toLowerCase() + getterAsString.substring(4, getterAsString.indexOf('('));
             // if the type of the field being processed is a collection process it differently and return
-            if (collectionsGenerationHelper.isCollectionWithGeneric(getterReturnTypeFromMap)) {
-                recordClassContent.append(format(recordFieldsListFormat, collectionsGenerationHelper.replaceGenericWithRecordClassNameIfAny(getterReturnTypeFromMap), getterFieldNonBoolean));
+            if (collectionsGenerator.isCollectionWithGeneric(getterReturnTypeFromMap)) {
+                collectionsGenerator.replaceGenericWithRecordClassNameIfAny(recordClassContent, getterFieldNonBoolean, getterReturnTypeFromMap);
                 return;
             }
             recordClassContent.append(format(recordFieldsListFormat, processAsRecord ? getterReturnTypeFromMap + RECORD : getterReturnTypeFromMap, getterFieldNonBoolean));
@@ -95,5 +91,13 @@ public class FieldsGenerationHelper {
             var getterFieldBoolean = getterAsString.substring(2, 3).toLowerCase() + getterAsString.substring(3, getterAsString.indexOf('('));
             recordClassContent.append(format(recordFieldsListFormat, getterReturnTypeFromMap, getterFieldBoolean));
         }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public void generateCode(final StringBuilder recordClassContent, final Map<String, Object> params) {
+        final Map<String, String> gettersMap = (Map<String, String>) params.get(CodeGenerator.GETTERS_MAP);
+        final List<? extends Element> gettersList = (List<? extends Element>) params.get(CodeGenerator.GETTERS_LIST);
+        buildRecordFieldsFromGettersList(recordClassContent, gettersMap, gettersList);
     }
 }
