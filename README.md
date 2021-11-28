@@ -48,4 +48,4 @@ https://github.com/mohamed-ashraf-bayor/froporec-annotation-client
 The annotation should be used ONLY on POJO classes created in your own project. Any other types (including Java types) are not supported
 
 ### Issues, Bugs, Suggestions
-Contribute to the project's growth by reporting issues or making improvement suggestions at http://froporec.org/
+Contribute to the project's growth by reporting issues or making improvement suggestions at https://github.com/mohamed-ashraf-bayor/froporec/issues/new/choose
