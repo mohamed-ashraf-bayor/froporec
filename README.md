@@ -6,9 +6,7 @@ https://youtu.be/IC0aS_biaMs
 
 ### How to Install ?
 
-Get Froporec from Maven Central: https://search.maven.org/artifact/org.froporec/froporec
-
-If you are running a Maven project, add the following dependency to your pom.xml
+If you are running a Maven project, add the latest release dependency to your pom.xml
 ```xml
 <dependency>
     <groupId>org.froporec</groupId>
@@ -16,6 +14,9 @@ If you are running a Maven project, add the following dependency to your pom.xml
     <version>1.1</version>
 </dependency>
 ``` 
+You can also download the Jar file from: https://githublinkhere.co,/.../...
+
+Or from Maven Central: https://search.maven.org/artifact/org.froporec/froporec
 
 ### Use on your declared POJO classes 
 ```java
