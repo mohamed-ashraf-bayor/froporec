@@ -2,7 +2,7 @@
 Turn your POJOs into fully immutable Record objects with Froporec annotation processor (min. Java 17 required)
 
 Pitch Video:
-https://youtu.be/IC0aS_biaMs
+[https://youtu.be/IC0aS_biaMs](https://youtu.be/IC0aS_biaMs)
 
 ### How to Install ?
 
@@ -14,9 +14,9 @@ If you are running a Maven project, add the latest release dependency to your po
     <version>1.1</version>
 </dependency>
 ``` 
-You can also download the Jar file from: https://githublinkhere.co,/.../...
+You can also download the [Jar file](https://githublinkhere.co,/.../...) and it to your classpath. 
 
-Or from Maven Central: https://search.maven.org/artifact/org.froporec/froporec
+Or from [Maven Central](https://search.maven.org/artifact/org.froporec/froporec).
 
 ### Use on your declared POJO classes 
 ```java
@@ -43,10 +43,10 @@ public void doSomething(@GenerateRecord PojoA pojoA) {
 ```
 
 ### Sample POJO classes for testing
-https://github.com/mohamed-ashraf-bayor/froporec-annotation-client
+[https://github.com/mohamed-ashraf-bayor/froporec-annotation-client](https://github.com/mohamed-ashraf-bayor/froporec-annotation-client)
 
 ### Invalid Uses of Froporec
 The annotation should be used ONLY on POJO classes created in your own project. Any other types (including Java types) are not supported
 
 ### Issues, Bugs, Suggestions
-Contribute to the project's growth by reporting issues or making improvement suggestions at https://github.com/mohamed-ashraf-bayor/froporec/issues/new/choose
+Contribute to the project's growth by reporting issues or making improvement suggestions [here](https://github.com/mohamed-ashraf-bayor/froporec/issues/new/choose)
