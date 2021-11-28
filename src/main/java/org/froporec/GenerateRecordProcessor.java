@@ -46,7 +46,7 @@ import static java.lang.String.format;
 /**
  * FroPoRec annotation processor class. Picks up and processes all elements (classes, fields and method params) annotated with @GenerateRecord<br>
  * The order of processing is: classes, then fields and then the method parameters<br>
- * For each element a Record class is generated. If the generated class already exists (in case the corresponding pojo has been annotated more than once), 
+ * For each element a Record class is generated. If the generated class already exists (in case the corresponding pojo has been annotated more than once),
  * the generation process will be skipped
  */
 @SupportedAnnotationTypes("org.froporec.GenerateRecord")
