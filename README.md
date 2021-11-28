@@ -14,9 +14,7 @@ If you are running a Maven project, add the latest release dependency to your po
     <version>1.1</version>
 </dependency>
 ``` 
-You can also download the [Jar file](https://github.com/mohamed-ashraf-bayor/froporec/releases) and it to your classpath. 
-
-Or from [Maven Central](https://search.maven.org/artifact/org.froporec/froporec).
+For other build tools, please check: [Maven Central](https://search.maven.org/artifact/org.froporec/froporec).
 
 ### Use on your declared POJO classes 
 ```java
