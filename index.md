@@ -45,7 +45,7 @@ public void doSomething(@GenerateRecord PojoA pojoA) {
 
 
 ### Sample POJO classes for testing
-https://github.com/mohamed-ashraf-bayor/froporec-annotation-client
+[https://github.com/mohamed-ashraf-bayor/froporec-annotation-client](https://github.com/mohamed-ashraf-bayor/froporec-annotation-client)
 
 
 ### Invalid Uses of Froporec
@@ -53,6 +53,6 @@ The annotation should be used ONLY on POJO classes created in your own project. 
 
 
 ### Issues, Bugs, Suggestions
-Contribute to the project's growth by reporting issues or making improvement suggestions at https://github.com/mohamed-ashraf-bayor/froporec/issues/new/choose
+Contribute to the project's growth by reporting issues or making improvement suggestions [here](https://github.com/mohamed-ashraf-bayor/froporec/issues/new/choose)
 
 
