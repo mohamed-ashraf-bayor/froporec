@@ -1,37 +1,50 @@
-## Welcome to GitHub Pages
+Pitch Video:
+https://youtu.be/IC0aS_biaMs
 
-You can use the [editor on GitHub](https://github.com/mohamed-ashraf-bayor/froporec/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+### How to Install ?
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+Get Froporec from Maven Central: https://search.maven.org/artifact/org.froporec/froporec
 
-### Markdown
+If you are running a Maven project, add the following dependency to your pom.xml
+```xml
+<dependency>
+    <groupId>org.froporec</groupId>
+    <artifactId>froporec</artifactId>
+    <version>1.1</version>
+</dependency>
+``` 
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+### Use on your declared POJO classes 
+```java
+@GenerateRecord
+public class PojoA {
+    // class content
+}
 ```
 
-For more details see [Basic writing and formatting syntax](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
+### Use on fields of your declared POJO classes 
+```java
+@GenerateRecord
+public class PojoA {
+    private @GenerateRecord PojoB pojoB;
+    // ...
+}
+```
 
-### Jekyll Themes
+### Use on your defined method parameters
+```java
+public void doSomething(@GenerateRecord PojoA pojoA) {
+    // method content...
+}
+```
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/mohamed-ashraf-bayor/froporec/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+### Sample POJO classes for testing
+https://github.com/mohamed-ashraf-bayor/froporec-annotation-client
 
-### Support or Contact
+### Invalid Uses of Froporec
+The annotation should be used ONLY on POJO classes created in your own project. Any other types (including Java types) are not supported
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+### Issues, Bugs, Suggestions
+Contribute to the project's growth by reporting issues or making improvement suggestions at https://github.com/mohamed-ashraf-bayor/froporec/issues/new/choose
+
+
