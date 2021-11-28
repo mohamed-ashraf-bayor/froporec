@@ -14,7 +14,7 @@ If you are running a Maven project, add the latest release dependency to your po
     <version>1.1</version>
 </dependency>
 ``` 
-For other build tools, please check: [Maven Central](https://search.maven.org/artifact/org.froporec/froporec).
+For other build tools, please check: [Maven Central](https://search.maven.org/artifact/org.froporec/froporec/1.1/jar).
 
 ### Use on your declared POJO classes 
 ```java
