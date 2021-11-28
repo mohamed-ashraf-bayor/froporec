@@ -141,8 +141,8 @@ sealed interface SupportedCollectionsFieldsGenerator extends SupportedCollection
 
     @Override
     default void generateCode(final StringBuilder recordClassContent, final Map<String, Object> params) {
-        final String fieldName = (String) params.get(FIELD_NAME);
-        final String getterReturnType = (String) params.get(GETTER_RETURN_TYPE);
+        var fieldName = (String) params.get(FIELD_NAME);
+        var getterReturnType = (String) params.get(GETTER_RETURN_TYPE);
         replaceGenericWithRecordClassNameIfAny(recordClassContent, fieldName, getterReturnType);
     }
 }
@@ -163,9 +163,9 @@ sealed interface SupportedCollectionsMappingLogicGenerator extends SupportedColl
 
     @Override
     default void generateCode(final StringBuilder recordClassContent, final Map<String, Object> params) {
-        final String fieldName = (String) params.get(FIELD_NAME);
-        final String getterAsString = (String) params.get(GETTER_AS_STRING);
-        final String getterReturnType = (String) params.get(GETTER_RETURN_TYPE);
+        var fieldName = (String) params.get(FIELD_NAME);
+        var getterAsString = (String) params.get(GETTER_AS_STRING);
+        var getterReturnType = (String) params.get(GETTER_RETURN_TYPE);
         generateCollectionFieldMappingIfGenericIsAnnotated(recordClassContent, fieldName, getterAsString, getterReturnType);
     }
 }

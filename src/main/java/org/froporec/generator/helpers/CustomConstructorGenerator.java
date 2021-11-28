@@ -107,9 +107,9 @@ public final class CustomConstructorGenerator implements CodeGenerator {
     @Override
     @SuppressWarnings("unchecked")
     public void generateCode(StringBuilder recordClassContent, Map<String, Object> params) {
-        final String qualifiedClassName = (String) params.get(CodeGenerator.QUALIFIED_CLASS_NAME);
-        final Map<String, String> gettersMap = (Map<String, String>) params.get(CodeGenerator.GETTERS_MAP);
-        final List<? extends Element> gettersList = (List<? extends Element>) params.get(CodeGenerator.GETTERS_LIST);
+        var qualifiedClassName = (String) params.get(CodeGenerator.QUALIFIED_CLASS_NAME);
+        var gettersMap = (Map<String, String>) params.get(CodeGenerator.GETTERS_MAP);
+        var gettersList = (List<? extends Element>) params.get(CodeGenerator.GETTERS_LIST);
         buildRecordCustom1ArgConstructor(recordClassContent, qualifiedClassName, gettersMap, gettersList);
     }
 }

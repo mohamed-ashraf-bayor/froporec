@@ -96,8 +96,8 @@ public final class FieldsGenerator implements CodeGenerator {
     @Override
     @SuppressWarnings("unchecked")
     public void generateCode(final StringBuilder recordClassContent, final Map<String, Object> params) {
-        final Map<String, String> gettersMap = (Map<String, String>) params.get(CodeGenerator.GETTERS_MAP);
-        final List<? extends Element> gettersList = (List<? extends Element>) params.get(CodeGenerator.GETTERS_LIST);
+        var gettersMap = (Map<String, String>) params.get(CodeGenerator.GETTERS_MAP);
+        var gettersList = (List<? extends Element>) params.get(CodeGenerator.GETTERS_LIST);
         buildRecordFieldsFromGettersList(recordClassContent, gettersMap, gettersList);
     }
 }

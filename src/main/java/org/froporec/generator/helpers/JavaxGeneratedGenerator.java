@@ -24,7 +24,6 @@ package org.froporec.generator.helpers;
 import org.froporec.GenerateRecordProcessor;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -55,8 +54,8 @@ public final class JavaxGeneratedGenerator implements CodeGenerator {
     }
 
     private String getAppVersion() {
-        final Properties properties = new Properties();
-        InputStream in = this.getClass().getClassLoader().getResourceAsStream("application.properties");
+        var properties = new Properties();
+        var in = this.getClass().getClassLoader().getResourceAsStream("application.properties");
         try {
             properties.load(in);
         } catch (IOException e) {

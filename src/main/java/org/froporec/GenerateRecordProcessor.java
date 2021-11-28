@@ -62,7 +62,7 @@ public class GenerateRecordProcessor extends AbstractProcessor {
             if (!annotation.getSimpleName().toString().contains("GenerateRecord")) {
                 continue;
             }
-            Set<? extends Element> allAnnotatedElements = roundEnv.getElementsAnnotatedWith(annotation);
+            var allAnnotatedElements = roundEnv.getElementsAnnotatedWith(annotation);
             processAnnotatedClasses(allAnnotatedElements); // process all annotated classes
             processAnnotatedClassAttributes(allAnnotatedElements); // process all annotated class attributes (fields)
             processAnnotatedMethodParams(allAnnotatedElements); // process all annotated method parameters

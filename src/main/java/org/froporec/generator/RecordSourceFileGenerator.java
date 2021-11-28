@@ -21,10 +21,10 @@
  */
 package org.froporec.generator;
 
+import org.froporec.generator.helpers.CodeGenerator;
 import org.froporec.generator.helpers.CustomConstructorGenerator;
 import org.froporec.generator.helpers.FieldsGenerator;
 import org.froporec.generator.helpers.JavaxGeneratedGenerator;
-import org.froporec.generator.helpers.CodeGenerator;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
@@ -102,7 +102,7 @@ public class RecordSourceFileGenerator {
         int lastDot = qualifiedClassName.lastIndexOf('.');
         var recordSimpleClassName = (qualifiedClassName + RECORD).substring(lastDot + 1);
         // package statement
-        String packageName = lastDot > 0 ? qualifiedClassName.substring(0, lastDot) : null;
+        var packageName = lastDot > 0 ? qualifiedClassName.substring(0, lastDot) : null;
         Optional.ofNullable(packageName).ifPresent(name -> recordClassContent.append(format("package %s;%n%n", name)));
         // javax.annotation.processing.Generated section
         javaxGeneratedGenerator.generateCode(recordClassContent, null);
