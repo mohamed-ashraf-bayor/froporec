@@ -1,3 +1,5 @@
+Minimum Java 17 required
+
 Pitch Video:
 [https://youtu.be/IC0aS_biaMs](https://youtu.be/IC0aS_biaMs)
 
