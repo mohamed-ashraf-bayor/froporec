@@ -1,5 +1,5 @@
 Pitch Video:
-[https://youtu.be/IC0aS_biaMs] (https://youtu.be/IC0aS_biaMs)
+[https://youtu.be/IC0aS_biaMs](https://youtu.be/IC0aS_biaMs)
 
 ### How to Install ?
 
@@ -11,9 +11,9 @@ If you are running a Maven project, add the latest release dependency to your po
     <version>1.1</version>
 </dependency>
 ``` 
-You can also download the [Jar file] (https://githublinkhere.co,/.../...) and it to your classpath. 
+You can also download the [Jar file](https://githublinkhere.co,/.../...) and it to your classpath. 
 
-Or from [Maven Central] (https://search.maven.org/artifact/org.froporec/froporec).
+Or from [Maven Central](https://search.maven.org/artifact/org.froporec/froporec).
 
 
 
