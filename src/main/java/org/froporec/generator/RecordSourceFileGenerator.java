@@ -92,7 +92,7 @@ public class RecordSourceFileGenerator {
     public void writeRecordSourceFile(final String qualifiedClassName, final List<? extends Element> gettersList, final Map<String, String> getterMap) throws IOException {
         var recordClassFile = processingEnvironment.getFiler().createSourceFile(qualifiedClassName + RECORD); // if file already exists, this line throws a FilerException
         var recordClassString = buildRecordClassContent(qualifiedClassName, gettersList, getterMap);
-        try (PrintWriter out = new PrintWriter(recordClassFile.openWriter())) {
+        try (var out = new PrintWriter(recordClassFile.openWriter())) {
             out.println(recordClassString);
         }
     }
