@@ -57,4 +57,4 @@ Contribute to the project's growth by reporting issues or making improvement sug
 [Froporec Github Repository](https://github.com/mohamed-ashraf-bayor/froporec)
 
 
-###### Froporec is currently distributed under [MIT License](https://github.com/mohamed-ashraf-bayor/froporec/blob/master/LICENSE)
+###### Froporec is an open source project, currently distributed under the [MIT License](https://github.com/mohamed-ashraf-bayor/froporec/blob/master/LICENSE)
