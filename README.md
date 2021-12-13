@@ -14,6 +14,30 @@ If you are running a Maven project, add the latest release dependency to your po
     <version>1.1</version>
 </dependency>
 ``` 
+You will also need to include the same dependency as an additional annotation processor in the Maven Compiler plugin of your project
+```xml
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
+                <configuration>
+                    <release>17</release>
+                    <compilerArgs>-Xlint:unchecked</compilerArgs>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.froporec</groupId>
+                            <artifactId>froporec</artifactId>
+                            <version>1.1</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+```
+
 For other build tools, please check: [Maven Central](https://search.maven.org/artifact/org.froporec/froporec/1.1/jar).
 
 ### Use on your declared POJO classes 
