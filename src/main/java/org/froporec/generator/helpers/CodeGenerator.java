@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021 Mohamed Ashraf Bayor
+ * Copyright (c) 2021-2022 Mohamed Ashraf Bayor
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -62,8 +62,10 @@ public sealed interface CodeGenerator permits JavaxGeneratedGenerator, FieldsGen
 
     /**
      * Generates piece of code requested, based on the parameters provided in the params object and appends it to the provided recordClassContent param
-     * @param recordClassContent Stringbuilder object containing the record class code being generated
-     * @param params expected parameters. restricted to what is expected by the implementing class. the expected parameters names are defined as constants in the CodeGenerator interface.
+     *
+     * @param recordClassContent {@link StringBuilder} object containing the record class code being generated
+     * @param params             expected parameters. restricted to parameters and values expected by the implementing class.
+     *                           the expected parameters names are defined as constants in the CodeGenerator interface.
      */
     void generateCode(StringBuilder recordClassContent, Map<String, Object> params);
 }
@@ -74,13 +76,17 @@ sealed interface SupportedCollectionsGenerator extends CodeGenerator {
      * Supported collections types, stored as a list of String values
      */
     enum SupportedCollectionTypes {
+
         LIST("List"),
         SET("Set"),
         MAP("Map");
+
         private final String type;
+
         SupportedCollectionTypes(final String type) {
             this.type = type;
         }
+
         public String getType() {
             return type;
         }
@@ -91,7 +97,7 @@ sealed interface SupportedCollectionsGenerator extends CodeGenerator {
      * the check is based on the string representation. first checked is the presence of &lt;&gt; and then whether the name has "List", "Set" or "Map" in its name
      *
      * @param getterReturnType - the provided type qualified name
-     * @return true or false
+     * @return true if the provided type is a collection with a generic. false otherwise
      */
     default boolean isCollectionWithGeneric(final String getterReturnType) {
         if (getterReturnType.indexOf('<') == -1 && getterReturnType.indexOf('>') == -1) {
@@ -105,6 +111,7 @@ sealed interface SupportedCollectionsGenerator extends CodeGenerator {
 
     /**
      * extracts the type within the &lt;&gt;
+     *
      * @param getterReturnType getter return type
      * @return the generic type
      */
@@ -116,6 +123,7 @@ sealed interface SupportedCollectionsGenerator extends CodeGenerator {
 
     /**
      * extracts the collection type without the generic
+     *
      * @param getterReturnType getter return type
      * @return the collection type
      */

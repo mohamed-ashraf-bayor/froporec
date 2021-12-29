@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021 Mohamed Ashraf Bayor
+ * Copyright (c) 2021-2022 Mohamed Ashraf Bayor
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
 import static java.lang.String.format;
 
 /**
- * FroPoRec annotation processor class. Picks up and processes all elements (classes, fields and method params) annotated with @GenerateRecord<br>
+ * FroPoRec annotation processor class. Picks up and processes all elements (classes, fields and method params) annotated with @{@link GenerateRecord}<br>
  * The order of processing is: classes, then fields and then the method parameters<br>
  * For each element a Record class is generated. If the generated class already exists (in case the corresponding pojo has been annotated more than once),
  * the generation process will be skipped
@@ -57,14 +57,14 @@ public class GenerateRecordProcessor extends AbstractProcessor {
     private final Logger log = Logger.getLogger(GenerateRecordProcessor.class.getName());
 
     @Override
-    public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-        for (TypeElement annotation : annotations) {
+    public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnvironment) {
+        for (var annotation : annotations) {
             if (!annotation.getSimpleName().toString().contains("GenerateRecord")) {
                 continue;
             }
-            var allAnnotatedElements = roundEnv.getElementsAnnotatedWith(annotation);
+            var allAnnotatedElements = roundEnvironment.getElementsAnnotatedWith(annotation);
             processAnnotatedClasses(allAnnotatedElements); // process all annotated classes
-            processAnnotatedClassAttributes(allAnnotatedElements); // process all annotated class attributes (fields)
+            processAnnotatedFields(allAnnotatedElements); // process all annotated class fields
             processAnnotatedMethodParams(allAnnotatedElements); // process all annotated method parameters
         }
         return true;
@@ -80,19 +80,17 @@ public class GenerateRecordProcessor extends AbstractProcessor {
         annotatedClasses.forEach(annotatedClass -> processAnnotatedElement(annotatedClass, allAnnotatedElements));
     }
 
-    private void processAnnotatedClassAttributes(final Set<? extends Element> allAnnotatedElements) {
-        var annotatedClassAttributes = allAnnotatedElements.stream()
+    private void processAnnotatedFields(final Set<? extends Element> allAnnotatedElements) {
+        var annotatedFields = allAnnotatedElements.stream()
                 .filter(element -> ElementKind.FIELD.equals(element.getKind()))
                 .filter(element -> !ElementKind.ENUM_CONSTANT.equals(element.getKind()))
-                .map(element -> processingEnv.getTypeUtils().asElement(element.asType()))
                 .collect(Collectors.toSet());
-        annotatedClassAttributes.forEach(annotatedMethod -> processAnnotatedElement(annotatedMethod, allAnnotatedElements));
+        annotatedFields.forEach(annotatedMethod -> processAnnotatedElement(annotatedMethod, allAnnotatedElements));
     }
 
     private void processAnnotatedMethodParams(final Set<? extends Element> allAnnotatedElements) {
         var annotatedParams = allAnnotatedElements.stream()
                 .filter(element -> ElementKind.PARAMETER.equals(element.getKind()))
-                .map(element -> processingEnv.getTypeUtils().asElement(element.asType()))
                 .collect(Collectors.toSet());
         annotatedParams.forEach(annotatedParam -> processAnnotatedElement(annotatedParam, allAnnotatedElements));
     }
@@ -108,7 +106,7 @@ public class GenerateRecordProcessor extends AbstractProcessor {
             new RecordSourceFileGenerator(processingEnv, allAnnotatedElements).writeRecordSourceFile(qualifiedClassName, gettersList, gettersMap);
             log.info(() -> "\t> Successfully generated " + qualifiedClassName + "Record");
         } catch (FilerException e) {
-            // Skipped generating " + qualifiedClassName + "Record - file already exists"
+            // File was already generated - do nothing
         } catch (IOException e) {
             log.log(Level.SEVERE, format("Error generating %sRecord", qualifiedClassName), e);
         }

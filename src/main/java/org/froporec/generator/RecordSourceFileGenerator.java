@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021 Mohamed Ashraf Bayor
+ * Copyright (c) 2021-2022 Mohamed Ashraf Bayor
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -62,10 +62,10 @@ public class RecordSourceFileGenerator {
     private final CodeGenerator customConstructorGenerator;
 
     /**
-     * Constructor of RecordSourceFileGenerator
+     * RecordSourceFileGenerator constructor. Instanciates needed instances of {@link FieldsGenerator}, {@link CustomConstructorGenerator} and {@link JavaxGeneratedGenerator}
      *
-     * @param processingEnvironment the processing environment needed to getTypeUtil() and getFile() methods
-     * @param allAnnotatedElements  all annotated elements in the client program
+     * @param processingEnvironment {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @param allAnnotatedElements  {@link Set} of all annotated {@link Element} instances
      */
     public RecordSourceFileGenerator(final ProcessingEnvironment processingEnvironment, final Set<? extends Element> allAnnotatedElements) {
         this.processingEnvironment = processingEnvironment;
@@ -85,8 +85,8 @@ public class RecordSourceFileGenerator {
      * Builds the content of the record class and writes it to the filesystem
      *
      * @param qualifiedClassName qualified name of the POJO class being processed. ex: org.froporec.data1.Person
-     * @param gettersList        list of public getters of the POJO class being processed. ex:[getLastname(), getAge(), getMark(), getGrade(), getSchool()]
-     * @param getterMap          map containing getters names as keys and their corresponding types as values. ex: {getAge=int, getSchool=org.froporec.data1.School, getLastname=java.lang.String}
+     * @param gettersList        {@link List} of public getters of the POJO class being processed. ex:[getLastname(), getAge(), getMark(), getGrade(), getSchool()]
+     * @param getterMap          {@link Map} containing getters names as keys and their corresponding types as values. ex: {getAge=int, getSchool=org.froporec.data1.School, getLastname=java.lang.String}
      * @throws IOException only if a "severe" error happens while writing the file to the filesystem. Cases of already existing files are not treated as errors
      */
     public void writeRecordSourceFile(final String qualifiedClassName, final List<? extends Element> gettersList, final Map<String, String> getterMap) throws IOException {

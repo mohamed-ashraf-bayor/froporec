@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021 Mohamed Ashraf Bayor
+ * Copyright (c) 2021-2022 Mohamed Ashraf Bayor
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,9 +36,9 @@ import static org.froporec.generator.RecordSourceFileGenerator.RECORD;
  * Builds the custom 1 arg constructor section for the record class being generated.
  * Starts with public RecordName(list of fields) and includes a call to the canonical constructor inside the body of the custom constructor<br>
  * The generateRecord() method params map MUST contain the following parameters names:<br>
- * qualifiedClassName @see {@link CodeGenerator#QUALIFIED_CLASS_NAME}<br>
- * gettersMap         @see {@link CodeGenerator#GETTERS_MAP}<br>
- * gettersList        @see {@link CodeGenerator#GETTERS_LIST}<br>
+ * qualifiedClassName {@link CodeGenerator#QUALIFIED_CLASS_NAME}<br>
+ * gettersMap         {@link CodeGenerator#GETTERS_MAP}<br>
+ * gettersList        {@link CodeGenerator#GETTERS_LIST}<br>
  */
 public final class CustomConstructorGenerator implements CodeGenerator {
 
@@ -49,10 +49,10 @@ public final class CustomConstructorGenerator implements CodeGenerator {
     private final SupportedCollectionsMappingLogicGenerator collectionsGenerator;
 
     /**
-     * Constructor of CustomConstructorGenerationHelper
+     * CustomConstructorGenerationHelper constructor. Instanciates needed instances of {@link ProcessingEnvironment} and {@link CollectionsGenerator}
      *
-     * @param processingEnvironment     the processing environment needed to use getTypeUtils() and getFiler() methods
-     * @param allAnnotatedElementsTypes all annotated elements in the client program
+     * @param processingEnvironment     {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @param allAnnotatedElementsTypes {@link Set} of all annotated elements types
      */
     public CustomConstructorGenerator(final ProcessingEnvironment processingEnvironment, final Set<String> allAnnotatedElementsTypes) {
         this.processingEnvironment = processingEnvironment;

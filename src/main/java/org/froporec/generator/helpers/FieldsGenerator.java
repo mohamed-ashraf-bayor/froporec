@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021 Mohamed Ashraf Bayor
+ * Copyright (c) 2021-2022 Mohamed Ashraf Bayor
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,8 +36,8 @@ import static org.froporec.generator.RecordSourceFileGenerator.RECORD;
  * Builds the list of fields of the record class being generated. ex: int a, String s, Person p<br>
  * Considerations will be made for fields whose types have also been annotated<br>
  * The generateRecord() method params map MUST contain the following parameters names:<br>
- * gettersMap         @see {@link CodeGenerator#GETTERS_MAP}<br>
- * gettersList        @see {@link CodeGenerator#GETTERS_LIST}<br>
+ * gettersMap         {@link CodeGenerator#GETTERS_MAP}<br>
+ * gettersList        {@link CodeGenerator#GETTERS_LIST}<br>
  */
 public final class FieldsGenerator implements CodeGenerator {
 
@@ -48,10 +48,10 @@ public final class FieldsGenerator implements CodeGenerator {
     private final SupportedCollectionsFieldsGenerator collectionsGenerator;
 
     /**
-     * Constructor of FieldsGenerationHelper
+     * FieldsGenerationHelper constructor
      *
-     * @param processingEnvironment     needed to access sourceversion and other useful info
-     * @param allAnnotatedElementsTypes all annotated elements in the client program
+     * @param processingEnvironment     {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @param allAnnotatedElementsTypes {@link Set} of all annotated elements types
      */
     public FieldsGenerator(final ProcessingEnvironment processingEnvironment, final Set<String> allAnnotatedElementsTypes) {
         this.processingEnvironment = processingEnvironment;
@@ -78,7 +78,7 @@ public final class FieldsGenerator implements CodeGenerator {
     }
 
     private void buildSingleField(final StringBuilder recordClassContent, final String getterAsString, final String getterReturnTypeFromMap, final boolean processAsRecord) {
-        final String recordFieldsListFormat = "%s %s, "; // type fieldName
+        var recordFieldsListFormat = "%s %s, "; // type fieldName
         var getterFieldNonBoolean = getterAsString.substring(3, 4).toLowerCase() + getterAsString.substring(4, getterAsString.indexOf('('));
         if (getterAsString.startsWith("get")) {
             // if the type of the field being processed is a collection process it differently and return

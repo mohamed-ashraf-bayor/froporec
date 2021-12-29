@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021 Mohamed Ashraf Bayor
+ * Copyright (c) 2021-2022 Mohamed Ashraf Bayor
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation to apply in 3 different ways:<br><br>
+ * Annotation to be applied in 3 different ways:<br><br>
  *
  * - on top of a class name while the class is being defined. As a result, a record class with the name classname + "Record" will be generated<br><br>
  *

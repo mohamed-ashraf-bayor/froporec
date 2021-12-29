@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021 Mohamed Ashraf Bayor
+ * Copyright (c) 2021-2022 Mohamed Ashraf Bayor
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,12 +32,12 @@ import java.util.Properties;
 import static java.lang.String.format;
 
 /**
- * Generates the @javax.annotation.processing.Generated annotation section at the top of the generated record class with the attributes: value, date and comments<br>
+ * Generates the {@link javax.annotation.processing.Generated} annotation section at the top of the generated record class with the attributes: value, date and comments<br>
  * The generateRecord() method params map is not required
  */
 public final class JavaxGeneratedGenerator implements CodeGenerator {
 
-    private static final String DEFAULT_APP_VERSION = "1.1.0";
+    private static final String DEFAULT_APP_VERSION = "1.2.0";
 
     private void buildGeneratedAnnotationSection(final StringBuilder recordClassContent) {
         recordClassContent.append(format("""
