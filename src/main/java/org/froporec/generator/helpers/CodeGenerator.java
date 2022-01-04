@@ -21,12 +21,19 @@
  */
 package org.froporec.generator.helpers;
 
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.Element;
+import javax.lang.model.type.ExecutableType;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
+import static java.util.stream.Collectors.toMap;
 
 /**
  * Exposes contract for a CodeGenerator class to fulfill
  */
-public sealed interface CodeGenerator permits JavaxGeneratedGenerator, FieldsGenerator, CustomConstructorGenerator, SupportedCollectionsGenerator {
+public sealed interface CodeGenerator extends StringGenerator permits JavaxGeneratedGenerator, FieldsGenerator, CustomConstructorGenerator, SupportedCollectionsGenerator {
 
     // List of the parameters expected in the params Map object of the generateCode method:
 
@@ -41,24 +48,19 @@ public sealed interface CodeGenerator permits JavaxGeneratedGenerator, FieldsGen
     String FIELD_NAME = "fieldName";
 
     /**
-     * parameter name: "getterReturnType", expected type: String
+     * parameter name: "nonVoidMethodReturnType", expected type: String
      */
-    String GETTER_RETURN_TYPE = "getterReturnType";
+    String NON_VOID_METHOD_RETURN_TYPE = "nonVoidMethodReturnType";
 
     /**
      * parameter name: "getterAsString", expected type: String
      */
-    String GETTER_AS_STRING = "getterAsString";
+    String NON_VOID_METHOD_AS_STRING = "nonVoidMethodAsString";
 
     /**
-     * parameter name: "gettersList", expected type: List&lt;? extends javax.lang.model.element.Element&gt;, ex:[getLastname(), getAge(), getMark(), getGrade(), getSchool()]
+     * parameter name: "nonVoidMethodsElementsList", expected type: List&lt;? extends javax.lang.model.element.Element&gt;, ex:[getLastname(), getAge(), getMark(), getGrade(), getSchool()]
      */
-    String GETTERS_LIST = "gettersList";
-
-    /**
-     * parameter name: "gettersMap", expected type: Map&lt;String, String&gt;, ex: {getAge=int, getSchool=org.froporec.data1.School, getLastname=java.lang.String}
-     */
-    String GETTERS_MAP = "gettersMap";
+    String NON_VOID_METHODS_ELEMENTS_LIST = "nonVoidMethodsElementsList";
 
     /**
      * Generates piece of code requested, based on the parameters provided in the params object and appends it to the provided recordClassContent param
@@ -68,6 +70,22 @@ public sealed interface CodeGenerator permits JavaxGeneratedGenerator, FieldsGen
      *                           the expected parameters names are defined as constants in the CodeGenerator interface.
      */
     void generateCode(StringBuilder recordClassContent, Map<String, Object> params);
+
+    // TODO javadoc
+
+    // construct Map containing getters names as keys and their corresponding types as values. ex: {getAge=int, getSchool=org.froporec.data1.School, getLastname=java.lang.String}
+    default Map<Element, String> constructNonVoidMethodsElementsReturnTypesMapFromList(final List<? extends Element> nonVoidMethodsElementsList) {
+        // Map content tostring representation ex: {getAge=int, getSchool=org.froporec.data1.School, getLastname=java.lang.String}
+//        return nonVoidMethodsElementsList.stream()
+//                .collect(toMap(nonVoidMethodElement -> nonVoidMethodElement, nonVoidMethodElement -> processingEnv.getTypeUtils().asElement(((ExecutableType) nonVoidMethodElement.asType()).getReturnType())));
+        return nonVoidMethodsElementsList.stream().collect(toMap(nonVoidMethodElement -> nonVoidMethodElement, nonVoidMethodElement -> ((ExecutableType) nonVoidMethodElement.asType()).getReturnType().toString()));
+    }
+
+    default Optional<Element> constructElementInstanceFromTypeString(final ProcessingEnvironment processingEnvironment, final String qualifiedName) {
+        return Optional.ofNullable(processingEnvironment.getElementUtils().getTypeElement(qualifiedName)).isEmpty()
+                ? Optional.empty()
+                : Optional.ofNullable(processingEnvironment.getTypeUtils().asElement(processingEnvironment.getElementUtils().getTypeElement(qualifiedName).asType()));
+    }
 }
 
 sealed interface SupportedCollectionsGenerator extends CodeGenerator {
@@ -150,7 +168,7 @@ sealed interface SupportedCollectionsFieldsGenerator extends SupportedCollection
     @Override
     default void generateCode(final StringBuilder recordClassContent, final Map<String, Object> params) {
         var fieldName = (String) params.get(FIELD_NAME);
-        var getterReturnType = (String) params.get(GETTER_RETURN_TYPE);
+        var getterReturnType = (String) params.get(NON_VOID_METHOD_RETURN_TYPE);
         replaceGenericWithRecordClassNameIfAny(recordClassContent, fieldName, getterReturnType);
     }
 }
@@ -172,8 +190,8 @@ sealed interface SupportedCollectionsMappingLogicGenerator extends SupportedColl
     @Override
     default void generateCode(final StringBuilder recordClassContent, final Map<String, Object> params) {
         var fieldName = (String) params.get(FIELD_NAME);
-        var getterAsString = (String) params.get(GETTER_AS_STRING);
-        var getterReturnType = (String) params.get(GETTER_RETURN_TYPE);
+        var getterAsString = (String) params.get(NON_VOID_METHOD_AS_STRING);
+        var getterReturnType = (String) params.get(NON_VOID_METHOD_RETURN_TYPE);
         generateCollectionFieldMappingIfGenericIsAnnotated(recordClassContent, fieldName, getterAsString, getterReturnType);
     }
 }

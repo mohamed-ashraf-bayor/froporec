@@ -21,7 +21,7 @@
  */
 package org.froporec.generator.helpers;
 
-import org.froporec.GenerateRecordProcessor;
+import org.froporec.FroporecAnnotationProcessor;
 
 import java.io.IOException;
 import java.time.ZonedDateTime;
@@ -47,7 +47,7 @@ public final class JavaxGeneratedGenerator implements CodeGenerator {
                             comments = "version: %s"
                         )
                         """
-                , GenerateRecordProcessor.class.getName()
+                , FroporecAnnotationProcessor.class.getName()
                 , ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                 , getAppVersion()
         ));

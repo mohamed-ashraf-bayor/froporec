@@ -25,6 +25,7 @@ import org.froporec.generator.helpers.CodeGenerator;
 import org.froporec.generator.helpers.CustomConstructorGenerator;
 import org.froporec.generator.helpers.FieldsGenerator;
 import org.froporec.generator.helpers.JavaxGeneratedGenerator;
+import org.froporec.generator.helpers.StringGenerator;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
@@ -37,19 +38,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
-import static org.froporec.generator.helpers.CodeGenerator.GETTERS_LIST;
-import static org.froporec.generator.helpers.CodeGenerator.GETTERS_MAP;
+import static org.froporec.generator.helpers.CodeGenerator.NON_VOID_METHODS_ELEMENTS_LIST;
 import static org.froporec.generator.helpers.CodeGenerator.QUALIFIED_CLASS_NAME;
 
 /**
  * Builds the record class string content and writes it to the generated record source file
  */
-public class RecordSourceFileGenerator {
-
-    /**
-     * "Record" string constant
-     */
-    public static final String RECORD = "Record";
+public class RecordSourceFileGenerator implements StringGenerator {
 
     private final ProcessingEnvironment processingEnvironment;
 
@@ -82,39 +77,41 @@ public class RecordSourceFileGenerator {
     }
 
     /**
-     * Builds the content of the record class and writes it to the filesystem
+     * Builds the content of the record class to be generated and writes it to the filesystem
      *
-     * @param qualifiedClassName qualified name of the POJO class being processed. ex: org.froporec.data1.Person
-     * @param gettersList        {@link List} of public getters of the POJO class being processed. ex:[getLastname(), getAge(), getMark(), getGrade(), getSchool()]
-     * @param getterMap          {@link Map} containing getters names as keys and their corresponding types as values. ex: {getAge=int, getSchool=org.froporec.data1.School, getLastname=java.lang.String}
+     * @param qualifiedClassName qualified name of the pojo or record class being processed
+     * @param generatedQualifiedClassName qualified name of the record class to be generated
+     * @param nonVoidMethodsElementsList  {@link List} of public getters of the POJO class, or public methods of the Record class being processed.
+     *                                    ex:[getLastname(), getAge(), getMark(), getGrade(), getSchool()]
      * @throws IOException only if a "severe" error happens while writing the file to the filesystem. Cases of already existing files are not treated as errors
      */
-    public void writeRecordSourceFile(final String qualifiedClassName, final List<? extends Element> gettersList, final Map<String, String> getterMap) throws IOException {
-        var recordClassFile = processingEnvironment.getFiler().createSourceFile(qualifiedClassName + RECORD); // if file already exists, this line throws a FilerException
-        var recordClassString = buildRecordClassContent(qualifiedClassName, gettersList, getterMap);
+    public void writeRecordSourceFile(final String qualifiedClassName, final String generatedQualifiedClassName, final List<? extends Element> nonVoidMethodsElementsList) throws IOException {
+        var recordClassFile = processingEnvironment.getFiler().createSourceFile(generatedQualifiedClassName); // if file already exists, this line throws a FilerException
+        var recordClassString = buildRecordClassContent(qualifiedClassName, generatedQualifiedClassName, nonVoidMethodsElementsList);
         try (var out = new PrintWriter(recordClassFile.openWriter())) {
             out.println(recordClassString);
         }
     }
 
-    private String buildRecordClassContent(final String qualifiedClassName, final List<? extends Element> gettersList, final Map<String, String> getterMap) {
+    private String buildRecordClassContent(final String qualifiedClassName, final String generatedQualifiedClassName, final List<? extends Element> nonVoidMethodsElementsList) {
+        // TODO DANCGER!!!!! rvw filename
         var recordClassContent = new StringBuilder();
         int lastDot = qualifiedClassName.lastIndexOf('.');
-        var recordSimpleClassName = (qualifiedClassName + RECORD).substring(lastDot + 1);
+        var recordSimpleClassName = generatedQualifiedClassName.substring(lastDot + 1);
         // package statement
         var packageName = lastDot > 0 ? qualifiedClassName.substring(0, lastDot) : null;
         Optional.ofNullable(packageName).ifPresent(name -> recordClassContent.append(format("package %s;%n%n", name)));
         // javax.annotation.processing.Generated section
-        javaxGeneratedGenerator.generateCode(recordClassContent, null);
+        javaxGeneratedGenerator.generateCode(recordClassContent, Map.of());
         // record definition statement: public record ... with all attributes listed
         recordClassContent.append(format("public %s ", RECORD.toLowerCase()));
         recordClassContent.append(recordSimpleClassName);
-        // listing all attributes next to the record name
+        // list all attributes next to the record name
         recordClassContent.append('(');
-        fieldsGenerator.generateCode(recordClassContent, Map.of(GETTERS_MAP, getterMap, GETTERS_LIST, gettersList));
+        fieldsGenerator.generateCode(recordClassContent, Map.of(NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList));
         recordClassContent.append(") {\n");
         // Custom 1 arg constructor statement
-        customConstructorGenerator.generateCode(recordClassContent, Map.of(QUALIFIED_CLASS_NAME, qualifiedClassName, GETTERS_MAP, getterMap, GETTERS_LIST, gettersList));
+        customConstructorGenerator.generateCode(recordClassContent, Map.of(QUALIFIED_CLASS_NAME, qualifiedClassName, NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList));
         // no additional content: close the body of the class
         recordClassContent.append('}');
         return recordClassContent.toString();

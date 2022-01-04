@@ -61,6 +61,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target({ElementType.TYPE, ElementType.FIELD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
 @Documented
-public @interface GenerateRecord {
+public @interface GenerateImmutable {
     Class<?>[] includeTypes() default {};
 }
