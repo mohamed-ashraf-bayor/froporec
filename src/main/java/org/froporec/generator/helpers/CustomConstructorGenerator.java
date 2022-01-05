@@ -62,7 +62,7 @@ public final class CustomConstructorGenerator implements CodeGenerator {
     private void buildRecordCustom1ArgConstructor(final StringBuilder recordClassContent, final String qualifiedClassName, final Map<? extends Element, String> nonVoidMethodsElementsReturnTypesMap, final List<? extends Element> nonVoidMethodsElementsList) {
         var simpleClassName = qualifiedClassName.substring(qualifiedClassName.lastIndexOf(DOT) + 1);
         var fieldName = simpleClassName.substring(0, 1).toLowerCase() + simpleClassName.substring(1); // simpleClassName starting with lowercase char
-        // %s = simple class name , %s = "Record" , %s = pojo class qualified name , %s = field name
+        // %s = generated simple class name, %s = pojo class qualified name , %s = field name
         recordClassContent.append(format("\tpublic %s(%s %s) {%n", constructImmutableSimpleNameBasedOnElementType(constructElementInstanceFromTypeString(processingEnvironment, qualifiedClassName).get()), qualifiedClassName, fieldName)); // line declaring the constructor
         recordClassContent.append("\t\tthis("); // calling canonical constructor
         // building canonical constructor content

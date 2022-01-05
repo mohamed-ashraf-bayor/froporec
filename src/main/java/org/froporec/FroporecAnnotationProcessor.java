@@ -71,18 +71,12 @@ public class FroporecAnnotationProcessor extends AbstractProcessor implements St
             }
             allAnnotatedElements.addAll(roundEnvironment.getElementsAnnotatedWith(annotation));
         }
-        // System.out.println(">>>>>>>allAnnotatedElements: " + allAnnotatedElements);
         var allAnnotatedElementsToProcess = new HashSet<Element>();
         extractAnnotatedPojoClassesWithIncludedTypes(allAnnotatedElements, allAnnotatedElementsToProcess);
-        System.out.println(">>>>>>>allAnnotatedElementsToProcess extractAnnotatedPojoClassesWithIncludedTypes: " + allAnnotatedElementsToProcess);
         extractAnnotatedRecordClassesWithIncludedTypes(allAnnotatedElements, allAnnotatedElementsToProcess);
-        System.out.println(">>>>>>>allAnnotatedElementsToProcess extractAnnotatedRecordClassesWithIncludedTypes: " + allAnnotatedElementsToProcess);
         extractAnnotatedFieldsWithIncludedTypes(allAnnotatedElements, allAnnotatedElementsToProcess);
-        System.out.println(">>>>>>>allAnnotatedElementsToProcess extractAnnotatedFieldsWithIncludedTypes: " + allAnnotatedElementsToProcess);
         extractAnnotatedMethodParamsWithIncludedTypes(allAnnotatedElements, allAnnotatedElementsToProcess);
-        System.out.println(">>>>>>>allAnnotatedElementsToProcess extractAnnotatedMethodParamsWithIncludedTypes: " + allAnnotatedElementsToProcess);
         var recordSourceFileGenerator = new RecordSourceFileGenerator(processingEnv, allAnnotatedElementsToProcess);
-        // TODO loop thru each Map<String, List<? extnds Elements>> and call recordSourceFileGenerator.generate... // chck call: processAnnotatedElement cmmntd blw
         allAnnotatedElementsToProcess.forEach(annotatedElement -> processAnnotatedElement(annotatedElement, recordSourceFileGenerator));
         return true;
     }
@@ -154,7 +148,6 @@ public class FroporecAnnotationProcessor extends AbstractProcessor implements St
                 .filter(element -> element.getSimpleName().toString().startsWith("get") || element.getSimpleName().toString().startsWith("is"))
                 .filter(element -> asList(METHODS_TO_EXCLUDE).stream().noneMatch(excludedMeth -> element.toString().contains(excludedMeth + OPENING_PARENTHESIS)))
                 .toList();
-        System.out.println("@@@@@@@@@@@@@@@@@@@@@@ nonVoidMethodsElementsList: " + nonVoidMethodsElementsList);
         var annotatedTypeElement = (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType());
         var qualifiedClassName = annotatedTypeElement.getQualifiedName().toString();
         var generatedQualifiedClassName = constructImmutableQualifiedNameBasedOnElementType(annotatedTypeElement);

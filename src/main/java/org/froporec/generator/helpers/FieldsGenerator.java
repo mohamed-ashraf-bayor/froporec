@@ -87,7 +87,9 @@ public final class FieldsGenerator implements CodeGenerator {
             }
             recordClassContent.append(format(
                     recordFieldsListFormat,
-                    processAsImmutable ? constructImmutableQualifiedNameBasedOnElementType(constructElementInstanceFromTypeString(processingEnvironment, nonVoidMethodReturnTypeAsString).get()) : nonVoidMethodReturnTypeAsString,
+                    processAsImmutable
+                            ? constructImmutableQualifiedNameBasedOnElementType(constructElementInstanceFromTypeString(processingEnvironment, nonVoidMethodReturnTypeAsString).get())
+                            : nonVoidMethodReturnTypeAsString,
                     fieldName)
             );
         } else {
@@ -102,7 +104,9 @@ public final class FieldsGenerator implements CodeGenerator {
                 }
                 recordClassContent.append(format(
                         recordFieldsListFormat,
-                        processAsImmutable ? constructImmutableQualifiedNameBasedOnElementType(constructElementInstanceFromTypeString(processingEnvironment, nonVoidMethodReturnTypeAsString).get()) : nonVoidMethodReturnTypeAsString,
+                        processAsImmutable
+                                ? constructImmutableQualifiedNameBasedOnElementType(constructElementInstanceFromTypeString(processingEnvironment, nonVoidMethodReturnTypeAsString).get())
+                                : nonVoidMethodReturnTypeAsString,
                         fieldNameNonBoolean)
                 );
             } else if (getterAsString.startsWith("is")) {

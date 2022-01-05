@@ -1,6 +1,5 @@
 package org.froporec.generator.helpers;
 
-import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 
@@ -26,10 +25,6 @@ public interface StringGenerator {
      * "("
      */
     String OPENING_PARENTHESIS = "(";
-    /**
-     * ")"
-     */
-    String CLOSING_PARENTHESIS = ")";
 
     String DOT_CLASS = ".class";
 
@@ -45,12 +40,6 @@ public interface StringGenerator {
     String[] METHODS_TO_EXCLUDE = {"getClass", "wait", "notifyAll", "hashCode", "equals", "notify", "toString", "clone", "finalize"};
 
     default String constructImmutableRecordQualifiedName(final String qualifiedClassName) {
-        return qualifiedClassName.contains(DOT)
-                ? qualifiedClassName.substring(0, qualifiedClassName.lastIndexOf(DOT)) + DOT + IMMUTABLE + qualifiedClassName.substring(qualifiedClassName.lastIndexOf(DOT) + 1)
-                : IMMUTABLE + qualifiedClassName;
-    }
-
-    default String constructImmutableRecordSimpleName(final String qualifiedClassName) {
         return qualifiedClassName.contains(DOT)
                 ? qualifiedClassName.substring(0, qualifiedClassName.lastIndexOf(DOT)) + DOT + IMMUTABLE + qualifiedClassName.substring(qualifiedClassName.lastIndexOf(DOT) + 1)
                 : IMMUTABLE + qualifiedClassName;

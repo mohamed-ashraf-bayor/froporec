@@ -79,7 +79,7 @@ public class RecordSourceFileGenerator implements StringGenerator {
     /**
      * Builds the content of the record class to be generated and writes it to the filesystem
      *
-     * @param qualifiedClassName qualified name of the pojo or record class being processed
+     * @param qualifiedClassName          qualified name of the pojo or record class being processed
      * @param generatedQualifiedClassName qualified name of the record class to be generated
      * @param nonVoidMethodsElementsList  {@link List} of public getters of the POJO class, or public methods of the Record class being processed.
      *                                    ex:[getLastname(), getAge(), getMark(), getGrade(), getSchool()]
@@ -94,7 +94,6 @@ public class RecordSourceFileGenerator implements StringGenerator {
     }
 
     private String buildRecordClassContent(final String qualifiedClassName, final String generatedQualifiedClassName, final List<? extends Element> nonVoidMethodsElementsList) {
-        // TODO DANCGER!!!!! rvw filename
         var recordClassContent = new StringBuilder();
         int lastDot = qualifiedClassName.lastIndexOf('.');
         var recordSimpleClassName = generatedQualifiedClassName.substring(lastDot + 1);
