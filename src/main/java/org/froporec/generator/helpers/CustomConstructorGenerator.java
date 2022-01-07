@@ -33,11 +33,12 @@ import java.util.Set;
 import static java.lang.String.format;
 
 /**
- * Builds the custom 1 arg constructor section for the record class being generated.
- * Starts with public RecordName(list of fields) and includes a call to the canonical constructor inside the body of the custom constructor<br>
- * The generateRecord() method params map MUST contain the following parameters names:<br>
- * qualifiedClassName {@link CodeGenerator#QUALIFIED_CLASS_NAME}<br>
- * gettersList        {@link CodeGenerator#NON_VOID_METHODS_ELEMENTS_LIST}<br>
+ * Builds the custom 1-arg constructor section for the record class being generated.<br>
+ * Starts with "public RecordName(list of fields)" and includes a call to the canonical constructor inside the body of the custom constructor.<br>
+ * The params {@link Map} parameter of the provided implementation of the generateCode() method (from {@link CodeGenerator}) MUST contain
+ * the following parameters names:<br>
+ * - qualifiedClassName {@link CodeGenerator#QUALIFIED_CLASS_NAME}<br>
+ * - nonVoidMethodsElementsList        {@link CodeGenerator#NON_VOID_METHODS_ELEMENTS_LIST}<br>
  */
 public final class CustomConstructorGenerator implements CodeGenerator {
 
@@ -59,11 +60,20 @@ public final class CustomConstructorGenerator implements CodeGenerator {
         this.collectionsGenerator = new CollectionsGenerator(this.processingEnvironment, this.allAnnotatedElementsTypes);
     }
 
-    private void buildRecordCustom1ArgConstructor(final StringBuilder recordClassContent, final String qualifiedClassName, final Map<? extends Element, String> nonVoidMethodsElementsReturnTypesMap, final List<? extends Element> nonVoidMethodsElementsList) {
+    private void buildRecordCustom1ArgConstructor(
+            final StringBuilder recordClassContent,
+            final String qualifiedClassName,
+            final Map<? extends Element, String> nonVoidMethodsElementsReturnTypesMap,
+            final List<? extends Element> nonVoidMethodsElementsList) {
         var simpleClassName = qualifiedClassName.substring(qualifiedClassName.lastIndexOf(DOT) + 1);
         var fieldName = simpleClassName.substring(0, 1).toLowerCase() + simpleClassName.substring(1); // simpleClassName starting with lowercase char
         // %s = generated simple class name, %s = pojo class qualified name , %s = field name
-        recordClassContent.append(format("\tpublic %s(%s %s) {%n", constructImmutableSimpleNameBasedOnElementType(constructElementInstanceFromTypeString(processingEnvironment, qualifiedClassName).get()), qualifiedClassName, fieldName)); // line declaring the constructor
+        recordClassContent.append(format(
+                "\tpublic %s(%s %s) {%n",
+                constructImmutableSimpleNameBasedOnElementType(constructElementInstanceValueFromTypeString(processingEnvironment, qualifiedClassName)),
+                qualifiedClassName,
+                fieldName
+        )); // line declaring the constructor
         recordClassContent.append("\t\tthis("); // calling canonical constructor
         // building canonical constructor content
         nonVoidMethodsElementsList.forEach(nonVoidMethodElement -> {
@@ -85,21 +95,32 @@ public final class CustomConstructorGenerator implements CodeGenerator {
         recordClassContent.append("\t}\n");
     }
 
-    private void buildCanonicalConstructorCallSingleParameter(final StringBuilder recordClassContent, final String fieldName, final Element nonVoidMethodElement, final String nonVoidMethodReturnTypeAsString, final boolean processAsImmutable, final boolean enclosingElementIsRecord) {
+    private void buildCanonicalConstructorCallSingleParameter(
+            final StringBuilder recordClassContent,
+            final String fieldName,
+            final Element nonVoidMethodElement,
+            final String nonVoidMethodReturnTypeAsString,
+            final boolean processAsImmutable,
+            final boolean enclosingElementIsRecord) {
         var nonVoidMethodElementAsString = nonVoidMethodElement.toString();
-        if (nonVoidMethodElementAsString.startsWith("get") || enclosingElementIsRecord) {
+        if (nonVoidMethodElementAsString.startsWith(GET) || enclosingElementIsRecord) {
             if (collectionsGenerator.isCollectionWithGeneric(nonVoidMethodReturnTypeAsString)) {
                 collectionsGenerator.generateCollectionFieldMappingIfGenericIsAnnotated(recordClassContent, fieldName, nonVoidMethodElementAsString, nonVoidMethodReturnTypeAsString);
             } else {
                 if (processAsImmutable) {
-                    recordClassContent.append(format("new %s(%s.%s), ", constructImmutableQualifiedNameBasedOnElementType(constructElementInstanceFromTypeString(processingEnvironment, nonVoidMethodReturnTypeAsString).get()), fieldName, nonVoidMethodElementAsString));
+                    recordClassContent.append(format(
+                            "new %s(%s.%s), ",
+                            constructImmutableQualifiedNameBasedOnElementType(constructElementInstanceValueFromTypeString(processingEnvironment, nonVoidMethodReturnTypeAsString)),
+                            fieldName,
+                            nonVoidMethodElementAsString
+                    ));
                 } else {
                     // applies to primitives and any pojo or record which hasn't been annotated
                     // %s.%s = fieldname.nonVoidMethodElementAsString
                     recordClassContent.append(format("%s.%s, ", fieldName, nonVoidMethodElementAsString));
                 }
             }
-        } else if (nonVoidMethodElementAsString.startsWith("is")) {
+        } else if (nonVoidMethodElementAsString.startsWith(IS)) {
             recordClassContent.append(format("%s.%s, ", fieldName, nonVoidMethodElementAsString));
         }
     }

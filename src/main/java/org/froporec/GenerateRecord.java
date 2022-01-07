@@ -28,39 +28,45 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * // TODO MODIFY JVDOC
  * Annotation to be applied in 3 different ways:<br><br>
- *
- * - on top of a class name while the class is being defined. As a result, a record class with the name classname + "Record" will be generated<br><br>
- *
+ * <p>
+ * - on top of a POJO class declaration. As a result, a record class with the name pojoclassname + "Record" will be generated<br><br>
+ * <p>
  * &#64;GenerateRecord<br>
  * public class PojoA {<br>
- *     // class content<br>
+ * // class content<br>
  * }<br><br>
- *
- * - next to a class field type for classes containing other POJO classes. Add the annotation before the POJO type name, while the field is being defined.<br>
- * As a result, a record class will be generated for the classname of the annotated generic and the record class generated for
+ * <p>
+ * - next to a class field type for classes containing nested POJO classes. Add the annotation before the POJO type name, during the field declaration.<br>
+ * As a result, a record class will be generated for the classname of the annotated field and the record class generated for
  * the enclosing POJO will contain references to corresponding record class generated for each one of the annotated enclosed POJOs.<br>
- * Not needed if the POJO class was already annotated while being defined.<br><br>
- *
+ * Not needed if the POJO class was already annotated during its declaration.<br><br>
+ * <p>
  * &#64;GenerateRecord<br>
  * public class PojoA {<br>
- *     private &#64;GenerateRecord PojoB pojoB;<br>
+ * private &#64;GenerateRecord PojoB pojoB;<br>
  * }<br><br>
- *
+ * <p>
  * - next to a method parameter type. As a result, a record class will be generated for the classname of the annotated parameter.<br>
- *  Not needed if the POJO class was already annotated while being defined.<br><br>
- *
- *  public void doSomething(&#64;GenerateRecord PojoA pojoA) {<br>
- *      // method content...<br>
- *  }<br><br>
- *
- * Important Note: the annotation should be used ONLY on POJO classes created in your own project. Any other types (including the JVMs) are not supported
- *
+ * Not needed if the POJO class was already annotated during its declaration.<br><br>
+ * <p>
+ * public void doSomething(&#64;GenerateRecord PojoA pojoA) {<br>
+ * // method content...<br>
+ * }<br><br>
+ * <p>
+ * Important Note: the annotation should be used ONLY on POJO classes created in your own project. Any other types (including the JVMs) are not supported <br><br>
+ * <p>
+ * The annotation can be used along with the "includeTypes" attribute which allows specifying additional types (POJOs or Records) to be
+ * transformed in their fully immutable equivalent (Records for POJOs and Immutable Records for Records).
  */
 @Retention(RetentionPolicy.SOURCE)
 @Target({ElementType.TYPE, ElementType.FIELD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
 @Documented
 public @interface GenerateRecord {
+    /**
+     * allows to specify additional types (POJOs or Records) to be transformed in their fully immutable equivalent (Records for POJOs and Immutable Records for Records)
+     *
+     * @return an array of .class values
+     */
     Class<?>[] includeTypes() default {};
 }

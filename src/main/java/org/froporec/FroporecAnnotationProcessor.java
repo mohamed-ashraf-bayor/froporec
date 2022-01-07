@@ -49,11 +49,10 @@ import static org.froporec.generator.helpers.StringGenerator.GENERATE_IMMUTABLE_
 import static org.froporec.generator.helpers.StringGenerator.GENERATE_RECORD_QUALIFIED_NAME;
 
 /**
- * // TODO MODIFY JAVADOC
- * FroPoRec annotation processor class. Picks up and processes all elements (classes, fields and method params) annotated with @{@link GenerateRecord}<br>
+ * FroPoRec annotation processor class. Picks up and processes all elements (classes, fields and method params) annotated with @{@link GenerateRecord} and {@link GenerateImmutable}.<br>
  * The order of processing is: classes, then fields and then the method parameters<br>
- * For each element a Record class is generated. If the generated class already exists (in case the corresponding pojo has been annotated more than once),
- * the generation process will be skipped
+ * For each annotated element a fully immutable Record class is generated. If the generated class already exists (in case the
+ * corresponding pojo or record has been annotated more than once), the generation process will be skipped
  */
 @SupportedAnnotationTypes({GENERATE_RECORD_QUALIFIED_NAME, GENERATE_IMMUTABLE_QUALIFIED_NAME})
 @SupportedSourceVersion(SourceVersion.RELEASE_17)
@@ -145,7 +144,7 @@ public class FroporecAnnotationProcessor extends AbstractProcessor implements St
                 .toList()
                 : processingEnv.getElementUtils().getAllMembers((TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())).stream()
                 .filter(element -> ElementKind.METHOD.equals(element.getKind()))
-                .filter(element -> element.getSimpleName().toString().startsWith("get") || element.getSimpleName().toString().startsWith("is"))
+                .filter(element -> element.getSimpleName().toString().startsWith(GET) || element.getSimpleName().toString().startsWith(IS))
                 .filter(element -> asList(METHODS_TO_EXCLUDE).stream().noneMatch(excludedMeth -> element.toString().contains(excludedMeth + OPENING_PARENTHESIS)))
                 .toList();
         var annotatedTypeElement = (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType());

@@ -28,39 +28,44 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * // TODO MODIFY JVDOC
  * Annotation to be applied in 3 different ways:<br><br>
- *
- * - on top of a class name while the class is being defined. As a result, a record class with the name classname + "Record" will be generated<br><br>
- *
- * &#64;GenerateRecord<br>
- * public class PojoA {<br>
- *     // class content<br>
+ * <p>
+ * - on top of a Record class declaration. As a result, a record class with the name "Immutable" + recordclassname will be generated<br><br>
+ * <p>
+ * &#64;GenerateImmutable<br>
+ * public record RecordA(int field1, String field2) {<br>
+ * // record class content<br>
  * }<br><br>
- *
- * - next to a class field type for classes containing other POJO classes. Add the annotation before the POJO type name, while the field is being defined.<br>
- * As a result, a record class will be generated for the classname of the annotated generic and the record class generated for
- * the enclosing POJO will contain references to corresponding record class generated for each one of the annotated enclosed POJOs.<br>
- * Not needed if the POJO class was already annotated while being defined.<br><br>
- *
- * &#64;GenerateRecord<br>
- * public class PojoA {<br>
- *     private &#64;GenerateRecord PojoB pojoB;<br>
+ * <p>
+ * - next to a record field type for classes containing nested POJO and/or Record classes. Add the annotation before the type name, during the field declaration.<br>
+ * As a result, a record class will be generated for the classname of the annotated field and the record class generated for
+ * the enclosing Record will contain references to corresponding immutable record class generated for each one of the annotated enclosed Records.<br>
+ * Not needed if the Record class was already annotated during its declaration.<br><br>
+ * <p>
+ * &#64;GenerateImmutable<br>
+ * public record RecordA(int field1, String field2, &#64;GenerateImmutable RecordB recordB) {<br>
  * }<br><br>
+ * <p>
+ * - next to a method parameter type. As a result, a record class will be generated for the recordclassname of the annotated parameter.<br>
+ * Not needed if the Record class was already annotated during its declaration.<br><br>
+ * <p>
+ * public void doSomething(&#64;GenerateImmutable RecordA recordA) {<br>
+ * // method content...<br>
+ * }<br><br>
+ * <p>
+ * Important Note: the annotation should be used ONLY on Record classes created in your own project. Any other types (including the JVMs) are not supported. <br><br>
  *
- * - next to a method parameter type. As a result, a record class will be generated for the classname of the annotated parameter.<br>
- *  Not needed if the POJO class was already annotated while being defined.<br><br>
- *
- *  public void doSomething(&#64;GenerateRecord PojoA pojoA) {<br>
- *      // method content...<br>
- *  }<br><br>
- *
- * Important Note: the annotation should be used ONLY on POJO classes created in your own project. Any other types (including the JVMs) are not supported
- *
+ * The annotation can be used along with the "includeTypes" attribute which allows specifying additional types (POJOs or Records) to be
+ * transformed in their fully immutable equivalent (Records for POJOs and Immutable Records for Records).
  */
 @Retention(RetentionPolicy.SOURCE)
 @Target({ElementType.TYPE, ElementType.FIELD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
 @Documented
 public @interface GenerateImmutable {
+    /**
+     * allows to specify additional types (POJOs or Records) to be transformed in their fully immutable equivalent (Records for POJOs and Immutable Records for Records)
+     *
+     * @return an array of .class values
+     */
     Class<?>[] includeTypes() default {};
 }

@@ -57,7 +57,7 @@ public class RecordSourceFileGenerator implements StringGenerator {
     private final CodeGenerator customConstructorGenerator;
 
     /**
-     * RecordSourceFileGenerator constructor. Instanciates needed instances of {@link FieldsGenerator}, {@link CustomConstructorGenerator} and {@link JavaxGeneratedGenerator}
+     * RecordSourceFileGenerator constructor. Instantiates needed instances of {@link FieldsGenerator}, {@link CustomConstructorGenerator} and {@link JavaxGeneratedGenerator}
      *
      * @param processingEnvironment {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
      * @param allAnnotatedElements  {@link Set} of all annotated {@link Element} instances
@@ -81,7 +81,8 @@ public class RecordSourceFileGenerator implements StringGenerator {
      *
      * @param qualifiedClassName          qualified name of the pojo or record class being processed
      * @param generatedQualifiedClassName qualified name of the record class to be generated
-     * @param nonVoidMethodsElementsList  {@link List} of public getters of the POJO class, or public methods of the Record class being processed.
+     * @param nonVoidMethodsElementsList  {@link List} of {@link Element} instances of public getters of the POJO class, or public methods of
+     *                                    the Record class being processed.<br>
      *                                    ex:[getLastname(), getAge(), getMark(), getGrade(), getSchool()]
      * @throws IOException only if a "severe" error happens while writing the file to the filesystem. Cases of already existing files are not treated as errors
      */
@@ -95,7 +96,7 @@ public class RecordSourceFileGenerator implements StringGenerator {
 
     private String buildRecordClassContent(final String qualifiedClassName, final String generatedQualifiedClassName, final List<? extends Element> nonVoidMethodsElementsList) {
         var recordClassContent = new StringBuilder();
-        int lastDot = qualifiedClassName.lastIndexOf('.');
+        int lastDot = qualifiedClassName.lastIndexOf(DOT);
         var recordSimpleClassName = generatedQualifiedClassName.substring(lastDot + 1);
         // package statement
         var packageName = lastDot > 0 ? qualifiedClassName.substring(0, lastDot) : null;
@@ -106,13 +107,13 @@ public class RecordSourceFileGenerator implements StringGenerator {
         recordClassContent.append(format("public %s ", RECORD.toLowerCase()));
         recordClassContent.append(recordSimpleClassName);
         // list all attributes next to the record name
-        recordClassContent.append('(');
+        recordClassContent.append(OPENING_PARENTHESIS);
         fieldsGenerator.generateCode(recordClassContent, Map.of(NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList));
-        recordClassContent.append(") {\n");
+        recordClassContent.append(CLOSING_PARENTHESIS + SPACE + OPENING_BRACE + "\n");
         // Custom 1 arg constructor statement
         customConstructorGenerator.generateCode(recordClassContent, Map.of(QUALIFIED_CLASS_NAME, qualifiedClassName, NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList));
         // no additional content: close the body of the class
-        recordClassContent.append('}');
+        recordClassContent.append(CLOSING_BRACE);
         return recordClassContent.toString();
     }
 }
