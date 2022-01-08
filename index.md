@@ -1,5 +1,3 @@
-<br>
-
 > ### Froporec 1.2 released:
 > - Added new annotation **@GenerateImmutable**, turning existing Record objects into fully immutable Record objects
 > - Enhanced the existing **@GenerateRecord** annotation to support the new **includeTypes** attribute (also supported by the new **@GenerateImmutable** annotation)
@@ -142,4 +140,4 @@ Contribute to the project's growth by reporting issues or making improvement sug
 <br>
 <br>
 
-###### &#169; 2021-2022, Froporec is an open source project, currently distributed under the [MIT License](https://github.com/mohamed-ashraf-bayor/froporec/blob/master/LICENSE)
+###### &#169; 2021-2022, [Froporec](https://github.com/mohamed-ashraf-bayor/froporec) is an open source project, currently distributed under the [MIT License](https://github.com/mohamed-ashraf-bayor/froporec/blob/master/LICENSE)
