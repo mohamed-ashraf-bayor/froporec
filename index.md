@@ -3,7 +3,7 @@
 > - Enhanced the existing **@GenerateRecord** annotation to support the new **includeTypes** attribute (also supported by the new **@GenerateImmutable** annotation)
 > - Bug fixes and performance improvements
 
-Version 1.2 Quick Intro: [https://youtu.be/nkbu6zxV3R0](https://youtu.be/nkbu6zxV3R0)
+Version 1.2 Quick Intro: [https://youtu.be/Yu3bR8ZkpYE](https://youtu.be/Yu3bR8ZkpYE)
 
 Project's Pitch Video: [https://youtu.be/IC0aS_biaMs](https://youtu.be/IC0aS_biaMs)
 
