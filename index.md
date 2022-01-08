@@ -59,7 +59,7 @@ public class PojoA {
     // pojo class content 
 }
 ```
-<br>
+
 - next to a class field type declaration for classes containing enclosed POJOs.<br>
 Add the annotation before the POJO type name, in the field declaration. As a result, a record class will be generated for the classname of the annotated field, and the record class generated for the enclosing POJO will contain a field referencing the corresponding record class generated for the enclosed POJO.<br>
 Not needed if the POJO class was already annotated in its own declaration or added to the list of .class values of the **includeTypes** attribute.  
@@ -78,7 +78,7 @@ public class PojoA {
     private PojoB pojoB; 
 }
 ```
-<br>
+
 - next to a method parameter type.<br>
 As a result, a record class will be generated for the classname of the annotated parameter.<br>
 Not needed if the POJO class was already annotated in its own declaration.
@@ -99,7 +99,7 @@ public record RecordA(int field1, String field2) {
     // record class content 
 }
 ```
-<br>
+
 - next to a record field type declaration for classes containing enclosed Record objects.<br>
 Add the annotation before the Record type name, in the field declaration. As a result, a record class will be generated for the classname of the annotated field and the record class generated for the enclosing Record will contain a field referencing the corresponding immutable record class generated for the enclosed Record object.<br>
   Not needed if the Record class was already annotated in its own declaration or added to the list of .class values of the **includeTypes** attribute.
@@ -116,7 +116,7 @@ public record RecordA(int field1, String field2, @GenerateImmutable RecordB reco
 public record RecordA(int field1, String field2, RecordB recordB) {
 }
 ```
-<br>
+
 - next to a method parameter type.<br>
 As a result, a record class will be generated for the classname of the annotated parameter.<br>
 Not needed if the Record class was already annotated in its own declaration.
