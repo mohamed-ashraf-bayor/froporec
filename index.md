@@ -52,7 +52,7 @@ For other build tools, please check: [Maven Central](https://search.maven.org/ar
 ### @GenerateRecord
 
 - on top of a POJO class declaration.<br>
-As a result, a record class with the name <pojo_class_name> + **Record** will be generated:  
+As a result, a record class with the name *pojo_class_name* + **Record** will be generated:  
 ```java
 @GenerateRecord 
 public class PojoA { 
@@ -70,7 +70,7 @@ public class PojoA {
 ```
 
 &nbsp;&nbsp;&nbsp;
- *** Above code can be written using the **includeTypes** attribute, avoiding multiple uses of @GenerateRecord:<br>
+&#42;&#42;&#42; Above code can be written using the **includeTypes** attribute, avoiding multiple uses of @GenerateRecord:<br>
 ```java
 @GenerateRecord(includeTypes = { PojoB.class }) 
 public class PojoA { 
@@ -90,7 +90,7 @@ Important Note: the annotation should be used ONLY on POJO classes created in yo
 ### @GenerateImmutable
 
 - on top of a Record class declaration.<br>
-As a result, a record class with the name **Immutable** + <record_class_name> will be generated:
+As a result, a record class with the name **Immutable** + *record_class_name* will be generated:
 ```java
 @GenerateImmutable
 public record RecordA(int field1, String field2) {
@@ -107,7 +107,7 @@ public record RecordA(int field1, String field2, @GenerateImmutable RecordB reco
 ```
 
 &nbsp;&nbsp;&nbsp;
-*** Above code can be written using the **includeTypes** attribute, avoiding multiple uses of @GenerateImmutable:<br>
+&#42;&#42;&#42; Above code can be written using the **includeTypes** attribute, avoiding multiple uses of @GenerateImmutable:<br>
 ```java
 @GenerateImmutable(includeTypes = { RecordB.class })
 public record RecordA(int field1, String field2, RecordB recordB) {
