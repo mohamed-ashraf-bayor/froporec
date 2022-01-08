@@ -58,6 +58,7 @@ As a result, a record class with the name *pojo_class_name* + **Record** will be
 public class PojoA { 
     // pojo class content 
 }
+
 ```
 
 - next to a class field type declaration for classes containing enclosed POJOs.<br>
@@ -68,6 +69,7 @@ Not needed if the POJO class was already annotated in its own declaration or add
 public class PojoA { 
     private @GenerateRecord PojoB pojoB; 
 } 
+
 ```
 
 &nbsp;&nbsp;&nbsp;
@@ -77,6 +79,7 @@ public class PojoA {
 public class PojoA { 
     private PojoB pojoB; 
 }
+
 ```
 
 - next to a method parameter type.<br>
@@ -86,6 +89,7 @@ Not needed if the POJO class was already annotated in its own declaration.
   public void doSomething(@GenerateRecord PojoA pojoA) {
     // method content... 
   }
+  
 ```
 Important Note: the annotation should be used ONLY on POJO classes created in your own project. Any other types are not supported.<br>
 
@@ -98,6 +102,7 @@ As a result, a record class with the name **Immutable** + *record_class_name* wi
 public record RecordA(int field1, String field2) {
     // record class content 
 }
+
 ```
 
 - next to a record field type declaration for classes containing enclosed Record objects.<br>
@@ -107,6 +112,7 @@ Add the annotation before the Record type name, in the field declaration. As a r
 @GenerateImmutable
 public record RecordA(int field1, String field2, @GenerateImmutable RecordB recordB) {
 }
+
 ```
 
 &nbsp;&nbsp;&nbsp;
@@ -115,6 +121,7 @@ public record RecordA(int field1, String field2, @GenerateImmutable RecordB reco
 @GenerateImmutable(includeTypes = { RecordB.class })
 public record RecordA(int field1, String field2, RecordB recordB) {
 }
+
 ```
 
 - next to a method parameter type.<br>
@@ -124,6 +131,7 @@ Not needed if the Record class was already annotated in its own declaration.
   public void doSomething(@GenerateRecord PojoA pojoA) {
     // method content... 
   }
+  
 ```
 Important Note: the annotation should be used ONLY on Record classes created in your own project. Any other types are not supported.<br>
 
