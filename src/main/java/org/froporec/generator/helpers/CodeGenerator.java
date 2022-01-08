@@ -110,6 +110,9 @@ public sealed interface CodeGenerator extends StringGenerator permits JavaxGener
     }
 }
 
+/**
+ * "Intermediate" interface providing an enum and a bunch of functions needed by classes handling code generation for collections fields instances
+ */
 sealed interface SupportedCollectionsGenerator extends CodeGenerator {
 
     /**
@@ -174,6 +177,9 @@ sealed interface SupportedCollectionsGenerator extends CodeGenerator {
     }
 }
 
+/**
+ * Exposes contract to be fulfilled by any class dedicated to replacing every POJO or Record class within a generic with its generated record class name
+ */
 sealed interface SupportedCollectionsFieldsGenerator extends SupportedCollectionsGenerator permits CollectionsGenerator {
 
     /**
@@ -196,6 +202,10 @@ sealed interface SupportedCollectionsFieldsGenerator extends SupportedCollection
     }
 }
 
+/**
+ * Exposes contract to be fulfilled by any class dedicated to building a Collection.stream()... logic to allow the mapping of a
+ * collection of POJO or Record classes to a collection of the corresponding generated Record classes
+ */
 sealed interface SupportedCollectionsMappingLogicGenerator extends SupportedCollectionsGenerator permits CollectionsGenerator {
 
     /**

@@ -82,8 +82,8 @@ public class RecordSourceFileGenerator implements StringGenerator {
      * @param qualifiedClassName          qualified name of the pojo or record class being processed
      * @param generatedQualifiedClassName qualified name of the record class to be generated
      * @param nonVoidMethodsElementsList  {@link List} of {@link Element} instances of public getters of the POJO class, or public methods of
-     *                                    the Record class being processed.<br>
-     *                                    ex:[getLastname(), getAge(), getMark(), getGrade(), getSchool()]
+     *                                    the Record class being processed.
+     *                                    toString representation ex for a POJO: [getLastname(), getAge(), getMark(), getGrade(), getSchool()]
      * @throws IOException only if a "severe" error happens while writing the file to the filesystem. Cases of already existing files are not treated as errors
      */
     public void writeRecordSourceFile(final String qualifiedClassName, final String generatedQualifiedClassName, final List<? extends Element> nonVoidMethodsElementsList) throws IOException {

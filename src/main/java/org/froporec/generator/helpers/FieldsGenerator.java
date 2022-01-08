@@ -38,7 +38,7 @@ import static java.lang.String.format;
  * "includeTypes" attribute of {@link org.froporec.GenerateRecord} or {@link org.froporec.GenerateImmutable}).<br>
  * The params {@link Map} parameter of the provided implementation of the generateCode() method (from {@link CodeGenerator}) MUST contain
  * the following parameters names:<br>
- * - nonVoidMethodsElementsList        {@link CodeGenerator#NON_VOID_METHODS_ELEMENTS_LIST}<br>
+ * - {@link CodeGenerator#NON_VOID_METHODS_ELEMENTS_LIST}<br>
  */
 public final class FieldsGenerator implements CodeGenerator {
 

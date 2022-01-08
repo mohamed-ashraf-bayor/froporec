@@ -37,8 +37,8 @@ import static java.lang.String.format;
  * Starts with "public RecordName(list of fields)" and includes a call to the canonical constructor inside the body of the custom constructor.<br>
  * The params {@link Map} parameter of the provided implementation of the generateCode() method (from {@link CodeGenerator}) MUST contain
  * the following parameters names:<br>
- * - qualifiedClassName {@link CodeGenerator#QUALIFIED_CLASS_NAME}<br>
- * - nonVoidMethodsElementsList        {@link CodeGenerator#NON_VOID_METHODS_ELEMENTS_LIST}<br>
+ * - {@link CodeGenerator#QUALIFIED_CLASS_NAME}<br>
+ * - {@link CodeGenerator#NON_VOID_METHODS_ELEMENTS_LIST}<br>
  */
 public final class CustomConstructorGenerator implements CodeGenerator {
 

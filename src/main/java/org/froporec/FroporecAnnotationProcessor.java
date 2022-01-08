@@ -126,7 +126,8 @@ public class FroporecAnnotationProcessor extends AbstractProcessor implements St
                 .filter(annotationMirror -> annotationMirror.toString().contains(GENERATE_IMMUTABLE_QUALIFIED_NAME)
                         || annotationMirror.toString().contains(GENERATE_RECORD_QUALIFIED_NAME))
                 .map(AnnotationMirror::getElementValues)
-                .forEach(map -> map.forEach((executableElement, annotationValue) -> { // annotationValue.getValue() sample value: com.bayor...School.class,com.bayor...Person.class
+                .forEach(map -> map.forEach((executableElement, annotationValue) -> {
+                    // annotationValue.getValue() sample value: com.bayor...School.class,com.bayor...Person.class
                     if (executableElement.toString().contains(INCLUDE_TYPES_ATTRIBUTE)) {
                         includedTypesAsElements.addAll(asList(annotationValue.getValue().toString().split(COMMA_SEPARATOR)).stream()
                                 .map(includedTypeDotClassString -> processingEnv.getTypeUtils().asElement(processingEnv.getElementUtils().getTypeElement(includedTypeDotClassString.strip().replace(DOT_CLASS, EMPTY_STRING)).asType()))
