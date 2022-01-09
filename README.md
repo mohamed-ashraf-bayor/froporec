@@ -1,5 +1,5 @@
 # FROPOREC - From POJOs to Records
-Achieve Full Immutability on Java data objects (min. Java 17 required)
+Achieve Full Immutability of Java data objects (min. Java 17 required)
 
 <br>
 
