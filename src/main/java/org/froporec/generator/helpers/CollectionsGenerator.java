@@ -21,94 +21,154 @@
  */
 package org.froporec.generator.helpers;
 
+import javax.annotation.processing.ProcessingEnvironment;
 import java.util.Map;
 import java.util.Set;
 
 import static java.lang.String.format;
-import static org.froporec.generator.RecordSourceFileGenerator.RECORD;
 
 /**
- * Class dedicated to generating code fragments where generics are used within collections, the generics types being annotated POJO classes.<br>
+ * Generates code fragments where generics are used within collections, the generics types being annotated POJO or Record classes.<br>
  * Also provides a utility method to check whether an annotated type is a collection with a generic.<br>
- * For now only Lists, Sets and Maps are supported.
+ * For now, only Lists, Sets and Maps are supported.
  */
 public final class CollectionsGenerator implements SupportedCollectionsFieldsGenerator, SupportedCollectionsMappingLogicGenerator {
 
-    private static final String EMPTY = "";
-
     private static final String NEW = "new "; // new<SPACE>
+
+    private static final String LIST_FIELD_MAPPING_LOGIC_STRING_FORMAT = "java.util.Optional.ofNullable(%s.%s).isEmpty() ? java.util.List.of() : " +
+            "%s.%s.stream().map(object -> %s(object)).collect(java.util.stream.Collectors.toUnmodifiableList()), ";
+
+    private static final String SET_FIELD_MAPPING_LOGIC_STRING_FORMAT = "java.util.Optional.ofNullable(%s.%s).isEmpty() ? java.util.Set.of() : " +
+            "%s.%s.stream().map(object -> %s(object)).collect(java.util.stream.Collectors.toUnmodifiableSet()), ";
+
+    private static final String MAP_FIELD_MAPPING_LOGIC_STRING_FORMAT = "java.util.Optional.ofNullable(%s.%s).isEmpty() ? java.util.Map.of() : " +
+            "%s.%s.entrySet().stream().collect(java.util.stream.Collectors.toUnmodifiableMap(entry -> %s(entry.getKey()), entry -> %s(entry.getValue()))), ";
 
     private final Set<String> allAnnotatedElementsTypes;
 
+    private final ProcessingEnvironment processingEnvironment;
+
     /**
-     * CollectionsGenerationHelper constructor
+     * CollectionsGenerationHelper constructor. Instantiates needed instance of {@link ProcessingEnvironment}
      *
      * @param allAnnotatedElementsTypes - {@link Set} of all annotated elements types
      */
-    public CollectionsGenerator(final Set<String> allAnnotatedElementsTypes) {
+    public CollectionsGenerator(final ProcessingEnvironment processingEnvironment, final Set<String> allAnnotatedElementsTypes) {
+        this.processingEnvironment = processingEnvironment;
         this.allAnnotatedElementsTypes = allAnnotatedElementsTypes;
     }
 
     @Override
-    public void replaceGenericWithRecordClassNameIfAny(final StringBuilder recordClassContent, final String fieldName, final String getterReturnType) {
-        String replacementString = getterReturnType;
-        int idxFirstSign = getterReturnType.indexOf('<');
-        if (idxFirstSign > -1) {
-            var genericType = extractGenericType(getterReturnType);
-            var collectionType = extractCollectionType(getterReturnType);
+    public void replaceGenericWithRecordClassNameIfAny(final StringBuilder recordClassContent, final String fieldName, final String nonVoidMethodReturnTypeAsString) {
+        int idxFirstSign = nonVoidMethodReturnTypeAsString.indexOf(INFERIOR_SIGN);
+        // "%s %s," type fieldName,
+        var typeAndFieldNameDeclarationFormat = "%s %s, ";
+        if (idxFirstSign == -1) {
+            // no generic found, use return type as is
+            recordClassContent.append(format(typeAndFieldNameDeclarationFormat, nonVoidMethodReturnTypeAsString, fieldName));
+        } else {
+            // generic found, process and replace return type with record class if any
+            var genericType = extractGenericType(nonVoidMethodReturnTypeAsString);
+            var collectionType = extractCollectionType(nonVoidMethodReturnTypeAsString);
             if (collectionType.contains(SupportedCollectionTypes.MAP.getType())) {
                 // only for maps
-                var keyValueArray = genericType.split(","); // the key/value entries in a Map genericType
-                replacementString = format("%s<%s, %s>",
-                        collectionType,
-                        allAnnotatedElementsTypes.contains(keyValueArray[0]) ? keyValueArray[0] + RECORD : keyValueArray[0],
-                        allAnnotatedElementsTypes.contains(keyValueArray[1]) ? keyValueArray[1] + RECORD : keyValueArray[1]);
-            }
-            if (allAnnotatedElementsTypes.contains(genericType)) {
-                replacementString = format("%s<%s%s>", collectionType, genericType, RECORD);
+                var keyValueArray = genericType.split(COMMA_SEPARATOR); // the key/value entries in a Map genericType
+                recordClassContent.append(format(
+                        typeAndFieldNameDeclarationFormat,
+                        buildReplacementStringForMapGeneric(collectionType, keyValueArray[0], keyValueArray[1]),
+                        fieldName
+                ));
+            } else if (collectionType.contains(SupportedCollectionTypes.LIST.getType()) || collectionType.contains(SupportedCollectionTypes.SET.getType())) {
+                recordClassContent.append(format(
+                        typeAndFieldNameDeclarationFormat,
+                        buildReplacementStringForListOrSetGeneric(collectionType, genericType, nonVoidMethodReturnTypeAsString),
+                        fieldName));
             }
         }
-        // "%s %s," type fieldName,
-        recordClassContent.append(format("%s %s, ", replacementString, fieldName));
+    }
+
+    private String buildReplacementStringForListOrSetGeneric(final String collectionType,
+                                                             final String genericType,
+                                                             final String nonVoidMethodReturnTypeAsString) {
+        if (allAnnotatedElementsTypes.contains(genericType)) {
+            var elementFromGenericTypeStringOpt = constructElementInstanceFromTypeString(processingEnvironment, genericType);
+            return format(
+                    "%s<%s>",
+                    collectionType,
+                    elementFromGenericTypeStringOpt.isEmpty()
+                            ? genericType
+                            : constructImmutableQualifiedNameBasedOnElementType(elementFromGenericTypeStringOpt.get())
+            );
+        } else return nonVoidMethodReturnTypeAsString;
+    }
+
+    private String buildReplacementStringForMapGeneric(final String collectionType, final String keyType, final String valueType) {
+        return format("%s<%s, %s>",
+                collectionType,
+                allAnnotatedElementsTypes.contains(keyType)
+                        ? constructImmutableQualifiedNameBasedOnElementType(constructElementInstanceValueFromTypeString(processingEnvironment, keyType))
+                        : keyType,
+                allAnnotatedElementsTypes.contains(valueType)
+                        ? constructImmutableQualifiedNameBasedOnElementType(constructElementInstanceValueFromTypeString(processingEnvironment, valueType))
+                        : valueType
+        );
     }
 
     @Override
-    public void generateCollectionFieldMappingIfGenericIsAnnotated(final StringBuilder recordClassContent, final String fieldName, final String getterAsString, final String getterReturnType) {
-        var collectionType = extractCollectionType(getterReturnType);
-        var genericType = extractGenericType(getterReturnType);
+    public void generateCollectionFieldMappingIfGenericIsAnnotated(final StringBuilder recordClassContent,
+                                                                   final String fieldName,
+                                                                   final String nonVoidMethodElementAsString,
+                                                                   final String nonVoidMethodReturnType) {
+        var collectionType = extractCollectionType(nonVoidMethodReturnType);
+        var genericType = extractGenericType(nonVoidMethodReturnType);
         if (collectionType.contains(SupportedCollectionTypes.LIST.getType())) {
             recordClassContent.append(format(
-                    "%s.%s.stream().map(object -> %s(object)).collect(java.util.stream.Collectors.toUnmodifiableList()), ",
+                    LIST_FIELD_MAPPING_LOGIC_STRING_FORMAT,
                     fieldName,
-                    getterAsString,
-                    allAnnotatedElementsTypes.contains(genericType) ? NEW + genericType + RECORD : EMPTY
+                    nonVoidMethodElementAsString,
+                    fieldName,
+                    nonVoidMethodElementAsString,
+                    allAnnotatedElementsTypes.contains(genericType)
+                            ? NEW + constructImmutableQualifiedNameBasedOnElementType(constructElementInstanceValueFromTypeString(processingEnvironment, genericType))
+                            : EMPTY_STRING
             ));
             return;
         }
         if (collectionType.contains(SupportedCollectionTypes.SET.getType())) {
             recordClassContent.append(format(
-                    "%s.%s.stream().map(object -> %s(object)).collect(java.util.stream.Collectors.toUnmodifiableSet()), ",
+                    SET_FIELD_MAPPING_LOGIC_STRING_FORMAT,
                     fieldName,
-                    getterAsString,
-                    allAnnotatedElementsTypes.contains(genericType) ? NEW + genericType + RECORD : EMPTY
+                    nonVoidMethodElementAsString,
+                    fieldName,
+                    nonVoidMethodElementAsString,
+                    allAnnotatedElementsTypes.contains(genericType)
+                            ? NEW + constructImmutableQualifiedNameBasedOnElementType(constructElementInstanceValueFromTypeString(processingEnvironment, genericType))
+                            : EMPTY_STRING
             ));
             return;
         }
         if (collectionType.contains(SupportedCollectionTypes.MAP.getType())) {
             // only for maps
-            var keyValueArray = genericType.split(","); // the key/value entries in a Map genericType
+            var keyValueArray = genericType.split(COMMA_SEPARATOR); // the key/value entries in a Map genericType
             if (!allAnnotatedElementsTypes.contains(keyValueArray[0]) && !allAnnotatedElementsTypes.contains(keyValueArray[1])) {
                 // both key and value are annotated pojos
-                recordClassContent.append(format("%s.%s, ", fieldName, getterAsString));
+                recordClassContent.append(format("%s.%s, ", fieldName, nonVoidMethodElementAsString));
                 return;
             }
             // either the key or the value types are annotated pojos
             recordClassContent.append(format(
-                    "%s.%s.entrySet().stream().collect(java.util.stream.Collectors.toUnmodifiableMap(entry -> %s(entry.getKey()), entry -> %s(entry.getValue()))), ",
+                    MAP_FIELD_MAPPING_LOGIC_STRING_FORMAT,
                     fieldName,
-                    getterAsString,
-                    allAnnotatedElementsTypes.contains(keyValueArray[0]) ? NEW + keyValueArray[0] + RECORD : EMPTY,
-                    allAnnotatedElementsTypes.contains(keyValueArray[1]) ? NEW + keyValueArray[1] + RECORD : EMPTY
+                    nonVoidMethodElementAsString,
+                    fieldName,
+                    nonVoidMethodElementAsString,
+                    allAnnotatedElementsTypes.contains(keyValueArray[0])
+                            ? NEW + constructImmutableQualifiedNameBasedOnElementType(constructElementInstanceValueFromTypeString(processingEnvironment, keyValueArray[0]))
+                            : EMPTY_STRING,
+                    allAnnotatedElementsTypes.contains(keyValueArray[1])
+                            ? NEW + constructImmutableQualifiedNameBasedOnElementType(constructElementInstanceValueFromTypeString(processingEnvironment, keyValueArray[1]))
+                            : EMPTY_STRING
             ));
             return;
         }

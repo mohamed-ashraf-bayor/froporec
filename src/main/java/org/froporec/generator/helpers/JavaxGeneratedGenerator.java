@@ -21,7 +21,7 @@
  */
 package org.froporec.generator.helpers;
 
-import org.froporec.GenerateRecordProcessor;
+import org.froporec.FroporecAnnotationProcessor;
 
 import java.io.IOException;
 import java.time.ZonedDateTime;
@@ -32,8 +32,9 @@ import java.util.Properties;
 import static java.lang.String.format;
 
 /**
- * Generates the {@link javax.annotation.processing.Generated} annotation section at the top of the generated record class with the attributes: value, date and comments<br>
- * The generateRecord() method params map is not required
+ * Generates the {@link javax.annotation.processing.Generated} annotation code fragment at the top of the generated record class
+ * with the attributes: value, date and comments.<br>
+ * The params {@link Map} parameter of the provided implementation of the generateCode() method (from {@link CodeGenerator}) is not required here.<br>
  */
 public final class JavaxGeneratedGenerator implements CodeGenerator {
 
@@ -47,7 +48,7 @@ public final class JavaxGeneratedGenerator implements CodeGenerator {
                             comments = "version: %s"
                         )
                         """
-                , GenerateRecordProcessor.class.getName()
+                , FroporecAnnotationProcessor.class.getName()
                 , ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                 , getAppVersion()
         ));
