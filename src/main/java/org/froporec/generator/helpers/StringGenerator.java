@@ -21,6 +21,11 @@
  */
 package org.froporec.generator.helpers;
 
+import org.froporec.annotations.GenerateImmutable;
+import org.froporec.annotations.GenerateRecord;
+import org.froporec.annotations.Immutable;
+import org.froporec.annotations.Record;
+
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 
@@ -50,19 +55,39 @@ public interface StringGenerator {
     String IMMUTABLE = "Immutable";
 
     /**
-     * {@link org.froporec.GenerateRecord} qualified name
+     * {@link GenerateRecord} qualified name
      */
-    String GENERATE_RECORD_QUALIFIED_NAME = "org.froporec.GenerateRecord";
+    String ORG_FROPOREC_GENERATE_RECORD = "org.froporec.annotations.GenerateRecord";
 
     /**
-     * {@link org.froporec.GenerateImmutable} qualified name
+     * {@link GenerateImmutable} qualified name
      */
-    String GENERATE_IMMUTABLE_QUALIFIED_NAME = "org.froporec.GenerateImmutable";
+    String ORG_FROPOREC_GENERATE_IMMUTABLE = "org.froporec.annotations.GenerateImmutable";
+
+    /**
+     * {@link Record} qualified name
+     */
+    String ORG_FROPOREC_RECORD = "org.froporec.annotations.Record";
+
+    /**
+     * {@link Record} qualified name
+     */
+    String ORG_FROPOREC_SUPER_RECORD = "org.froporec.annotations.SuperRecord";
+
+    /**
+     * {@link Immutable} qualified name
+     */
+    String ORG_FROPOREC_IMMUTABLE = "org.froporec.annotations.Immutable";
 
     /**
      * "includeTypes" attribute String literal
      */
     String INCLUDE_TYPES_ATTRIBUTE = "includeTypes";
+
+    /**
+     * "alsoConvert" attribute String literal
+     */
+    String ALSO_CONVERT_ATTRIBUTES = "alsoConvert";
 
     /**
      * "," String literal

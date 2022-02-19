@@ -21,6 +21,9 @@
  */
 package org.froporec.generator.helpers;
 
+import org.froporec.annotations.GenerateImmutable;
+import org.froporec.annotations.GenerateRecord;
+
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.type.ExecutableType;
@@ -184,7 +187,7 @@ sealed interface SupportedCollectionsFieldsGenerator extends SupportedCollection
 
     /**
      * Replaces every POJO or Record class within a generic with its generated record class name, only if the POJO or Record within
-     * the generic was also annotated or added as a .class value within the "includeTypes" attribute of {@link org.froporec.GenerateRecord} or {@link org.froporec.GenerateImmutable}).<br>
+     * the generic was also annotated or added as a .class value within the "includeTypes" attribute of {@link GenerateRecord} or {@link GenerateImmutable}).<br>
      * ex: if List&lt;Person&gt; is a member of an annotated POJO class, the generated record class of the POJO will have a member of List&lt;PersonRecord&gt;
      *
      * @param recordClassContent              content being built, containing the record source string
@@ -211,7 +214,7 @@ sealed interface SupportedCollectionsMappingLogicGenerator extends SupportedColl
     /**
      * Builds a Collection.stream()... logic to allow the mapping of a collection of POJO or Record classes to a collection of the
      * corresponding generated Record classes, only if the POJOs or Records defined as generics were also annotated or
-     * added as .class values within the "includeTypes" attribute of {@link org.froporec.GenerateRecord} or {@link org.froporec.GenerateImmutable}).<br>
+     * added as .class values within the "includeTypes" attribute of {@link GenerateRecord} or {@link GenerateImmutable}).<br>
      * This happens inside the generated custom constructor inside which we call the canonical constructor of the Record class being generated
      *
      * @param fieldName                       field name being processed
@@ -219,7 +222,10 @@ sealed interface SupportedCollectionsMappingLogicGenerator extends SupportedColl
      * @param nonVoidMethodReturnTypeAsString qualified name of the method's return type, also the type of the field being processed
      * @return return the mapping logic for the collection field being processed
      */
-    void generateCollectionFieldMappingIfGenericIsAnnotated(final StringBuilder recordClassContent, final String fieldName, final String nonVoidMethodElementAsString, final String nonVoidMethodReturnTypeAsString);
+    void generateCollectionFieldMappingIfGenericIsAnnotated(final StringBuilder recordClassContent,
+                                                            final String fieldName,
+                                                            final String nonVoidMethodElementAsString,
+                                                            final String nonVoidMethodReturnTypeAsString);
 
     @Override
     default void generateCode(final StringBuilder recordClassContent, final Map<String, Object> params) {

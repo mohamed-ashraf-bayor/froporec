@@ -21,6 +21,9 @@
  */
 package org.froporec.generator.helpers;
 
+import org.froporec.annotations.GenerateImmutable;
+import org.froporec.annotations.GenerateRecord;
+
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -35,7 +38,7 @@ import static java.lang.String.format;
 /**
  * Builds the list of fields of the record class being generated. ex: int a, String s, Person p.<br>
  * Considerations will be made for fields whose types have also been annotated or added as a .class value within the
- * "includeTypes" attribute of {@link org.froporec.GenerateRecord} or {@link org.froporec.GenerateImmutable}).<br>
+ * "includeTypes" attribute of {@link GenerateRecord} or {@link GenerateImmutable}).<br>
  * The params {@link Map} parameter of the provided implementation of the generateCode() method (from {@link CodeGenerator}) MUST contain
  * the following parameters names:<br>
  * - {@link CodeGenerator#NON_VOID_METHODS_ELEMENTS_LIST}<br>
@@ -68,18 +71,22 @@ public final class FieldsGenerator implements CodeGenerator {
             var enclosingElementIsRecord = ElementKind.RECORD.equals(nonVoidMethodElement.getEnclosingElement().getKind());
             var nonVoidMethodReturnTypeAsString = nonVoidMethodsElementsReturnTypesMap.get(nonVoidMethodElement);
             var nonVoidMethodReturnTypeElementOpt = Optional.ofNullable(processingEnvironment.getTypeUtils().asElement(((ExecutableType) nonVoidMethodElement.asType()).getReturnType())); // for collections, Element.toString() will NOT return the generic part
+            // TODO ifpresentorelse here ???
             if (nonVoidMethodReturnTypeElementOpt.isEmpty()) { // primitives
                 buildSingleField(recordClassContent, nonVoidMethodElement, nonVoidMethodReturnTypeAsString, false, enclosingElementIsRecord);
             } else { // non-primitives
                 // if the type has already been annotated somewhere else in the code, the field type is the corresponding generated record class
                 // if not annotated and not a collection then keep the received type as is
-                buildSingleField(recordClassContent, nonVoidMethodElement, nonVoidMethodReturnTypeAsString, allAnnotatedElementsTypes.contains(nonVoidMethodReturnTypeElementOpt.get().toString()), enclosingElementIsRecord);
+                buildSingleField(recordClassContent, nonVoidMethodElement, nonVoidMethodReturnTypeAsString,
+                        allAnnotatedElementsTypes.contains(nonVoidMethodReturnTypeElementOpt.get().toString()), enclosingElementIsRecord);
             }
         });
         recordClassContent.deleteCharAt(recordClassContent.length() - 1).deleteCharAt(recordClassContent.length() - 1);
     }
 
-    private void buildSingleField(final StringBuilder recordClassContent, final Element nonVoidMethodElement, final String nonVoidMethodReturnTypeAsString, final boolean processAsImmutable, final boolean enclosingElementIsRecord) {
+    private void buildSingleField(final StringBuilder recordClassContent, final Element nonVoidMethodElement,
+                                  final String nonVoidMethodReturnTypeAsString, final boolean processAsImmutable,
+                                  final boolean enclosingElementIsRecord) {
         var recordFieldsListFormat = "%s %s, "; // type fieldName,<SPACE>
         if (enclosingElementIsRecord) {
             // Record class, handle all non-void methods

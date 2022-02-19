@@ -19,7 +19,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.froporec;
+package org.froporec.annotations;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -33,7 +33,7 @@ import java.lang.annotation.Target;
  * - on top of a POJO class declaration.<br>
  * As a result, a record class with the name pojo_class_name + "Record" will be generated:<br><br>
  * <p>
- * &#64;GenerateRecord<br>
+ * &#64;Record<br>
  * public class PojoA {<br>
  * // class content<br>
  * }<br><br>
@@ -44,13 +44,13 @@ import java.lang.annotation.Target;
  * corresponding record class generated for the enclosed POJO.<br>
  * Not needed if the POJO class was already annotated in its own declaration or added to the list of .class values of the "includeTypes" attribute.<br><br>
  * <p>
- * &#64;GenerateRecord<br>
+ * &#64;Record<br>
  * public class PojoA {<br>
- * private &#64;GenerateRecord PojoB pojoB;<br>
+ * private &#64;Record PojoB pojoB;<br>
  * }<br><br>
  * <p>
- * Above code can be written using the "includeTypes" attribute, avoiding multiple uses of &#64;GenerateRecord:<br><br>
- * &#64;GenerateRecord(includeTypes = { PojoB.class })<br>
+ * Above code can be written using the "includeTypes" attribute, avoiding multiple uses of &#64;Record:<br><br>
+ * &#64;Record(includeTypes = { PojoB.class })<br>
  * public class PojoA {<br>
  * private PojoB pojoB;<br>
  * }<br><br>
@@ -59,7 +59,7 @@ import java.lang.annotation.Target;
  * As a result, a record class will be generated for the classname of the annotated parameter.<br>
  * Not needed if the POJO class was already annotated in its own declaration.<br><br>
  * <p>
- * public void doSomething(&#64;GenerateRecord PojoA pojoA) {<br>
+ * public void doSomething(&#64;Record PojoA pojoA) {<br>
  * // method content...<br>
  * }<br><br>
  * <p>
@@ -71,11 +71,13 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target({ElementType.TYPE, ElementType.FIELD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
 @Documented
-public @interface GenerateRecord {
+public @interface Record {
     /**
      * allows specifying additional types (POJOs or Records) to be transformed in their fully immutable equivalent (Records for POJOs and Immutable Records for Records)
      *
      * @return an array of .class values
      */
     Class<?>[] includeTypes() default {};
+
+    Class<?>[] implementTypes() default {};
 }

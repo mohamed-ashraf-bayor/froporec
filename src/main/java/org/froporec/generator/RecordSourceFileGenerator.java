@@ -109,7 +109,7 @@ public class RecordSourceFileGenerator implements StringGenerator {
         // list all attributes next to the record name
         recordClassContent.append(OPENING_PARENTHESIS);
         fieldsGenerator.generateCode(recordClassContent, Map.of(NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList));
-        recordClassContent.append(CLOSING_PARENTHESIS + SPACE + OPENING_BRACE + "\n");
+        recordClassContent.append(CLOSING_PARENTHESIS + SPACE + OPENING_BRACE + "\n"); // TODO around space and openeing-brace add super/parent-interfaces list if presnt
         // Custom 1 arg constructor statement
         customConstructorGenerator.generateCode(recordClassContent, Map.of(QUALIFIED_CLASS_NAME, qualifiedClassName, NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList));
         // no additional content: close the body of the class

@@ -80,6 +80,7 @@ public final class CustomConstructorGenerator implements CodeGenerator {
             var enclosingElementIsRecord = ElementKind.RECORD.equals(nonVoidMethodElement.getEnclosingElement().getKind());
             var nonVoidMethodReturnTypeAsString = nonVoidMethodsElementsReturnTypesMap.get(nonVoidMethodElement);
             var nonVoidMethodReturnTypeElementOpt = Optional.ofNullable(processingEnvironment.getTypeUtils().asElement(((ExecutableType) nonVoidMethodElement.asType()).getReturnType())); // for collections, Element.toString() will NOT return the generic part
+            // TODO check ifpresentorelse ???
             // if the pojo constructor param is another pojo, check if it's been annotated. if yes, use the corresponding generated record class
             if (nonVoidMethodReturnTypeElementOpt.isEmpty()) {
                 // primitives
