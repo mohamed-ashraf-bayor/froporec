@@ -31,6 +31,8 @@ import java.util.Optional;
 import java.util.Set;
 
 import static java.lang.String.format;
+import static org.froporec.generator.helpers.StringGenerator.constructImmutableSimpleNameBasedOnElementType;
+import static org.froporec.generator.helpers.StringGenerator.constructImmutableQualifiedNameBasedOnElementType;
 
 /**
  * Builds the custom 1-arg constructor section for the record class being generated.<br>
@@ -44,7 +46,7 @@ public final class CustomConstructorGenerator implements CodeGenerator {
 
     private final ProcessingEnvironment processingEnvironment;
 
-    private final Set<String> allAnnotatedElementsTypes;
+    private final Set<String> allElementsTypesToConvertByAnnotation;
 
     private final SupportedCollectionsMappingLogicGenerator collectionsGenerator;
 
@@ -52,12 +54,12 @@ public final class CustomConstructorGenerator implements CodeGenerator {
      * CustomConstructorGenerationHelper constructor. Instantiates needed instances of {@link ProcessingEnvironment} and {@link CollectionsGenerator}
      *
      * @param processingEnvironment     {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
-     * @param allAnnotatedElementsTypes {@link Set} of all annotated elements types
+     * @param allElementsTypesToConvertByAnnotation {@link Set} of all annotated elements types
      */
-    public CustomConstructorGenerator(final ProcessingEnvironment processingEnvironment, final Set<String> allAnnotatedElementsTypes) {
+    public CustomConstructorGenerator(ProcessingEnvironment processingEnvironment, Map<String, Set<String>> allElementsTypesToConvertByAnnotation) {
         this.processingEnvironment = processingEnvironment;
-        this.allAnnotatedElementsTypes = allAnnotatedElementsTypes;
-        this.collectionsGenerator = new CollectionsGenerator(this.processingEnvironment, this.allAnnotatedElementsTypes);
+        this.allElementsTypesToConvertByAnnotation = allElementsTypesToConvertByAnnotation; // TODO consolidate and ...
+        this.collectionsGenerator = new CollectionsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation);
     }
 
     private void buildRecordCustom1ArgConstructor(
@@ -87,7 +89,7 @@ public final class CustomConstructorGenerator implements CodeGenerator {
                 buildCanonicalConstructorCallSingleParameter(recordClassContent, fieldName, nonVoidMethodElement, nonVoidMethodReturnTypeAsString, false, enclosingElementIsRecord);
             } else {
                 // non-primitives
-                buildCanonicalConstructorCallSingleParameter(recordClassContent, fieldName, nonVoidMethodElement, nonVoidMethodReturnTypeAsString, allAnnotatedElementsTypes.contains(nonVoidMethodReturnTypeElementOpt.get().toString()), enclosingElementIsRecord);
+                buildCanonicalConstructorCallSingleParameter(recordClassContent, fieldName, nonVoidMethodElement, nonVoidMethodReturnTypeAsString, allElementsTypesToConvertByAnnotation.contains(nonVoidMethodReturnTypeElementOpt.get().toString()), enclosingElementIsRecord);
             }
         });
         recordClassContent.deleteCharAt(recordClassContent.length() - 1).deleteCharAt(recordClassContent.length() - 1);

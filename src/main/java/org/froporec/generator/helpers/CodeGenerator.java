@@ -36,7 +36,7 @@ import static java.util.stream.Collectors.toMap;
 /**
  * Exposes contract for a CodeGenerator class to fulfill
  */
-public sealed interface CodeGenerator extends StringGenerator permits JavaxGeneratedGenerator, FieldsGenerator, CustomConstructorGenerator, SupportedCollectionsGenerator {
+public sealed interface CodeGenerator extends StringGenerator permits JavaxGeneratedGenerator, FieldsGenerator, CustomConstructorGenerator, SupportedCollectionsGenerator  {
 
     // List of the parameters expected in the params Map object of the generateCode method:
 
@@ -82,7 +82,7 @@ public sealed interface CodeGenerator extends StringGenerator permits JavaxGener
      * @param nonVoidMethodsElementsList {@link List} of {@link Element} objects representing non-void methods
      * @return {@link Map} containing non-void methods names as keys and their corresponding return types as String values
      */
-    default Map<Element, String> constructNonVoidMethodsElementsReturnTypesMapFromList(final List<? extends Element> nonVoidMethodsElementsList) {
+    default Map<Element, String> constructNonVoidMethodsElementsReturnTypesMapFromList(List<? extends Element> nonVoidMethodsElementsList) {
         return nonVoidMethodsElementsList.stream().collect(
                 toMap(nonVoidMethodElement -> nonVoidMethodElement, nonVoidMethodElement -> ((ExecutableType) nonVoidMethodElement.asType()).getReturnType().toString())
         );
@@ -95,7 +95,7 @@ public sealed interface CodeGenerator extends StringGenerator permits JavaxGener
      * @param qualifiedName         qualified name of the provided type
      * @return an {@link Optional} object wrapping the corresponding {@link Element} instance if any
      */
-    default Optional<Element> constructElementInstanceFromTypeString(final ProcessingEnvironment processingEnvironment, final String qualifiedName) {
+    default Optional<Element> constructElementInstanceFromTypeString(ProcessingEnvironment processingEnvironment, String qualifiedName) {
         return Optional.ofNullable(processingEnvironment.getElementUtils().getTypeElement(qualifiedName)).isEmpty()
                 ? Optional.empty()
                 : Optional.ofNullable(processingEnvironment.getTypeUtils().asElement(processingEnvironment.getElementUtils().getTypeElement(qualifiedName).asType()));
@@ -108,7 +108,7 @@ public sealed interface CodeGenerator extends StringGenerator permits JavaxGener
      * @param qualifiedName         qualified name of the provided type
      * @return the corresponding {@link Element} instance if the provided type is valid, null if not
      */
-    default Element constructElementInstanceValueFromTypeString(final ProcessingEnvironment processingEnvironment, final String qualifiedName) {
+    default Element constructElementInstanceValueFromTypeString(ProcessingEnvironment processingEnvironment, String qualifiedName) {
         return processingEnvironment.getTypeUtils().asElement(processingEnvironment.getElementUtils().getTypeElement(qualifiedName).asType());
     }
 }
@@ -129,7 +129,7 @@ sealed interface SupportedCollectionsGenerator extends CodeGenerator {
 
         private final String type;
 
-        SupportedCollectionTypes(final String type) {
+        SupportedCollectionTypes(String type) {
             this.type = type;
         }
 
@@ -146,7 +146,7 @@ sealed interface SupportedCollectionsGenerator extends CodeGenerator {
      * @param nonVoidMethodReturnTypeAsString - qualified name of the method's return type
      * @return true if the provided type is a collection with a generic, false otherwise
      */
-    default boolean isCollectionWithGeneric(final String nonVoidMethodReturnTypeAsString) {
+    default boolean isCollectionWithGeneric(String nonVoidMethodReturnTypeAsString) {
         if (nonVoidMethodReturnTypeAsString.indexOf(INFERIOR_SIGN) == -1 && nonVoidMethodReturnTypeAsString.indexOf(SUPERIOR_SIGN) == -1) {
             return false;
         }
@@ -162,7 +162,7 @@ sealed interface SupportedCollectionsGenerator extends CodeGenerator {
      * @param nonVoidMethodReturnTypeAsString qualified name of the method's return type
      * @return the generic type as a String
      */
-    default String extractGenericType(final String nonVoidMethodReturnTypeAsString) {
+    default String extractGenericType(String nonVoidMethodReturnTypeAsString) {
         int idxFirstSign = nonVoidMethodReturnTypeAsString.indexOf(INFERIOR_SIGN);
         int idxLastSign = nonVoidMethodReturnTypeAsString.indexOf(SUPERIOR_SIGN);
         return nonVoidMethodReturnTypeAsString.substring(0, idxLastSign).substring(idxFirstSign + 1);
@@ -174,7 +174,7 @@ sealed interface SupportedCollectionsGenerator extends CodeGenerator {
      * @param nonVoidMethodReturnTypeAsString qualified name of the method's return type
      * @return the collection type
      */
-    default String extractCollectionType(final String nonVoidMethodReturnTypeAsString) {
+    default String extractCollectionType(String nonVoidMethodReturnTypeAsString) {
         int idxFirstSign = nonVoidMethodReturnTypeAsString.indexOf(INFERIOR_SIGN);
         return nonVoidMethodReturnTypeAsString.substring(0, idxFirstSign);
     }

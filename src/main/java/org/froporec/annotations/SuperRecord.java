@@ -28,7 +28,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * TODO document use of "extendWith"
+ * TODO document use of "mergeWith" . no alsoConvert no includEtypes
+ * // TODO CAN BE USED ON BOTH POJO CLSSES and RECORDS
  * Annotation to be applied in 3 different ways:<br><br>
  * <p>
  * - on top of a POJO class declaration.<br>
@@ -73,15 +74,16 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE, ElementType.FIELD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
 @Documented
 public @interface SuperRecord {
+
     /**
      * TODO HERE HERE
      * @return
      */
-    Class<?>[] extendWith(); // mandataory atrib
+    Class<?>[] mergeWith(); // mandataory atrib
+
     /**
-     * allows specifying additional types (POJOs or Records) to be transformed in their fully immutable equivalent (Records for POJOs and Immutable Records for Records)
-     *
-     * @return an array of .class values
+     * kjhkj
+     * @return
      */
-    Class<?>[] includeTypes() default {};
+    Class<?>[] superInterfaces() default {};
 }

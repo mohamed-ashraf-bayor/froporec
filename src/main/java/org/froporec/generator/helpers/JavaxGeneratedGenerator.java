@@ -38,9 +38,9 @@ import static java.lang.String.format;
  */
 public final class JavaxGeneratedGenerator implements CodeGenerator {
 
-    private static final String DEFAULT_APP_VERSION = "1.2.0";
+    private static final String DEFAULT_APP_VERSION = "1.3.0";
 
-    private void buildGeneratedAnnotationSection(final StringBuilder recordClassContent) {
+    private void buildGeneratedAnnotationSection(StringBuilder recordClassContent) {
         recordClassContent.append(format("""
                         @javax.annotation.processing.Generated(
                             value = "%s",
@@ -66,7 +66,7 @@ public final class JavaxGeneratedGenerator implements CodeGenerator {
     }
 
     @Override
-    public void generateCode(final StringBuilder recordClassContent, final Map<String, Object> params) {
+    public void generateCode(StringBuilder recordClassContent, Map<String, Object> params) {
         buildGeneratedAnnotationSection(recordClassContent);
     }
 }

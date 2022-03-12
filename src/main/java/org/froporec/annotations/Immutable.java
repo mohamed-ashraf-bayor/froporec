@@ -28,6 +28,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * // TODO RECOMMEND TO USE ON RECORDS ONLY FOR CODE CLARITY / IF ON A POJO THEN GENERATE A POJO-RECORD CLASS W A WRNG MSG
  * Annotation to be applied in 3 different ways:<br><br>
  * <p>
  * - on top of a Record class declaration.<br>
@@ -77,9 +78,8 @@ public @interface Immutable {
     Class<?>[] alsoConvert() default {};
 
     /**
-     * allows specifying additional types (POJOs or Records) to be transformed in their fully immutable equivalent (Records for POJOs and Immutable Records for Records)
-     *
-     * @return an array of .class values
+     * iuhihioho
+     * @return
      */
-    Class<?>[] includeTypes() default {};
+    Class<?>[] superInterfaces() default {};
 }

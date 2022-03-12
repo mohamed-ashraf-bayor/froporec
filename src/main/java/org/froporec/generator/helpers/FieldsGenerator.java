@@ -34,6 +34,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static java.lang.String.format;
+import static org.froporec.generator.helpers.StringGenerator.constructImmutableQualifiedNameBasedOnElementType;
 
 /**
  * Builds the list of fields of the record class being generated. ex: int a, String s, Person p.<br>
@@ -47,7 +48,7 @@ public final class FieldsGenerator implements CodeGenerator {
 
     private final ProcessingEnvironment processingEnvironment;
 
-    private final Set<String> allAnnotatedElementsTypes;
+    private final Set<String> allElementsTypesToConvert;
 
     private final SupportedCollectionsFieldsGenerator collectionsGenerator;
 
@@ -55,12 +56,12 @@ public final class FieldsGenerator implements CodeGenerator {
      * FieldsGenerationHelper constructor. Instantiates needed instance of {@link CollectionsGenerator}
      *
      * @param processingEnvironment     {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
-     * @param allAnnotatedElementsTypes {@link Set} of all annotated elements types string representations
+     * @param allElementsTypesToConvertByAnnotation {@link Set} of all annotated elements types string representations
      */
-    public FieldsGenerator(final ProcessingEnvironment processingEnvironment, final Set<String> allAnnotatedElementsTypes) {
+    public FieldsGenerator(ProcessingEnvironment processingEnvironment, Map<String, Set<String>> allElementsTypesToConvertByAnnotation) {
         this.processingEnvironment = processingEnvironment;
-        this.allAnnotatedElementsTypes = allAnnotatedElementsTypes;
-        this.collectionsGenerator = new CollectionsGenerator(this.processingEnvironment, this.allAnnotatedElementsTypes);
+        this.allElementsTypesToConvert = allElementsTypesToConvertByAnnotation; // TODO cnsolidate and ...
+        this.collectionsGenerator = new CollectionsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation);
     }
 
     private void buildRecordFieldsFromNonVoidMethodsList(
@@ -78,15 +79,15 @@ public final class FieldsGenerator implements CodeGenerator {
                 // if the type has already been annotated somewhere else in the code, the field type is the corresponding generated record class
                 // if not annotated and not a collection then keep the received type as is
                 buildSingleField(recordClassContent, nonVoidMethodElement, nonVoidMethodReturnTypeAsString,
-                        allAnnotatedElementsTypes.contains(nonVoidMethodReturnTypeElementOpt.get().toString()), enclosingElementIsRecord);
+                        allElementsTypesToConvertByAnnotation.contains(nonVoidMethodReturnTypeElementOpt.get().toString()), enclosingElementIsRecord);
             }
         });
         recordClassContent.deleteCharAt(recordClassContent.length() - 1).deleteCharAt(recordClassContent.length() - 1);
     }
 
-    private void buildSingleField(final StringBuilder recordClassContent, final Element nonVoidMethodElement,
-                                  final String nonVoidMethodReturnTypeAsString, final boolean processAsImmutable,
-                                  final boolean enclosingElementIsRecord) {
+    private void buildSingleField(StringBuilder recordClassContent, Element nonVoidMethodElement,
+                                  String nonVoidMethodReturnTypeAsString, boolean processAsImmutable,
+                                  boolean enclosingElementIsRecord) {
         var recordFieldsListFormat = "%s %s, "; // type fieldName,<SPACE>
         if (enclosingElementIsRecord) {
             // Record class, handle all non-void methods
@@ -130,7 +131,7 @@ public final class FieldsGenerator implements CodeGenerator {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void generateCode(final StringBuilder recordClassContent, final Map<String, Object> params) {
+    public void generateCode(StringBuilder recordClassContent, Map<String, Object> params) {
         var nonVoidMethodsElementsList = (List<? extends Element>) params.get(CodeGenerator.NON_VOID_METHODS_ELEMENTS_LIST);
         buildRecordFieldsFromNonVoidMethodsList(recordClassContent, constructNonVoidMethodsElementsReturnTypesMapFromList(nonVoidMethodsElementsList), nonVoidMethodsElementsList);
     }

@@ -45,6 +45,16 @@ public interface StringGenerator {
     String SPACE = " ";
 
     /**
+     * @ string literal
+     */
+    String AT_SIGN = "@";
+
+    /**
+     * "Pojo" string literal
+     */
+    String POJO = "Pojo";
+
+    /**
      * "Record" string literal
      */
     String RECORD = "Record";
@@ -55,13 +65,20 @@ public interface StringGenerator {
     String IMMUTABLE = "Immutable";
 
     /**
+     * "SuperRecord" string literal
+     */
+    String SUPER_RECORD = "SuperRecord";
+
+    /**
      * {@link GenerateRecord} qualified name
      */
+    @Deprecated(forRemoval = true, since = "1.3")
     String ORG_FROPOREC_GENERATE_RECORD = "org.froporec.annotations.GenerateRecord";
 
     /**
      * {@link GenerateImmutable} qualified name
      */
+    @Deprecated(forRemoval = true, since = "1.3")
     String ORG_FROPOREC_GENERATE_IMMUTABLE = "org.froporec.annotations.GenerateImmutable";
 
     /**
@@ -87,7 +104,17 @@ public interface StringGenerator {
     /**
      * "alsoConvert" attribute String literal
      */
-    String ALSO_CONVERT_ATTRIBUTES = "alsoConvert";
+    String ALSO_CONVERT_ATTRIBUTE = "alsoConvert";
+
+    /**
+     * "mergeWith" attribute String literal
+     */
+    String MERGE_WITH_ATTRIBUTE = "mergeWith";
+
+    /**
+     * "superInterfaces" attribute String literal
+     */
+    String SUPER_INTERFACES_ATTRIBUTE = "superInterfaces";
 
     /**
      * "," String literal
@@ -150,6 +177,11 @@ public interface StringGenerator {
     String GENERATION_SUCCESS_MSG_FORMAT = "\t> Successfully generated %s";
 
     /**
+     * Warning message displayed during code compilation, indicating annotated elements skipped during generation process
+     */
+    String SKIPPED_ELEMENTS_WARNING_MSG_FORMAT = "\t> Skipped %s annotated elements (must be %s classes):%n\t\t%s";
+
+    /**
      * Message displayed during code compilation, in case an error occurred during a Record source file generation process
      */
     String GENERATION_FAILURE_MSG_FORMAT = "\t> Error generating %s";
@@ -165,7 +197,7 @@ public interface StringGenerator {
      * @param qualifiedClassName qualified name of the annotated class
      * @return the qualified name of the fully immutable record class being generated from an annotated Record class. ex: "Immutable"+RecordClassName
      */
-    default String constructImmutableRecordQualifiedName(final String qualifiedClassName) {
+    static String constructImmutableRecordQualifiedName(String qualifiedClassName) {
         return qualifiedClassName.contains(DOT)
                 ? qualifiedClassName.substring(0, qualifiedClassName.lastIndexOf(DOT)) + DOT + IMMUTABLE + qualifiedClassName.substring(qualifiedClassName.lastIndexOf(DOT) + 1)
                 : IMMUTABLE + qualifiedClassName;
@@ -178,7 +210,7 @@ public interface StringGenerator {
      * @return the qualified name of the fully immutable record class being generated from an annotated Pojo or Record class.<br>
      * ex: ..."Immutable" + RecordClassName or ...PojoClassName+"Record"
      */
-    default String constructImmutableQualifiedNameBasedOnElementType(final Element element) {
+    static String constructImmutableQualifiedNameBasedOnElementType(Element element) {
         return ElementKind.RECORD.equals(element.getKind())
                 ? constructImmutableRecordQualifiedName(element.toString())
                 : element + RECORD;
@@ -191,7 +223,7 @@ public interface StringGenerator {
      * @return the simple name of the fully immutable record class being generated from an annotated Pojo or Record class.<br>
      * ex: "Immutable" + RecordClassName or PojoClassName+"Record"
      */
-    default String constructImmutableSimpleNameBasedOnElementType(final Element element) {
+    static String constructImmutableSimpleNameBasedOnElementType(Element element) {
         var immutableQualifiedName = constructImmutableQualifiedNameBasedOnElementType(element);
         return immutableQualifiedName.substring(immutableQualifiedName.lastIndexOf(DOT) + 1);
     }

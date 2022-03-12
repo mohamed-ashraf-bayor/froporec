@@ -27,17 +27,26 @@ import org.froporec.generator.helpers.FieldsGenerator;
 import org.froporec.generator.helpers.JavaxGeneratedGenerator;
 import org.froporec.generator.helpers.StringGenerator;
 
+import javax.annotation.processing.FilerException;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeKind;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.logging.Level;
 
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toSet;
 import static org.froporec.generator.helpers.CodeGenerator.NON_VOID_METHODS_ELEMENTS_LIST;
 import static org.froporec.generator.helpers.CodeGenerator.QUALIFIED_CLASS_NAME;
 
@@ -48,7 +57,9 @@ public class RecordSourceFileGenerator implements StringGenerator {
 
     private final ProcessingEnvironment processingEnvironment;
 
-    private final Set<String> allAnnotatedElementsTypes;
+    private final Map<String, Set<String>> allElementsTypesToConvertByAnnotation;
+
+    // TODO add 2 new fields here to store superInterfaces and mergeWith info
 
     private final CodeGenerator javaxGeneratedGenerator;
 
@@ -59,21 +70,49 @@ public class RecordSourceFileGenerator implements StringGenerator {
     /**
      * RecordSourceFileGenerator constructor. Instantiates needed instances of {@link FieldsGenerator}, {@link CustomConstructorGenerator} and {@link JavaxGeneratedGenerator}
      *
-     * @param processingEnvironment {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
-     * @param allAnnotatedElements  {@link Set} of all annotated {@link Element} instances
+     * @param processingEnvironment            {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @param allAnnotatedElementsByAnnotation @{@link Map} of all annotated elements. The Map content (key/value) structure is organized as:
+     *                                         String = annotation toString representation,
+     *                                         Element = the annotated class or record,
+     *                                         String = the attribute name,
+     *                                         List<Element> = list of all elements specified as values of: alsoConvert, includeTypes,...
      */
-    public RecordSourceFileGenerator(final ProcessingEnvironment processingEnvironment, final Set<? extends Element> allAnnotatedElements) {
+    public RecordSourceFileGenerator(ProcessingEnvironment processingEnvironment, Map<String, Map<Element, Map<String, List<Element>>>> allAnnotatedElementsByAnnotation) {
         this.processingEnvironment = processingEnvironment;
-        this.allAnnotatedElementsTypes = buildAllAnnotatedElementsTypes(allAnnotatedElements);
-        this.fieldsGenerator = new FieldsGenerator(this.processingEnvironment, this.allAnnotatedElementsTypes);
-        this.customConstructorGenerator = new CustomConstructorGenerator(this.processingEnvironment, this.allAnnotatedElementsTypes);
+        this.allElementsTypesToConvertByAnnotation = buildAllElementsTypesToConvert(allAnnotatedElementsByAnnotation);
+        // TODO add 2 new fields here to store superInterfaces and mergeWith info
+        this.fieldsGenerator = new FieldsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation);
+        this.customConstructorGenerator = new CustomConstructorGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation);
         this.javaxGeneratedGenerator = new JavaxGeneratedGenerator();
     }
 
-    private Set<String> buildAllAnnotatedElementsTypes(Set<? extends Element> allAnnotatedElements) {
-        return allAnnotatedElements.stream()
-                .map(element -> processingEnvironment.getTypeUtils().asElement(element.asType()).toString())
-                .collect(Collectors.toSet());
+    // SuperRecord not considered in this prv methd
+    private Map<String, Set<String>> buildAllElementsTypesToConvert(Map<String, Map<Element, Map<String, List<Element>>>> allAnnotatedElementsByAnnotation) {
+        var allElementsTypesToConvert = new HashMap<String, Set<String>>();
+        allAnnotatedElementsByAnnotation.forEach((annotationString, annotatedElementsMap) -> {
+            var annotatedElementsWithAlsoConvertAndIncludeTypes = new HashSet<String>();
+            annotatedElementsMap.forEach((annotatedElement, attributesMap) -> {
+                annotatedElementsWithAlsoConvertAndIncludeTypes.add(processingEnvironment.getTypeUtils().asElement(annotatedElement.asType()).toString());
+                annotatedElementsWithAlsoConvertAndIncludeTypes.addAll(attributesMap.get(ALSO_CONVERT_ATTRIBUTE).stream()
+                        .map(element -> processingEnvironment.getTypeUtils().asElement(element.asType()).toString()).collect(toSet()));
+                annotatedElementsWithAlsoConvertAndIncludeTypes.addAll(attributesMap.get(INCLUDE_TYPES_ATTRIBUTE).stream()
+                        .map(element -> processingEnvironment.getTypeUtils().asElement(element.asType()).toString()).collect(toSet()));
+            });
+            allElementsTypesToConvert.put(annotationString, annotatedElementsWithAlsoConvertAndIncludeTypes);
+        });
+        return allElementsTypesToConvert;
+    }
+
+    public void generateRecord() {
+
+    }
+
+    public void generateImmutable() {
+
+    }
+
+    public void generateSuperRecord() {
+
     }
 
     /**
@@ -86,7 +125,8 @@ public class RecordSourceFileGenerator implements StringGenerator {
      *                                    toString representation ex for a POJO: [getLastname(), getAge(), getMark(), getGrade(), getSchool()]
      * @throws IOException only if a "severe" error happens while writing the file to the filesystem. Cases of already existing files are not treated as errors
      */
-    public void writeRecordSourceFile(final String qualifiedClassName, final String generatedQualifiedClassName, final List<? extends Element> nonVoidMethodsElementsList) throws IOException {
+    public void writeRecordSourceFile(String qualifiedClassName, String generatedQualifiedClassName, List<? extends Element> nonVoidMethodsElementsList) throws IOException {
+        // TODO check superrecord case
         var recordClassFile = processingEnvironment.getFiler().createSourceFile(generatedQualifiedClassName); // if file already exists, this line throws a FilerException
         var recordClassString = buildRecordClassContent(qualifiedClassName, generatedQualifiedClassName, nonVoidMethodsElementsList);
         try (var out = new PrintWriter(recordClassFile.openWriter())) {
@@ -94,7 +134,7 @@ public class RecordSourceFileGenerator implements StringGenerator {
         }
     }
 
-    private String buildRecordClassContent(final String qualifiedClassName, final String generatedQualifiedClassName, final List<? extends Element> nonVoidMethodsElementsList) {
+    private String buildRecordClassContent(String qualifiedClassName, String generatedQualifiedClassName, List<? extends Element> nonVoidMethodsElementsList) {
         var recordClassContent = new StringBuilder();
         int lastDot = qualifiedClassName.lastIndexOf(DOT);
         var recordSimpleClassName = generatedQualifiedClassName.substring(lastDot + 1);
@@ -115,5 +155,31 @@ public class RecordSourceFileGenerator implements StringGenerator {
         // no additional content: close the body of the class
         recordClassContent.append(CLOSING_BRACE);
         return recordClassContent.toString();
+    }
+
+    private void processAnnotatedElement(Element annotatedElement, RecordSourceFileGenerator recordSourceFileGenerator) {
+        var nonVoidMethodsElementsList = ElementKind.RECORD.equals((processingEnv.getTypeUtils().asElement(annotatedElement.asType())).getKind())
+                ? processingEnv.getElementUtils().getAllMembers((TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())).stream()
+                .filter(element -> ElementKind.METHOD.equals(element.getKind()))
+                .filter(element -> (!TypeKind.VOID.equals(((ExecutableElement) element).getReturnType().getKind())))
+                .filter(element -> asList(METHODS_TO_EXCLUDE).stream().noneMatch(excludedMeth -> element.toString().contains(excludedMeth + OPENING_PARENTHESIS)))
+                .toList()
+                : processingEnv.getElementUtils().getAllMembers((TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())).stream()
+                .filter(element -> ElementKind.METHOD.equals(element.getKind()))
+                .filter(element -> element.getSimpleName().toString().startsWith(GET) || element.getSimpleName().toString().startsWith(IS))
+                .filter(element -> asList(METHODS_TO_EXCLUDE).stream().noneMatch(excludedMeth -> element.toString().contains(excludedMeth + OPENING_PARENTHESIS)))
+                .toList();
+        var annotatedTypeElement = (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType());
+        var qualifiedClassName = annotatedTypeElement.getQualifiedName().toString();
+        var generatedQualifiedClassName = constructImmutableQualifiedNameBasedOnElementType(annotatedTypeElement);
+        try {
+            // TODO wghat abt SuperRecord ..and Pojo ?
+            recordSourceFileGenerator.writeRecordSourceFile(qualifiedClassName, generatedQualifiedClassName, nonVoidMethodsElementsList);
+            log.info(() -> format(GENERATION_SUCCESS_MSG_FORMAT, generatedQualifiedClassName));
+        } catch (FilerException e) {
+            // File was already generated - do nothing
+        } catch (IOException e) {
+            log.log(Level.SEVERE, format(GENERATION_FAILURE_MSG_FORMAT, generatedQualifiedClassName), e);
+        }
     }
 }
