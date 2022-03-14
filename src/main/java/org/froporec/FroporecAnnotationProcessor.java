@@ -27,6 +27,7 @@ import org.froporec.annotations.Record;
 import org.froporec.annotations.SuperRecord;
 import org.froporec.extractor.FroporecAnnotationInfoExtractor;
 import org.froporec.generator.RecordSourceFileGenerator;
+import org.froporec.generator.SourceFileGenerator;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Processor;
@@ -35,31 +36,32 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.concat;
-import static org.froporec.generator.helpers.StringGenerator.ALSO_CONVERT_ATTRIBUTE;
 import static org.froporec.generator.helpers.StringGenerator.AT_SIGN;
+import static org.froporec.generator.helpers.StringGenerator.FAILURE;
+import static org.froporec.generator.helpers.StringGenerator.GENERATION_FAILURE_MSG;
+import static org.froporec.generator.helpers.StringGenerator.GENERATION_REPORT_ELEMENTS_SEPARATOR;
+import static org.froporec.generator.helpers.StringGenerator.GENERATION_REPORT_MSG_FORMAT;
+import static org.froporec.generator.helpers.StringGenerator.GENERATION_SUCCESS_MSG;
 import static org.froporec.generator.helpers.StringGenerator.IMMUTABLE;
-import static org.froporec.generator.helpers.StringGenerator.INCLUDE_TYPES_ATTRIBUTE;
-import static org.froporec.generator.helpers.StringGenerator.MERGE_WITH_ATTRIBUTE;
 import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_GENERATE_IMMUTABLE;
 import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_GENERATE_RECORD;
 import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_IMMUTABLE;
 import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_RECORD;
 import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_SUPER_RECORD;
-import static org.froporec.generator.helpers.StringGenerator.POJO;
 import static org.froporec.generator.helpers.StringGenerator.RECORD;
-import static org.froporec.generator.helpers.StringGenerator.SKIPPED_ELEMENTS_WARNING_MSG_FORMAT;
+import static org.froporec.generator.helpers.StringGenerator.SUCCESS;
 import static org.froporec.generator.helpers.StringGenerator.SUPER_RECORD;
 
 /**
@@ -73,7 +75,7 @@ import static org.froporec.generator.helpers.StringGenerator.SUPER_RECORD;
         ORG_FROPOREC_GENERATE_IMMUTABLE})
 @SupportedSourceVersion(SourceVersion.RELEASE_17)
 @AutoService(Processor.class)
-public class FroporecAnnotationProcessor extends AbstractProcessor {
+public final class FroporecAnnotationProcessor extends AbstractProcessor implements AnnotationProcessor {
 
     private final Logger log = Logger.getLogger(FroporecAnnotationProcessor.class.getName());
 
@@ -94,72 +96,44 @@ public class FroporecAnnotationProcessor extends AbstractProcessor {
         if (!allAnnotatedElementsByAnnotation.isEmpty()) {
             var allAnnotatedElementsToProcessByAnnotation =
                     new FroporecAnnotationInfoExtractor(processingEnv).extractAnnotatedElementsByAnnotation(allAnnotatedElementsByAnnotation);
-            var recordSourceFileGenerator = new RecordSourceFileGenerator(processingEnv, allAnnotatedElementsToProcessByAnnotation);
-            processRecordAnnotatedElements(allAnnotatedElementsToProcessByAnnotation.get(ORG_FROPOREC_RECORD), recordSourceFileGenerator);
-            processImmutableAnnotatedElements(allAnnotatedElementsToProcessByAnnotation.get(ORG_FROPOREC_IMMUTABLE), recordSourceFileGenerator);
-            processSuperRecordAnnotatedElements(allAnnotatedElementsToProcessByAnnotation.get(ORG_FROPOREC_SUPER_RECORD), recordSourceFileGenerator);
+            SourceFileGenerator recordSourceFileGenerator = new RecordSourceFileGenerator(processingEnv, allAnnotatedElementsToProcessByAnnotation);
+            displayReport(
+                    AT_SIGN + RECORD,
+                    processRecordAnnotatedElements(allAnnotatedElementsToProcessByAnnotation.get(ORG_FROPOREC_RECORD), recordSourceFileGenerator, processingEnv)
+            );
+            displayReport(
+                    AT_SIGN + IMMUTABLE,
+                    processImmutableAnnotatedElements(allAnnotatedElementsToProcessByAnnotation.get(ORG_FROPOREC_IMMUTABLE), recordSourceFileGenerator, processingEnv)
+            );
+            displayReport(
+                    AT_SIGN + SUPER_RECORD,
+                    processSuperRecordAnnotatedElements(allAnnotatedElementsToProcessByAnnotation.get(ORG_FROPOREC_SUPER_RECORD), recordSourceFileGenerator, processingEnv)
+            );
         }
         return true;
     }
 
-    private void processRecordAnnotatedElements(Map<Element, Map<String, List<Element>>> annotatedElementsMap, RecordSourceFileGenerator recordSourceFileGenerator) {
-        var skippedElements = annotatedElementsMap.keySet().stream()
-                .filter(element -> !ElementKind.CLASS.equals(processingEnv.getTypeUtils().asElement(element.asType()).getKind()))
-                .toList();
-        if (!skippedElements.isEmpty()) {
-            log.warning(() -> format(
-                    SKIPPED_ELEMENTS_WARNING_MSG_FORMAT,
-                    AT_SIGN + RECORD,
-                    POJO,
-                    skippedElements.stream().map(Object::toString).collect(joining(format("%n\t\t")))
+    private void displayReport(String processedAnnotation, Map<String, List<String>> generatedClassesMap) {
+        if (!generatedClassesMap.get(SUCCESS).isEmpty()) {
+            log.info(() -> format(
+                    GENERATION_REPORT_MSG_FORMAT,
+                    GENERATION_SUCCESS_MSG,
+                    AT_SIGN + processedAnnotation,
+                    generatedClassesMap.get(SUCCESS).stream().collect(joining(format(GENERATION_REPORT_ELEMENTS_SEPARATOR)))
             ));
         }
-        annotatedElementsMap.keySet().stream()
-                .filter(element -> !skippedElements.contains(element))
-                .forEach(element -> {
-                    recordSourceFileGenerator.generateRecord(List.of(element));
-                    recordSourceFileGenerator.generateRecord(annotatedElementsMap.get(element).get(ALSO_CONVERT_ATTRIBUTE));
-                    recordSourceFileGenerator.generateRecord(annotatedElementsMap.get(element).get(INCLUDE_TYPES_ATTRIBUTE));
-                });
+        if (!generatedClassesMap.get(FAILURE).isEmpty()) {
+            log.log(Level.SEVERE, format(
+                    GENERATION_REPORT_MSG_FORMAT,
+                    GENERATION_FAILURE_MSG,
+                    AT_SIGN + processedAnnotation,
+                    generatedClassesMap.get(FAILURE).stream().collect(joining(format(GENERATION_REPORT_ELEMENTS_SEPARATOR)))
+            ));
+        }
     }
 
-    private void processImmutableAnnotatedElements(Map<Element, Map<String, List<Element>>> annotatedElementsMap, RecordSourceFileGenerator recordSourceFileGenerator) {
-        var skippedElements = annotatedElementsMap.keySet().stream()
-                .filter(element -> !ElementKind.RECORD.equals(processingEnv.getTypeUtils().asElement(element.asType()).getKind()))
-                .toList();
-        if (!skippedElements.isEmpty()) {
-            log.warning(() -> format(
-                    SKIPPED_ELEMENTS_WARNING_MSG_FORMAT,
-                    AT_SIGN + IMMUTABLE,
-                    RECORD,
-                    skippedElements.stream().map(Object::toString).collect(joining(format("%n\t\t")))
-            ));
-        }
-        annotatedElementsMap.keySet().stream()
-                .filter(element -> !skippedElements.contains(element))
-                .forEach(element -> {
-                    recordSourceFileGenerator.generateImmutable(List.of(element));
-                    recordSourceFileGenerator.generateImmutable(annotatedElementsMap.get(element).get(ALSO_CONVERT_ATTRIBUTE));
-                    recordSourceFileGenerator.generateImmutable(annotatedElementsMap.get(element).get(INCLUDE_TYPES_ATTRIBUTE));
-                });
-    }
-
-    private void processSuperRecordAnnotatedElements(Map<Element, Map<String, List<Element>>> annotatedElementsMap, RecordSourceFileGenerator recordSourceFileGenerator) {
-        var skippedElements = annotatedElementsMap.keySet().stream()
-                .filter(element -> !ElementKind.RECORD.equals(processingEnv.getTypeUtils().asElement(element.asType()).getKind()))
-                .filter(element -> !ElementKind.CLASS.equals(processingEnv.getTypeUtils().asElement(element.asType()).getKind()))
-                .toList();
-        if (!skippedElements.isEmpty()) {
-            log.warning(() -> format(
-                    SKIPPED_ELEMENTS_WARNING_MSG_FORMAT,
-                    AT_SIGN + SUPER_RECORD,
-                    POJO + " or " + RECORD,
-                    skippedElements.stream().map(Object::toString).collect(joining(format("%n\t\t")))
-            ));
-        }
-        annotatedElementsMap.keySet().stream()
-                .filter(element -> !skippedElements.contains(element))
-                .forEach(element ->
-                        recordSourceFileGenerator.generateSuperRecord(List.of(element), annotatedElementsMap.get(element).get(MERGE_WITH_ATTRIBUTE)));
+    @Override
+    public void notifyWarning(String warningMsg) {
+        log.warning(() -> warningMsg);
     }
 }

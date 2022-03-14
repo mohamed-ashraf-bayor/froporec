@@ -25,27 +25,17 @@ import org.froporec.generator.helpers.CodeGenerator;
 import org.froporec.generator.helpers.CustomConstructorGenerator;
 import org.froporec.generator.helpers.FieldsGenerator;
 import org.froporec.generator.helpers.JavaxGeneratedGenerator;
-import org.froporec.generator.helpers.StringGenerator;
 
-import javax.annotation.processing.FilerException;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeKind;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.logging.Level;
 
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toSet;
 import static org.froporec.generator.helpers.CodeGenerator.NON_VOID_METHODS_ELEMENTS_LIST;
 import static org.froporec.generator.helpers.CodeGenerator.QUALIFIED_CLASS_NAME;
@@ -53,7 +43,7 @@ import static org.froporec.generator.helpers.CodeGenerator.QUALIFIED_CLASS_NAME;
 /**
  * Builds the record class string content and writes it to the generated record source file
  */
-public class RecordSourceFileGenerator implements StringGenerator {
+public final class RecordSourceFileGenerator implements SourceFileGenerator {
 
     private final ProcessingEnvironment processingEnvironment;
 
@@ -103,38 +93,10 @@ public class RecordSourceFileGenerator implements StringGenerator {
         return allElementsTypesToConvert;
     }
 
-    public void generateRecord() {
-
-    }
-
-    public void generateImmutable() {
-
-    }
-
-    public void generateSuperRecord() {
-
-    }
-
-    /**
-     * Builds the content of the record class to be generated and writes it to the filesystem
-     *
-     * @param qualifiedClassName          qualified name of the pojo or record class being processed
-     * @param generatedQualifiedClassName qualified name of the record class to be generated
-     * @param nonVoidMethodsElementsList  {@link List} of {@link Element} instances of public getters of the POJO class, or public methods of
-     *                                    the Record class being processed.
-     *                                    toString representation ex for a POJO: [getLastname(), getAge(), getMark(), getGrade(), getSchool()]
-     * @throws IOException only if a "severe" error happens while writing the file to the filesystem. Cases of already existing files are not treated as errors
-     */
-    public void writeRecordSourceFile(String qualifiedClassName, String generatedQualifiedClassName, List<? extends Element> nonVoidMethodsElementsList) throws IOException {
-        // TODO check superrecord case
-        var recordClassFile = processingEnvironment.getFiler().createSourceFile(generatedQualifiedClassName); // if file already exists, this line throws a FilerException
-        var recordClassString = buildRecordClassContent(qualifiedClassName, generatedQualifiedClassName, nonVoidMethodsElementsList);
-        try (var out = new PrintWriter(recordClassFile.openWriter())) {
-            out.println(recordClassString);
-        }
-    }
-
-    private String buildRecordClassContent(String qualifiedClassName, String generatedQualifiedClassName, List<? extends Element> nonVoidMethodsElementsList) {
+    @Override
+    public String buildRecordClassContent(String qualifiedClassName,
+                                          String generatedQualifiedClassName,
+                                          List<? extends Element> nonVoidMethodsElementsList) {
         var recordClassContent = new StringBuilder();
         int lastDot = qualifiedClassName.lastIndexOf(DOT);
         var recordSimpleClassName = generatedQualifiedClassName.substring(lastDot + 1);
@@ -155,31 +117,5 @@ public class RecordSourceFileGenerator implements StringGenerator {
         // no additional content: close the body of the class
         recordClassContent.append(CLOSING_BRACE);
         return recordClassContent.toString();
-    }
-
-    private void processAnnotatedElement(Element annotatedElement, RecordSourceFileGenerator recordSourceFileGenerator) {
-        var nonVoidMethodsElementsList = ElementKind.RECORD.equals((processingEnv.getTypeUtils().asElement(annotatedElement.asType())).getKind())
-                ? processingEnv.getElementUtils().getAllMembers((TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())).stream()
-                .filter(element -> ElementKind.METHOD.equals(element.getKind()))
-                .filter(element -> (!TypeKind.VOID.equals(((ExecutableElement) element).getReturnType().getKind())))
-                .filter(element -> asList(METHODS_TO_EXCLUDE).stream().noneMatch(excludedMeth -> element.toString().contains(excludedMeth + OPENING_PARENTHESIS)))
-                .toList()
-                : processingEnv.getElementUtils().getAllMembers((TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())).stream()
-                .filter(element -> ElementKind.METHOD.equals(element.getKind()))
-                .filter(element -> element.getSimpleName().toString().startsWith(GET) || element.getSimpleName().toString().startsWith(IS))
-                .filter(element -> asList(METHODS_TO_EXCLUDE).stream().noneMatch(excludedMeth -> element.toString().contains(excludedMeth + OPENING_PARENTHESIS)))
-                .toList();
-        var annotatedTypeElement = (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType());
-        var qualifiedClassName = annotatedTypeElement.getQualifiedName().toString();
-        var generatedQualifiedClassName = constructImmutableQualifiedNameBasedOnElementType(annotatedTypeElement);
-        try {
-            // TODO wghat abt SuperRecord ..and Pojo ?
-            recordSourceFileGenerator.writeRecordSourceFile(qualifiedClassName, generatedQualifiedClassName, nonVoidMethodsElementsList);
-            log.info(() -> format(GENERATION_SUCCESS_MSG_FORMAT, generatedQualifiedClassName));
-        } catch (FilerException e) {
-            // File was already generated - do nothing
-        } catch (IOException e) {
-            log.log(Level.SEVERE, format(GENERATION_FAILURE_MSG_FORMAT, generatedQualifiedClassName), e);
-        }
     }
 }

@@ -98,7 +98,9 @@ public interface StringGenerator {
 
     /**
      * "includeTypes" attribute String literal
+     * @deprecated use 'alsoConvert' instead
      */
+    @Deprecated
     String INCLUDE_TYPES_ATTRIBUTE = "includeTypes";
 
     /**
@@ -172,9 +174,29 @@ public interface StringGenerator {
     String IS = "is";
 
     /**
+     * "Success" String literal
+     */
+    String SUCCESS = "Success";
+
+    /**
+     * "Failure" String literal
+     */
+    String FAILURE = "Failure";
+
+    /**
      * Message displayed during code compilation, along with the name of a successfully generated Record source file
      */
-    String GENERATION_SUCCESS_MSG_FORMAT = "\t> Successfully generated %s";
+    String GENERATION_SUCCESS_MSG = "\t> Successfully generated";
+
+    /**
+     * Generation report info message format
+     */
+    String GENERATION_REPORT_MSG_FORMAT = "%s - %s:%n\t\t";
+
+    /**
+     * Separator used while displaying each one of the generated or skipped filenames
+     */
+    String GENERATION_REPORT_ELEMENTS_SEPARATOR = "%n\t\t";
 
     /**
      * Warning message displayed during code compilation, indicating annotated elements skipped during generation process
@@ -184,7 +206,7 @@ public interface StringGenerator {
     /**
      * Message displayed during code compilation, in case an error occurred during a Record source file generation process
      */
-    String GENERATION_FAILURE_MSG_FORMAT = "\t> Error generating %s";
+    String GENERATION_FAILURE_MSG = "\t> Error generating";
 
     /**
      * Array of methods to exclude while pulling the list of all methods of a Pojo or Record class
