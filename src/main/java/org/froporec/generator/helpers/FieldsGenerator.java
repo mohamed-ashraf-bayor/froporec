@@ -60,6 +60,8 @@ public final class FieldsGenerator implements CodeGenerator {
      */
     public FieldsGenerator(ProcessingEnvironment processingEnvironment, Map<String, Set<String>> allElementsTypesToConvertByAnnotation) {
         this.processingEnvironment = processingEnvironment;
+        // TODO do renameing by element name not type -> will reduce issue while calling canonical cnstructor
+        // TODO do the duplicate check/rename process here // NOT HERE DO THAT IN FIELDS & CNSTRCTORS GEN...
         this.allElementsTypesToConvert = allElementsTypesToConvertByAnnotation; // TODO cnsolidate and ...
         this.collectionsGenerator = new CollectionsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation);
     }

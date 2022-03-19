@@ -32,7 +32,7 @@ import java.util.Properties;
 import static java.lang.String.format;
 
 /**
- * Generates the {@link javax.annotation.processing.Generated} annotation code fragment at the top of the generated record class
+ * Generates the {@link javax.annotation.processing.Generated} annotation code fragment on top of the generated record class
  * with the attributes: value, date and comments.<br>
  * The params {@link Map} parameter of the provided implementation of the generateCode() method (from {@link CodeGenerator}) is not required here.<br>
  */

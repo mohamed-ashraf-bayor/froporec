@@ -28,6 +28,7 @@ import org.froporec.annotations.Record;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.TypeElement;
 
 /**
  * A bunch of String literals and commonly used string handling functions
@@ -98,9 +99,10 @@ public interface StringGenerator {
 
     /**
      * "includeTypes" attribute String literal
+     *
      * @deprecated use 'alsoConvert' instead
      */
-    @Deprecated
+    @Deprecated(forRemoval = true, since = "1.3")
     String INCLUDE_TYPES_ATTRIBUTE = "includeTypes";
 
     /**
@@ -248,5 +250,20 @@ public interface StringGenerator {
     static String constructImmutableSimpleNameBasedOnElementType(Element element) {
         var immutableQualifiedName = constructImmutableQualifiedNameBasedOnElementType(element);
         return immutableQualifiedName.substring(immutableQualifiedName.lastIndexOf(DOT) + 1);
+    }
+
+    /**
+     * Constructs the qualified name of the generated super record class.
+     * Based on whether or not the qualified name of the passed in element ends with 'Record'
+     *
+     * @param element {@link Element} instance of the annotated class
+     * @return the qualified name of the fully immutable super record class being generated from an annotated Pojo or Record class.<br>
+     * ex: ...RecordClassName+"SuperRecord" or ...PojoClassName+"SuperRecord"
+     */
+    static String constructSuperRecordQualifiedNameBasedOnElementType(Element element) {
+        var qualifiedName = element.toString();
+        return qualifiedName.endsWith(RECORD)
+                ? qualifiedName.substring(0, qualifiedName.lastIndexOf(RECORD)) + SUPER_RECORD
+                : qualifiedName + SUPER_RECORD;
     }
 }

@@ -47,9 +47,9 @@ public final class RecordSourceFileGenerator implements SourceFileGenerator {
 
     private final ProcessingEnvironment processingEnvironment;
 
-    private final Map<String, Set<String>> allElementsTypesToConvertByAnnotation;
+    private final Map<String, Set<String>> allElementsTypesToConvertByAnnotation; // TODO shld be Set<Element>
 
-    // TODO add 2 new fields here to store superInterfaces and mergeWith info
+    // TODO add 2 new fields here to store superInterfaces and mergeWith info + organize by annotation also // Map<String, Map<Eleemnt, List<String>>
 
     private final CodeGenerator javaxGeneratedGenerator;
 
@@ -69,20 +69,21 @@ public final class RecordSourceFileGenerator implements SourceFileGenerator {
      */
     public RecordSourceFileGenerator(ProcessingEnvironment processingEnvironment, Map<String, Map<Element, Map<String, List<Element>>>> allAnnotatedElementsByAnnotation) {
         this.processingEnvironment = processingEnvironment;
-        this.allElementsTypesToConvertByAnnotation = buildAllElementsTypesToConvert(allAnnotatedElementsByAnnotation);
+        this.allElementsTypesToConvertByAnnotation = buildAllElementsTypesToConvert(allAnnotatedElementsByAnnotation); // TODO start chnges frm here
         // TODO add 2 new fields here to store superInterfaces and mergeWith info
         this.fieldsGenerator = new FieldsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation);
         this.customConstructorGenerator = new CustomConstructorGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation);
         this.javaxGeneratedGenerator = new JavaxGeneratedGenerator();
     }
 
+    // TODO not Set<String> but Set<Element>
     // SuperRecord not considered in this prv methd
     private Map<String, Set<String>> buildAllElementsTypesToConvert(Map<String, Map<Element, Map<String, List<Element>>>> allAnnotatedElementsByAnnotation) {
         var allElementsTypesToConvert = new HashMap<String, Set<String>>();
         allAnnotatedElementsByAnnotation.forEach((annotationString, annotatedElementsMap) -> {
             var annotatedElementsWithAlsoConvertAndIncludeTypes = new HashSet<String>();
             annotatedElementsMap.forEach((annotatedElement, attributesMap) -> {
-                annotatedElementsWithAlsoConvertAndIncludeTypes.add(processingEnvironment.getTypeUtils().asElement(annotatedElement.asType()).toString());
+                annotatedElementsWithAlsoConvertAndIncludeTypes.add(processingEnvironment.getTypeUtils().asElement(annotatedElement.asType()).toString()); // TODO rmv toString() keep Element
                 annotatedElementsWithAlsoConvertAndIncludeTypes.addAll(attributesMap.get(ALSO_CONVERT_ATTRIBUTE).stream()
                         .map(element -> processingEnvironment.getTypeUtils().asElement(element.asType()).toString()).collect(toSet()));
                 annotatedElementsWithAlsoConvertAndIncludeTypes.addAll(attributesMap.get(INCLUDE_TYPES_ATTRIBUTE).stream()

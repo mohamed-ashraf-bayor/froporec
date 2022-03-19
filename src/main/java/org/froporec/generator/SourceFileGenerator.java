@@ -12,11 +12,13 @@ import javax.lang.model.type.TypeKind;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static java.util.Arrays.asList;
 import static org.froporec.generator.helpers.StringGenerator.constructImmutableQualifiedNameBasedOnElementType;
+import static org.froporec.generator.helpers.StringGenerator.constructSuperRecordQualifiedNameBasedOnElementType;
 
 public sealed interface SourceFileGenerator extends StringGenerator permits RecordSourceFileGenerator {
 
@@ -25,8 +27,14 @@ public sealed interface SourceFileGenerator extends StringGenerator permits Reco
     default Map<String, List<String>> generateForRecordAnnotatedElements(List<Element> elementsListToProcess,
                                                                          ProcessingEnvironment processingEnv) {
         Map<String, List<String>> generationReport = Map.of(SUCCESS, new ArrayList<>(), FAILURE, new ArrayList<>());
-        elementsListToProcess.forEach(annotatedElement ->
-                performGeneration(generationReport, annotatedElement, buildNonVoidMethodsElementsList(annotatedElement, processingEnv), processingEnv));
+        elementsListToProcess.forEach(annotatedElement -> {
+            var individualReport = performGeneration(
+                    annotatedElement,
+                    buildNonVoidMethodsElementsList(annotatedElement, processingEnv),
+                    processingEnv,
+                    false);
+            mergeIndividualReportInMainReport(individualReport, generationReport);
+        });
         return generationReport;
     }
 
@@ -40,13 +48,12 @@ public sealed interface SourceFileGenerator extends StringGenerator permits Reco
                                                                               ProcessingEnvironment processingEnv) {
         Map<String, List<String>> generationReport = Map.of(SUCCESS, new ArrayList<>(), FAILURE, new ArrayList<>());
         annotatedElementsWithMergeWithInfo.forEach((annotatedElement, mergeWithElementsList) -> {
-            var nonVoidMethodsElements = new ArrayList<Element>(buildNonVoidMethodsElementsList(annotatedElement, processingEnv)); // TODO make this a Map<theAnnotatedElmnt, theMEthodsLists> instead
-            // TODO do renameing by element name not type -> will reduce issue while calling canonical cnstructor
+            var nonVoidMethodsElements = new ArrayList<Element>(buildNonVoidMethodsElementsList(annotatedElement, processingEnv));
             nonVoidMethodsElements.addAll(mergeWithElementsList.stream()
                     .flatMap(element -> buildNonVoidMethodsElementsList(element, processingEnv).stream())
                     .toList());
-            // TODO do the duplicate check/rename process here // NOT HERE DO THAT IN FIELDS & CNSTRCTORS GEN...
-            performGeneration(generationReport, annotatedElement, nonVoidMethodsElements, processingEnv);
+            var individualReport = performGeneration(annotatedElement, nonVoidMethodsElements, processingEnv, true);
+            mergeIndividualReportInMainReport(individualReport, generationReport);
         });
         return generationReport;
     }
@@ -60,7 +67,8 @@ public sealed interface SourceFileGenerator extends StringGenerator permits Reco
                 .filter(element -> ElementKind.METHOD.equals(element.getKind()))
                 .filter(element -> (!TypeKind.VOID.equals(((ExecutableElement) element).getReturnType().getKind())))
                 .filter(element -> asList(METHODS_TO_EXCLUDE).stream().noneMatch(excludedMeth ->
-                        element.toString().contains(excludedMeth + OPENING_PARENTHESIS)))
+                        element.toString().contains(excludedMeth + OPENING_PARENTHESIS))) // exclude known Object methds
+                .filter(element -> ((ExecutableElement) element).getParameters().isEmpty()) // only methods with no params
                 .toList()
                 : processingEnv.getElementUtils().getAllMembers(
                         (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())
@@ -69,45 +77,48 @@ public sealed interface SourceFileGenerator extends StringGenerator permits Reco
                 .filter(element -> element.getSimpleName().toString().startsWith(GET) || element.getSimpleName().toString().startsWith(IS))
                 .filter(element -> asList(METHODS_TO_EXCLUDE).stream().noneMatch(excludedMeth ->
                         element.toString().contains(excludedMeth + OPENING_PARENTHESIS)))
+                .filter(element -> ((ExecutableElement) element).getParameters().isEmpty())
                 .toList();
     }
 
-    private void performGeneration(Map<String, List<String>> generationReport,
-                                   Element annotatedElement,
-                                   List<? extends Element> nonVoidMethodsElementsList,
-                                   ProcessingEnvironment processingEnv) {
+    private Map<String, String> performGeneration(Element annotatedElement,
+                                                  List<? extends Element> nonVoidMethodsElementsList,
+                                                  ProcessingEnvironment processingEnv,
+                                                  boolean isSuperRecord) {
+        var generationReport = new HashMap<String, String>();
         var annotatedTypeElement = (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType());
         var qualifiedClassName = annotatedTypeElement.getQualifiedName().toString();
-        var generatedQualifiedClassName = constructImmutableQualifiedNameBasedOnElementType(annotatedTypeElement);
+        var generatedQualifiedClassName = isSuperRecord
+                ? constructSuperRecordQualifiedNameBasedOnElementType(annotatedTypeElement)
+                : constructImmutableQualifiedNameBasedOnElementType(annotatedTypeElement);
         try {
             writeRecordSourceFile(qualifiedClassName, generatedQualifiedClassName, nonVoidMethodsElementsList, processingEnv);
-            generationReport.get(SUCCESS).add(generatedQualifiedClassName);
+            generationReport.put(SUCCESS, generatedQualifiedClassName);
         } catch (FilerException e) {
             // File was already generated - do nothing
         } catch (IOException e) {
-            generationReport.get(FAILURE).add(generatedQualifiedClassName);
+            generationReport.put(FAILURE, generatedQualifiedClassName);
         }
+        return generationReport;
     }
 
-    /**
-     * Builds the content of the record class to be generated and writes it to the filesystem
-     *
-     * @param qualifiedClassName          qualified name of the pojo or record class being processed
-     * @param generatedQualifiedClassName qualified name of the record class to be generated
-     * @param nonVoidMethodsElementsList  {@link List} of {@link Element} instances of public getters of the POJO class, or public methods of
-     *                                    the Record class being processed.
-     *                                    toString representation ex for a POJO: [getLastname(), getAge(), getMark(), getGrade(), getSchool()]
-     * @throws IOException only if a "severe" error happens while writing the file to the filesystem. Cases of already existing files are not treated as errors
-     */
     private void writeRecordSourceFile(String qualifiedClassName,
                                        String generatedQualifiedClassName,
                                        List<? extends Element> nonVoidMethodsElementsList,
                                        ProcessingEnvironment processingEnv) throws IOException {
-        // TODO check superrecord case
         var recordClassFile = processingEnv.getFiler().createSourceFile(generatedQualifiedClassName); // if file already exists, this line throws a FilerException
         var recordClassString = buildRecordClassContent(qualifiedClassName, generatedQualifiedClassName, nonVoidMethodsElementsList);
         try (var out = new PrintWriter(recordClassFile.openWriter())) {
             out.println(recordClassString);
+        }
+    }
+
+    private void mergeIndividualReportInMainReport(Map<String, String> individualReport, Map<String, List<String>> mainReport) {
+        if (individualReport.containsKey(SUCCESS)) {
+            mainReport.get(SUCCESS).add(individualReport.get(SUCCESS));
+        }
+        if (individualReport.containsKey(FAILURE)) {
+            mainReport.get(FAILURE).add(individualReport.get(FAILURE));
         }
     }
 }
