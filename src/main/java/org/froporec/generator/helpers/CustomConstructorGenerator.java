@@ -39,7 +39,7 @@ import static org.froporec.generator.helpers.StringGenerator.constructImmutableQ
  * Starts with "public RecordName(list of fields)" and includes a call to the canonical constructor inside the body of the custom constructor.<br>
  * The params {@link Map} parameter of the provided implementation of the generateCode() method (from {@link CodeGenerator}) MUST contain
  * the following parameters names:<br>
- * - {@link CodeGenerator#QUALIFIED_CLASS_NAME}<br>
+ * - {@link CodeGenerator#ANNOTATED_ELEMENT}<br>
  * - {@link CodeGenerator#NON_VOID_METHODS_ELEMENTS_LIST}<br>
  */
 public final class CustomConstructorGenerator implements CodeGenerator {
@@ -94,8 +94,8 @@ public final class CustomConstructorGenerator implements CodeGenerator {
         });
         recordClassContent.deleteCharAt(recordClassContent.length() - 1).deleteCharAt(recordClassContent.length() - 1);
         // finished building canonical constructor content
-        recordClassContent.append(");\n");
-        recordClassContent.append("\t}\n");
+        recordClassContent.append(CLOSING_PARENTHESIS + SEMI_COLON + NEW_LINE);
+        recordClassContent.append(TAB + CLOSING_BRACE + NEW_LINE);
     }
 
     private void buildCanonicalConstructorCallSingleParameter(
@@ -131,7 +131,7 @@ public final class CustomConstructorGenerator implements CodeGenerator {
     @Override
     @SuppressWarnings("unchecked")
     public void generateCode(StringBuilder recordClassContent, Map<String, Object> params) {
-        var qualifiedClassName = (String) params.get(CodeGenerator.QUALIFIED_CLASS_NAME);
+        var qualifiedClassName = (String) params.get(CodeGenerator.ANNOTATED_ELEMENT);
         var nonVoidMethodsElementsList = (List<? extends Element>) params.get(CodeGenerator.NON_VOID_METHODS_ELEMENTS_LIST);
         buildRecordCustom1ArgConstructor(recordClassContent, qualifiedClassName, constructNonVoidMethodsElementsReturnTypesMapFromList(nonVoidMethodsElementsList), nonVoidMethodsElementsList);
     }

@@ -30,6 +30,9 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.joining;
+
 /**
  * A bunch of String literals and commonly used string handling functions
  */
@@ -121,9 +124,19 @@ public interface StringGenerator {
     String SUPER_INTERFACES_ATTRIBUTE = "superInterfaces";
 
     /**
+     * " " whitespace
+     */
+    String WHITESPACE = " ";
+
+    /**
      * "," String literal
      */
     String COMMA_SEPARATOR = ",";
+
+    /**
+     * ";" Semi-colon
+     */
+    String SEMI_COLON = ";";
 
     /**
      * "("
@@ -164,6 +177,16 @@ public interface StringGenerator {
      * "." String literal
      */
     String DOT = ".";
+
+    /**
+     * New line
+     */
+    String NEW_LINE = "\n";
+
+    /**
+     * Tabulation
+     */
+    String TAB = "\t";
 
     /**
      * "get" String literal. Starting string of Pojos non-boolean getters
@@ -265,5 +288,15 @@ public interface StringGenerator {
         return qualifiedName.endsWith(RECORD)
                 ? qualifiedName.substring(0, qualifiedName.lastIndexOf(RECORD)) + SUPER_RECORD
                 : qualifiedName + SUPER_RECORD;
+    }
+
+    /**
+     * Removes all commas from the provided string
+     *
+     * @param text contains commas as a string separator
+     * @return provided text with all commas removed
+     */
+    static String removeCommaSeparator(final String text) {
+        return asList(text.split(COMMA_SEPARATOR)).stream().collect(joining());
     }
 }

@@ -23,7 +23,6 @@ package org.froporec.generator.helpers;
 
 import org.froporec.annotations.GenerateImmutable;
 import org.froporec.annotations.GenerateRecord;
-import org.froporec.generator.SourceFileGenerator;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
@@ -37,14 +36,14 @@ import static java.util.stream.Collectors.toMap;
 /**
  * Exposes contract for a CodeGenerator class to fulfill
  */
-public sealed interface CodeGenerator extends StringGenerator permits CustomConstructorGenerator, FieldsGenerator, JavaxGeneratedGenerator, SupportedCollectionsGenerator {
+public sealed interface CodeGenerator extends StringGenerator permits CustomConstructorGenerator, FieldsGenerator, SuperInterfacesGenerator, JavaxGeneratedGenerator, SupportedCollectionsGenerator {
 
     // List of the parameters expected in the params Map object of the generateCode method:
 
     /**
      * parameter name: "qualifiedClassName", expected type: String
      */
-    String QUALIFIED_CLASS_NAME = "qualifiedClassName";
+    String ANNOTATED_ELEMENT = "annotatedElement";
 
     /**
      * parameter name: "fieldName", expected type: String
