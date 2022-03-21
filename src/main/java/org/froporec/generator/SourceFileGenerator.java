@@ -34,10 +34,13 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toSet;
 import static org.froporec.generator.helpers.StringGenerator.constructImmutableQualifiedNameBasedOnElementType;
 import static org.froporec.generator.helpers.StringGenerator.constructSuperRecordQualifiedNameBasedOnElementType;
 
@@ -49,7 +52,7 @@ public sealed interface SourceFileGenerator extends StringGenerator permits Reco
                                                                          ProcessingEnvironment processingEnv) {
         Map<String, List<String>> generationReport = Map.of(SUCCESS, new ArrayList<>(), FAILURE, new ArrayList<>());
         elementsListToProcess.forEach(annotatedElement -> {
-            var individualReport = performGeneration(
+            var individualReport = performRecordSourceFileGeneration(
                     annotatedElement,
                     buildNonVoidMethodsElementsList(annotatedElement, processingEnv),
                     processingEnv,
@@ -73,7 +76,7 @@ public sealed interface SourceFileGenerator extends StringGenerator permits Reco
             nonVoidMethodsElements.addAll(mergeWithElementsList.stream()
                     .flatMap(element -> buildNonVoidMethodsElementsList(element, processingEnv).stream())
                     .toList());
-            var individualReport = performGeneration(annotatedElement, nonVoidMethodsElements, processingEnv, true);
+            var individualReport = performRecordSourceFileGeneration(annotatedElement, nonVoidMethodsElements, processingEnv, true);
             mergeIndividualReportInMainReport(individualReport, generationReport);
         });
         return generationReport;
@@ -103,10 +106,10 @@ public sealed interface SourceFileGenerator extends StringGenerator permits Reco
     }
 
     // TODO add the annot string/name of the annotation being processed
-    private Map<String, String> performGeneration(Element annotatedElement,
-                                                  List<? extends Element> nonVoidMethodsElementsList,
-                                                  ProcessingEnvironment processingEnv,
-                                                  boolean isSuperRecord) { // TODO check abv, might no longer be needed
+    private Map<String, String> performRecordSourceFileGeneration(Element annotatedElement,
+                                                                  List<? extends Element> nonVoidMethodsElementsList,
+                                                                  ProcessingEnvironment processingEnv,
+                                                                  boolean isSuperRecord) { // TODO check abv, might no longer be needed
         var generationReport = new HashMap<String, String>();
         var annotatedTypeElement = (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType());
         var generatedQualifiedClassName = isSuperRecord
@@ -141,5 +144,69 @@ public sealed interface SourceFileGenerator extends StringGenerator permits Reco
         if (individualReport.containsKey(FAILURE)) {
             mainReport.get(FAILURE).add(individualReport.get(FAILURE));
         }
+    }
+
+    default Map<String, Set<Element>> buildAllElementsTypesToConvert(ProcessingEnvironment processingEnvironment, Map<String, Map<Element, Map<String, List<Element>>>> allAnnotatedElementsByAnnotation) {
+        var allElementsTypesToConvert = new HashMap<String, Set<Element>>(); // String = annotation toString value , Element = Element instance of the annotated element type
+        allAnnotatedElementsByAnnotation.forEach((annotationString, annotatedElementsMap) -> {
+            var annotatedElementsWithAlsoConvertAndIncludeTypes = new HashSet<Element>();
+            annotatedElementsMap.forEach((annotatedElement, attributesMap) -> {
+                if (isAnnotatedAsExpected(processingEnvironment, annotationString, annotatedElement)) {
+                    annotatedElementsWithAlsoConvertAndIncludeTypes.add(processingEnvironment.getTypeUtils().asElement(annotatedElement.asType()));
+                    annotatedElementsWithAlsoConvertAndIncludeTypes.addAll(attributesMap.get(ALSO_CONVERT_ATTRIBUTE).stream()
+                            .map(element -> processingEnvironment.getTypeUtils().asElement(element.asType())).collect(toSet()));
+                    annotatedElementsWithAlsoConvertAndIncludeTypes.addAll(attributesMap.get(INCLUDE_TYPES_ATTRIBUTE).stream()
+                            .map(element -> processingEnvironment.getTypeUtils().asElement(element.asType())).collect(toSet()));
+                }
+            });
+            allElementsTypesToConvert.put(annotationString, annotatedElementsWithAlsoConvertAndIncludeTypes);
+        });
+        return allElementsTypesToConvert;
+    }
+
+    private boolean isAnnotatedAsExpected(ProcessingEnvironment processingEnvironment, String annotationString, Element annotatedElement) {
+        boolean isAClass = ElementKind.CLASS.equals(processingEnvironment.getTypeUtils().asElement(annotatedElement.asType()).getKind());
+        boolean isARecord = ElementKind.RECORD.equals(processingEnvironment.getTypeUtils().asElement(annotatedElement.asType()).getKind());
+        return (ORG_FROPOREC_RECORD.equals(annotationString) && isAClass)
+                || (ORG_FROPOREC_GENERATE_RECORD.equals(annotationString) && isAClass)
+                || (ORG_FROPOREC_IMMUTABLE.equals(annotationString) && isARecord)
+                || (ORG_FROPOREC_GENERATE_IMMUTABLE.equals(annotationString) && isARecord)
+                || (ORG_FROPOREC_SUPER_RECORD.equals(annotationString) && (isAClass || isARecord));
+    }
+
+    default Map<String, Map<Element, List<Element>>> buildSuperInterfacesListByAnnotatedElement(ProcessingEnvironment processingEnvironment,
+                                                                                                Map<String, Set<Element>> allElementsTypesToConvertByAnnotation,
+                                                                                                Map<String, Map<Element, Map<String, List<Element>>>> allAnnotatedElementsByAnnotation) {
+        var superInterfacesListByAnnotatedElementAndByAnnotation = new HashMap<String, Map<Element, List<Element>>>();
+        // (generics above) String = annotation toString value , Element = Element instance of the annotated element type, List<Element> = list of provided superinterfaces Element instances
+        allAnnotatedElementsByAnnotation.forEach((annotationString, annotatedElementsMap) -> {
+            var annotatedElementsWithSuperInterfacesMap = new HashMap<Element, List<Element>>();
+            annotatedElementsMap.forEach((annotatedElement, attributesMap) -> {
+                if (allElementsTypesToConvertByAnnotation.get(annotationString).contains(annotatedElement)) {
+                    annotatedElementsWithSuperInterfacesMap.put(annotatedElement, attributesMap.get(SUPER_INTERFACES_ATTRIBUTE).stream()
+                            .map(element -> processingEnvironment.getTypeUtils().asElement(element.asType())).toList());
+                }
+            });
+            superInterfacesListByAnnotatedElementAndByAnnotation.put(annotationString, annotatedElementsWithSuperInterfacesMap);
+        });
+        return superInterfacesListByAnnotatedElementAndByAnnotation;
+    }
+
+    default Map<String, Map<Element, List<Element>>> buildMergeWithElementsListByAnnotatedElement(ProcessingEnvironment processingEnvironment,
+                                                                                                  Map<String, Set<Element>> allElementsTypesToConvertByAnnotation,
+                                                                                                  Map<String, Map<Element, Map<String, List<Element>>>> allAnnotatedElementsByAnnotation) {
+        var mergeWithListByAnnotatedElementAndByAnnotation = new HashMap<String, Map<Element, List<Element>>>();
+        // (generics above) String = annotation toString value , Element = Element instance of the annotated element type, List<Element> = list of provided mergeWith Element instances
+        allAnnotatedElementsByAnnotation.forEach((annotationString, annotatedElementsMap) -> {
+            var annotatedElementsWithMergeWithElementsMap = new HashMap<Element, List<Element>>();
+            annotatedElementsMap.forEach((annotatedElement, attributesMap) -> {
+                if (allElementsTypesToConvertByAnnotation.get(annotationString).contains(annotatedElement)) {
+                    annotatedElementsWithMergeWithElementsMap.put(annotatedElement, attributesMap.get(MERGE_WITH_ATTRIBUTE).stream()
+                            .map(element -> processingEnvironment.getTypeUtils().asElement(element.asType())).toList());
+                }
+            });
+            mergeWithListByAnnotatedElementAndByAnnotation.put(annotationString, annotatedElementsWithMergeWithElementsMap);
+        });
+        return mergeWithListByAnnotatedElementAndByAnnotation;
     }
 }
