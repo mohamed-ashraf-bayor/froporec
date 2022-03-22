@@ -21,7 +21,7 @@
  */
 package org.froporec;
 
-import org.froporec.generator.SourceFileGenerator;
+import org.froporec.generator.RecordSourceFileGenerator;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
@@ -49,7 +49,7 @@ public sealed interface AnnotationProcessor permits FroporecAnnotationProcessor 
     void notifyWarning(String warningMsg);
 
     default Map<String, List<String>> processRecordAnnotatedElements(Map<Element, Map<String, List<Element>>> annotatedElementsMap,
-                                                                     SourceFileGenerator sourceFileGenerator,
+                                                                     RecordSourceFileGenerator recordSourceFileGenerator,
                                                                      ProcessingEnvironment processingEnv) {
         var skippedElements = annotatedElementsMap.keySet().stream()
                 .filter(element -> !ElementKind.CLASS.equals(processingEnv.getTypeUtils().asElement(element.asType()).getKind()))
@@ -70,11 +70,11 @@ public sealed interface AnnotationProcessor permits FroporecAnnotationProcessor 
                     elementsListToProcess.addAll(annotatedElementsMap.get(element).get(ALSO_CONVERT_ATTRIBUTE));
                     elementsListToProcess.addAll(annotatedElementsMap.get(element).get(INCLUDE_TYPES_ATTRIBUTE));
                 });
-        return sourceFileGenerator.generateForRecordAnnotatedElements(elementsListToProcess, processingEnv); // TODO add the annot string/name
+        return recordSourceFileGenerator.generateForRecordAnnotatedElements(elementsListToProcess, processingEnv);
     }
 
     default Map<String, List<String>> processImmutableAnnotatedElements(Map<Element, Map<String, List<Element>>> annotatedElementsMap,
-                                                                        SourceFileGenerator sourceFileGenerator,
+                                                                        RecordSourceFileGenerator recordSourceFileGenerator,
                                                                         ProcessingEnvironment processingEnv) {
         var skippedElements = annotatedElementsMap.keySet().stream()
                 .filter(element -> !ElementKind.RECORD.equals(processingEnv.getTypeUtils().asElement(element.asType()).getKind()))
@@ -95,11 +95,11 @@ public sealed interface AnnotationProcessor permits FroporecAnnotationProcessor 
                     elementsListToProcess.addAll(annotatedElementsMap.get(element).get(ALSO_CONVERT_ATTRIBUTE));
                     elementsListToProcess.addAll(annotatedElementsMap.get(element).get(INCLUDE_TYPES_ATTRIBUTE));
                 });
-        return sourceFileGenerator.generateForImmutableAnnotatedElements(elementsListToProcess, processingEnv); // TODO add the annot string/name
+        return recordSourceFileGenerator.generateForImmutableAnnotatedElements(elementsListToProcess, processingEnv);
     }
 
     default Map<String, List<String>> processSuperRecordAnnotatedElements(Map<Element, Map<String, List<Element>>> annotatedElementsMap,
-                                                                          SourceFileGenerator sourceFileGenerator,
+                                                                          RecordSourceFileGenerator recordSourceFileGenerator,
                                                                           ProcessingEnvironment processingEnv) {
         var skippedElements = annotatedElementsMap.keySet().stream()
                 .filter(element -> !ElementKind.RECORD.equals(processingEnv.getTypeUtils().asElement(element.asType()).getKind()))
@@ -116,6 +116,6 @@ public sealed interface AnnotationProcessor permits FroporecAnnotationProcessor 
         var elementsMapToProcess = annotatedElementsMap.keySet().stream()
                 .filter(element -> !skippedElements.contains(element))
                 .collect(toMap(element -> element, element -> annotatedElementsMap.get(element).get(MERGE_WITH_ATTRIBUTE)));
-        return sourceFileGenerator.generateForSuperRecordAnnotatedElements(elementsMapToProcess, processingEnv); // TODO add the annot string/name
+        return recordSourceFileGenerator.generateForSuperRecordAnnotatedElements(elementsMapToProcess, processingEnv); // TODO add the annot string/name
     }
 }

@@ -27,15 +27,27 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toSet;
+import static org.froporec.generator.helpers.StringGenerator.ALSO_CONVERT_ATTRIBUTE;
 import static org.froporec.generator.helpers.StringGenerator.COMMA_SEPARATOR;
 import static org.froporec.generator.helpers.StringGenerator.DOT_CLASS;
 import static org.froporec.generator.helpers.StringGenerator.EMPTY_STRING;
+import static org.froporec.generator.helpers.StringGenerator.INCLUDE_TYPES_ATTRIBUTE;
+import static org.froporec.generator.helpers.StringGenerator.MERGE_WITH_ATTRIBUTE;
+import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_GENERATE_IMMUTABLE;
+import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_GENERATE_RECORD;
+import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_IMMUTABLE;
+import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_RECORD;
+import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_SUPER_RECORD;
+import static org.froporec.generator.helpers.StringGenerator.SUPER_INTERFACES_ATTRIBUTE;
 
 @FunctionalInterface
 public interface AnnotationInfoExtractor {
@@ -55,6 +67,7 @@ public interface AnnotationInfoExtractor {
     Predicate<Element> METHOD_PARAMS_INFO_EXTRACTOR_PREDICATE = element -> ElementKind.PARAMETER.equals(element.getKind());
 
     /**
+     * // TODO jdoc
      * @param allAnnotatedElementsByAnnotation
      * @param filterPredicate
      * @return map organized according to the structure: Map<String, Map<Element, Map<String, List<Element>>>>, detailed below:
@@ -63,9 +76,9 @@ public interface AnnotationInfoExtractor {
      * String : the attribute name of the annotation (includeTypes, alsoConvert, mergeWith, superInterfaces,...)
      * List<Element> : list of Element instances converted from the .class String values listed in the attributes names mentioned above
      */
-    Map<String, Map<Element, Map<String, List<Element>>>> extract(Map<TypeElement, Set<? extends Element>> allAnnotatedElementsByAnnotation, Predicate<Element> filterPredicate);
+    Map<String, Map<Element, Map<String, List<Element>>>> extractInfoBasedOnPredicate(Map<TypeElement, Set<? extends Element>> allAnnotatedElementsByAnnotation, Predicate<Element> filterPredicate);
 
-    static List<Element> extractList(String attributeName, Element annotatedElement, TypeElement annotation, ProcessingEnvironment processingEnv) {
+    static List<Element> extractAttributeValuesList(String attributeName, Element annotatedElement, TypeElement annotation, ProcessingEnvironment processingEnv) {
         var extractedElementsList = new ArrayList<Element>();
         processingEnv.getElementUtils().getAllAnnotationMirrors(annotatedElement).stream()
                 .filter(annotationMirror -> annotationMirror.toString().contains(annotation.toString()))
@@ -83,5 +96,70 @@ public interface AnnotationInfoExtractor {
                     }
                 }));
         return extractedElementsList;
+    }
+
+    static Map<String, Set<Element>> extractAllElementsTypesToConvert(ProcessingEnvironment processingEnvironment,
+                                                                      Map<String, Map<Element, Map<String, List<Element>>>> allAnnotatedElementsByAnnotation) {
+        var allElementsTypesToConvert = new HashMap<String, Set<Element>>(); // String = annotation toString value , Element = Element instance of the annotated element type
+        allAnnotatedElementsByAnnotation.forEach((annotationString, annotatedElementsMap) -> {
+            var annotatedElementsWithAlsoConvertAndIncludeTypes = new HashSet<Element>();
+            annotatedElementsMap.forEach((annotatedElement, attributesMap) -> {
+                if (isAnnotatedAsExpected(processingEnvironment, annotationString, annotatedElement)) {
+                    annotatedElementsWithAlsoConvertAndIncludeTypes.add(processingEnvironment.getTypeUtils().asElement(annotatedElement.asType()));
+                    annotatedElementsWithAlsoConvertAndIncludeTypes.addAll(attributesMap.get(ALSO_CONVERT_ATTRIBUTE).stream()
+                            .map(element -> processingEnvironment.getTypeUtils().asElement(element.asType())).collect(toSet()));
+                    annotatedElementsWithAlsoConvertAndIncludeTypes.addAll(attributesMap.get(INCLUDE_TYPES_ATTRIBUTE).stream()
+                            .map(element -> processingEnvironment.getTypeUtils().asElement(element.asType())).collect(toSet()));
+                }
+            });
+            allElementsTypesToConvert.put(annotationString, annotatedElementsWithAlsoConvertAndIncludeTypes);
+        });
+        return allElementsTypesToConvert;
+    }
+
+    private static boolean isAnnotatedAsExpected(ProcessingEnvironment processingEnvironment, String annotationString, Element annotatedElement) {
+        boolean isAClass = ElementKind.CLASS.equals(processingEnvironment.getTypeUtils().asElement(annotatedElement.asType()).getKind());
+        boolean isARecord = ElementKind.RECORD.equals(processingEnvironment.getTypeUtils().asElement(annotatedElement.asType()).getKind());
+        return (ORG_FROPOREC_RECORD.equals(annotationString) && isAClass)
+                || (ORG_FROPOREC_GENERATE_RECORD.equals(annotationString) && isAClass)
+                || (ORG_FROPOREC_IMMUTABLE.equals(annotationString) && isARecord)
+                || (ORG_FROPOREC_GENERATE_IMMUTABLE.equals(annotationString) && isARecord)
+                || (ORG_FROPOREC_SUPER_RECORD.equals(annotationString) && (isAClass || isARecord));
+    }
+
+    static Map<String, Map<Element, List<Element>>> extractSuperInterfacesListByAnnotatedElement(ProcessingEnvironment processingEnvironment,
+                                                                                                 Map<String, Set<Element>> allElementsTypesToConvertByAnnotation,
+                                                                                                 Map<String, Map<Element, Map<String, List<Element>>>> allAnnotatedElementsByAnnotation) {
+        var superInterfacesListByAnnotatedElementAndByAnnotation = new HashMap<String, Map<Element, List<Element>>>();
+        // (generics above) String = annotation toString value , Element = Element instance of the annotated element type, List<Element> = list of provided superinterfaces Element instances
+        allAnnotatedElementsByAnnotation.forEach((annotationString, annotatedElementsMap) -> {
+            var annotatedElementsWithSuperInterfacesMap = new HashMap<Element, List<Element>>();
+            annotatedElementsMap.forEach((annotatedElement, attributesMap) -> {
+                if (allElementsTypesToConvertByAnnotation.get(annotationString).contains(annotatedElement)) {
+                    annotatedElementsWithSuperInterfacesMap.put(annotatedElement, attributesMap.get(SUPER_INTERFACES_ATTRIBUTE).stream()
+                            .map(element -> processingEnvironment.getTypeUtils().asElement(element.asType())).toList());
+                }
+            });
+            superInterfacesListByAnnotatedElementAndByAnnotation.put(annotationString, annotatedElementsWithSuperInterfacesMap);
+        });
+        return superInterfacesListByAnnotatedElementAndByAnnotation;
+    }
+
+    static Map<String, Map<Element, List<Element>>> extractMergeWithElementsListByAnnotatedElement(ProcessingEnvironment processingEnvironment,
+                                                                                                   Map<String, Set<Element>> allElementsTypesToConvertByAnnotation,
+                                                                                                   Map<String, Map<Element, Map<String, List<Element>>>> allAnnotatedElementsByAnnotation) {
+        var mergeWithListByAnnotatedElementAndByAnnotation = new HashMap<String, Map<Element, List<Element>>>();
+        // (generics above) String = annotation toString value , Element = Element instance of the annotated element type, List<Element> = list of provided mergeWith Element instances
+        allAnnotatedElementsByAnnotation.forEach((annotationString, annotatedElementsMap) -> {
+            var annotatedElementsWithMergeWithElementsMap = new HashMap<Element, List<Element>>();
+            annotatedElementsMap.forEach((annotatedElement, attributesMap) -> {
+                if (allElementsTypesToConvertByAnnotation.get(annotationString).contains(annotatedElement)) {
+                    annotatedElementsWithMergeWithElementsMap.put(annotatedElement, attributesMap.get(MERGE_WITH_ATTRIBUTE).stream()
+                            .map(element -> processingEnvironment.getTypeUtils().asElement(element.asType())).toList());
+                }
+            });
+            mergeWithListByAnnotatedElementAndByAnnotation.put(annotationString, annotatedElementsWithMergeWithElementsMap);
+        });
+        return mergeWithListByAnnotatedElementAndByAnnotation;
     }
 }

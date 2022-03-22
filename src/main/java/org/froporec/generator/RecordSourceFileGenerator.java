@@ -21,94 +21,125 @@
  */
 package org.froporec.generator;
 
-import org.froporec.generator.helpers.CodeGenerator;
-import org.froporec.generator.helpers.CustomConstructorGenerator;
-import org.froporec.generator.helpers.FieldsGenerator;
-import org.froporec.generator.helpers.JavaxGeneratedGenerator;
-import org.froporec.generator.helpers.SuperInterfacesGenerator;
+import org.froporec.generator.helpers.StringGenerator;
 
+import javax.annotation.processing.FilerException;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeKind;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 
-import static java.lang.String.format;
-import static org.froporec.generator.helpers.CodeGenerator.ANNOTATED_ELEMENT;
-import static org.froporec.generator.helpers.CodeGenerator.NON_VOID_METHODS_ELEMENTS_LIST;
+import static java.util.Arrays.asList;
+import static org.froporec.generator.helpers.StringGenerator.constructImmutableQualifiedNameBasedOnElementType;
+import static org.froporec.generator.helpers.StringGenerator.constructSuperRecordQualifiedNameBasedOnElementType;
 
-/**
- * Builds the record class string content and writes it to the generated record source file
- */
-public final class RecordSourceFileGenerator implements SourceFileGenerator {
+public sealed interface RecordSourceFileGenerator extends StringGenerator permits FroporecRecordSourceFileGenerator {
 
-    private final ProcessingEnvironment processingEnvironment;
+    String generateRecordClassContent(Element annotatedElement, String generatedQualifiedClassName, List<? extends Element> nonVoidMethodsElementsList);
 
-    private final Map<String, Set<Element>> allElementsTypesToConvertByAnnotation;
-
-    private final Map<String, Map<Element, List<Element>>> superInterfacesListByAnnotatedElementAndByAnnotation;
-
-    private final Map<String, Map<Element, List<Element>>> mergeWithListByAnnotatedElementAndByAnnotation;
-
-    private final CodeGenerator javaxGeneratedGenerator;
-
-    private final CodeGenerator fieldsGenerator;
-
-    private final CodeGenerator superInterfacesGenerator;
-
-    private final CodeGenerator customConstructorGenerator;
-
-    /**
-     * RecordSourceFileGenerator constructor. Instantiates needed instances of {@link FieldsGenerator}, {@link CustomConstructorGenerator} and {@link JavaxGeneratedGenerator}
-     *
-     * @param processingEnvironment            {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
-     * @param allAnnotatedElementsByAnnotation @{@link Map} of all annotated elements. The Map content (key/value) structure is organized as:
-     *                                         String = annotation toString representation,
-     *                                         Element = the annotated class or record,
-     *                                         String = the attribute name,
-     *                                         List<Element> = list of all elements specified as values of: alsoConvert, includeTypes,...
-     */
-    public RecordSourceFileGenerator(ProcessingEnvironment processingEnvironment, Map<String, Map<Element, Map<String, List<Element>>>> allAnnotatedElementsByAnnotation) {
-        this.processingEnvironment = processingEnvironment;
-        this.allElementsTypesToConvertByAnnotation = buildAllElementsTypesToConvert(this.processingEnvironment, allAnnotatedElementsByAnnotation);
-        this.superInterfacesListByAnnotatedElementAndByAnnotation = buildSuperInterfacesListByAnnotatedElement(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, allAnnotatedElementsByAnnotation);
-        this.mergeWithListByAnnotatedElementAndByAnnotation = buildMergeWithElementsListByAnnotatedElement(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, allAnnotatedElementsByAnnotation);
-        this.fieldsGenerator = new FieldsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, this.mergeWithListByAnnotatedElementAndByAnnotation);
-        this.superInterfacesGenerator = new SuperInterfacesGenerator(this.processingEnvironment, this.superInterfacesListByAnnotatedElementAndByAnnotation);
-        this.customConstructorGenerator = new CustomConstructorGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, this.mergeWithListByAnnotatedElementAndByAnnotation);
-        this.javaxGeneratedGenerator = new JavaxGeneratedGenerator();
+    default Map<String, List<String>> generateForRecordAnnotatedElements(List<Element> elementsListToProcess,
+                                                                         ProcessingEnvironment processingEnv) {
+        Map<String, List<String>> generationReport = Map.of(SUCCESS, new ArrayList<>(), FAILURE, new ArrayList<>());
+        elementsListToProcess.forEach(annotatedElement -> {
+            var individualReport = performRecordSourceFileGeneration(
+                    annotatedElement,
+                    buildNonVoidMethodsElementsList(annotatedElement, processingEnv),
+                    processingEnv,
+                    false);
+            mergeIndividualReportInMainReport(individualReport, generationReport);
+        });
+        return generationReport;
     }
 
-    @Override
-    public String buildRecordClassContent(Element annotatedElement,
-                                          String generatedQualifiedClassName,
-                                          List<? extends Element> nonVoidMethodsElementsList) {
-        var recordClassContent = new StringBuilder();
-        var annotatedTypeElement = (TypeElement) processingEnvironment.getTypeUtils().asElement(annotatedElement.asType());
-        var qualifiedClassName = annotatedTypeElement.getQualifiedName().toString();
-        int lastDot = qualifiedClassName.lastIndexOf(DOT);
-        var recordSimpleClassName = generatedQualifiedClassName.substring(lastDot + 1);
-        // package statement
-        var packageName = lastDot > 0 ? qualifiedClassName.substring(0, lastDot) : null;
-        Optional.ofNullable(packageName).ifPresent(name -> recordClassContent.append(format("package %s;%n%n", name)));
-        // javax.annotation.processing.Generated section
-        javaxGeneratedGenerator.generateCode(recordClassContent, Map.of());
-        // record definition statement: public record ... with all attributes listed
-        recordClassContent.append(format("public %s ", RECORD.toLowerCase()));
-        recordClassContent.append(recordSimpleClassName);
-        // list all attributes next to the record name
-        recordClassContent.append(OPENING_PARENTHESIS);
-        fieldsGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement, NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList));
-        recordClassContent.append(CLOSING_PARENTHESIS + SPACE);
-        // list all provided superinterfaces
-        superInterfacesGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement));
-        recordClassContent.append(OPENING_BRACE + NEW_LINE);
-        // Custom 1 arg constructor statement
-        customConstructorGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement, NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList));
-        // no additional content: close the body of the class
-        recordClassContent.append(CLOSING_BRACE);
-        return recordClassContent.toString();
+    default Map<String, List<String>> generateForImmutableAnnotatedElements(List<Element> elementsListToProcess,
+                                                                            ProcessingEnvironment processingEnv) {
+        // redirect to generateForRecordAnnotatedElements which already handles both pojo and record classes
+        return generateForRecordAnnotatedElements(elementsListToProcess, processingEnv);
+    }
+
+    default Map<String, List<String>> generateForSuperRecordAnnotatedElements(Map<Element, List<Element>> annotatedElementsWithMergeWithInfo,
+                                                                              ProcessingEnvironment processingEnv) {
+        Map<String, List<String>> generationReport = Map.of(SUCCESS, new ArrayList<>(), FAILURE, new ArrayList<>());
+        annotatedElementsWithMergeWithInfo.forEach((annotatedElement, mergeWithElementsList) -> {
+            var nonVoidMethodsElements = new ArrayList<Element>(buildNonVoidMethodsElementsList(annotatedElement, processingEnv));
+            // besides all nonVoidMethodsElements of the annotated Element we also add nonVoidMethodsElements from all specified mergeWithElementsList
+            nonVoidMethodsElements.addAll(mergeWithElementsList.stream()
+                    .flatMap(element -> buildNonVoidMethodsElementsList(element, processingEnv).stream())
+                    .toList());
+            var individualReport = performRecordSourceFileGeneration(annotatedElement, nonVoidMethodsElements, processingEnv, true);
+            mergeIndividualReportInMainReport(individualReport, generationReport);
+        });
+        return generationReport;
+    }
+
+    private List<? extends Element> buildNonVoidMethodsElementsList(Element annotatedElement,
+                                                                    ProcessingEnvironment processingEnv) {
+        return ElementKind.RECORD.equals((processingEnv.getTypeUtils().asElement(annotatedElement.asType())).getKind())
+                ? processingEnv.getElementUtils().getAllMembers(
+                        (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())
+                ).stream()
+                .filter(element -> ElementKind.METHOD.equals(element.getKind()))
+                .filter(element -> (!TypeKind.VOID.equals(((ExecutableElement) element).getReturnType().getKind())))
+                .filter(element -> asList(METHODS_TO_EXCLUDE).stream().noneMatch(excludedMeth ->
+                        element.toString().contains(excludedMeth + OPENING_PARENTHESIS))) // exclude known Object methds
+                .filter(element -> ((ExecutableElement) element).getParameters().isEmpty()) // only methods with no params
+                .toList()
+                : processingEnv.getElementUtils().getAllMembers(
+                        (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())
+                ).stream()
+                .filter(element -> ElementKind.METHOD.equals(element.getKind()))
+                .filter(element -> element.getSimpleName().toString().startsWith(GET) || element.getSimpleName().toString().startsWith(IS))
+                .filter(element -> asList(METHODS_TO_EXCLUDE).stream().noneMatch(excludedMeth ->
+                        element.toString().contains(excludedMeth + OPENING_PARENTHESIS)))
+                .filter(element -> ((ExecutableElement) element).getParameters().isEmpty())
+                .toList();
+    }
+
+    // TODO add the annot string/name of the annotation being processed
+    private Map<String, String> performRecordSourceFileGeneration(Element annotatedElement,
+                                                                  List<? extends Element> nonVoidMethodsElementsList,
+                                                                  ProcessingEnvironment processingEnv,
+                                                                  boolean isSuperRecord) { // TODO check abv, might no longer be needed
+        var generationReport = new HashMap<String, String>();
+        var annotatedTypeElement = (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType());
+        var generatedQualifiedClassName = isSuperRecord
+                ? constructSuperRecordQualifiedNameBasedOnElementType(annotatedTypeElement)
+                : constructImmutableQualifiedNameBasedOnElementType(annotatedTypeElement);
+        try {
+            writeRecordSourceFile(annotatedElement, generatedQualifiedClassName, nonVoidMethodsElementsList, processingEnv);
+            generationReport.put(SUCCESS, generatedQualifiedClassName);
+        } catch (FilerException e) {
+            // File was already generated - do nothing
+        } catch (IOException e) {
+            generationReport.put(FAILURE, generatedQualifiedClassName);
+        }
+        return generationReport;
+    }
+
+    private void writeRecordSourceFile(Element annotatedElement,
+                                       String generatedQualifiedClassName,
+                                       List<? extends Element> nonVoidMethodsElementsList,
+                                       ProcessingEnvironment processingEnv) throws IOException {
+        var recordClassFile = processingEnv.getFiler().createSourceFile(generatedQualifiedClassName); // if file already exists, this line throws a FilerException
+        try (var out = new PrintWriter(recordClassFile.openWriter())) {
+            out.println(generateRecordClassContent(annotatedElement, generatedQualifiedClassName, nonVoidMethodsElementsList));
+        }
+    }
+
+    private void mergeIndividualReportInMainReport(Map<String, String> individualReport, Map<String, List<String>> mainReport) {
+        if (individualReport.containsKey(SUCCESS)) {
+            mainReport.get(SUCCESS).add(individualReport.get(SUCCESS));
+        }
+        if (individualReport.containsKey(FAILURE)) {
+            mainReport.get(FAILURE).add(individualReport.get(FAILURE));
+        }
     }
 }

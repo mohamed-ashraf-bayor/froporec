@@ -26,8 +26,8 @@ import org.froporec.annotations.Immutable;
 import org.froporec.annotations.Record;
 import org.froporec.annotations.SuperRecord;
 import org.froporec.extractor.FroporecAnnotationInfoExtractor;
+import org.froporec.generator.FroporecRecordSourceFileGenerator;
 import org.froporec.generator.RecordSourceFileGenerator;
-import org.froporec.generator.SourceFileGenerator;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Processor;
@@ -96,7 +96,7 @@ public final class FroporecAnnotationProcessor extends AbstractProcessor impleme
         if (!allAnnotatedElementsByAnnotation.isEmpty()) {
             var allAnnotatedElementsToProcessByAnnotation =
                     new FroporecAnnotationInfoExtractor(processingEnv).extractAnnotatedElementsByAnnotation(allAnnotatedElementsByAnnotation);
-            SourceFileGenerator recordSourceFileGenerator = new RecordSourceFileGenerator(processingEnv, allAnnotatedElementsToProcessByAnnotation);
+            RecordSourceFileGenerator recordSourceFileGenerator = new FroporecRecordSourceFileGenerator(processingEnv, allAnnotatedElementsToProcessByAnnotation);
             displayReport(
                     AT_SIGN + RECORD,
                     processRecordAnnotatedElements(allAnnotatedElementsToProcessByAnnotation.get(ORG_FROPOREC_RECORD), recordSourceFileGenerator, processingEnv)
@@ -111,6 +111,11 @@ public final class FroporecAnnotationProcessor extends AbstractProcessor impleme
             );
         }
         return true;
+    }
+
+    @Override
+    public void notifyWarning(String warningMsg) {
+        log.warning(() -> warningMsg);
     }
 
     private void displayReport(String processedAnnotation, Map<String, List<String>> generatedClassesMap) {
@@ -130,10 +135,5 @@ public final class FroporecAnnotationProcessor extends AbstractProcessor impleme
                     generatedClassesMap.get(FAILURE).stream().collect(joining(format(GENERATION_REPORT_ELEMENTS_SEPARATOR)))
             ));
         }
-    }
-
-    @Override
-    public void notifyWarning(String warningMsg) {
-        log.warning(() -> warningMsg);
     }
 }

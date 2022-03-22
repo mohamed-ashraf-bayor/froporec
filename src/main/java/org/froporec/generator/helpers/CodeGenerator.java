@@ -27,9 +27,12 @@ import org.froporec.annotations.GenerateRecord;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.type.ExecutableType;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Predicate;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -41,22 +44,22 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
     // List of the parameters expected in the params Map object of the generateCode method:
 
     /**
-     * parameter name: "qualifiedClassName", expected type: String
+     * parameter name: "annotatedElement", expected type: {@link Element}
      */
     String ANNOTATED_ELEMENT = "annotatedElement";
 
     /**
-     * parameter name: "fieldName", expected type: String
+     * parameter name: "fieldName", expected type: {@link String}
      */
     String FIELD_NAME = "fieldName";
 
     /**
-     * parameter name: "nonVoidMethodReturnTypeAsString", expected type: String, return type of the method being processed
+     * parameter name: "nonVoidMethodReturnTypeAsString", expected type: {@link String}, return type of the method being processed
      */
     String NON_VOID_METHOD_RETURN_TYPE_AS_STRING = "nonVoidMethodReturnTypeAsString";
 
     /**
-     * parameter name: "nonVoidMethodAsString", expected type: String, name of the method being processed
+     * parameter name: "nonVoidMethodAsString", expected type: {@link String}, name of the method being processed
      */
     String NON_VOID_METHOD_AS_STRING = "nonVoidMethodAsString";
 
@@ -84,7 +87,8 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
      */
     default Map<Element, String> constructNonVoidMethodsElementsReturnTypesMapFromList(List<? extends Element> nonVoidMethodsElementsList) {
         return nonVoidMethodsElementsList.stream().collect(
-                toMap(nonVoidMethodElement -> nonVoidMethodElement, nonVoidMethodElement -> ((ExecutableType) nonVoidMethodElement.asType()).getReturnType().toString())
+                toMap(nonVoidMethodElement -> nonVoidMethodElement,
+                        nonVoidMethodElement -> ((ExecutableType) nonVoidMethodElement.asType()).getReturnType().toString())
         );
     }
 
@@ -110,6 +114,20 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
      */
     default Element constructElementInstanceValueFromTypeString(ProcessingEnvironment processingEnvironment, String qualifiedName) {
         return processingEnvironment.getTypeUtils().asElement(processingEnvironment.getElementUtils().getTypeElement(qualifiedName).asType());
+    }
+
+    default Predicate<Element> isElementAnnotatedAsRecordOrImmutable(Map<String, Set<Element>> allElementsTypesToConvertByAnnotation) {
+        return nonVoidMethodReturnTypeElement ->
+                allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_RECORD).contains(nonVoidMethodReturnTypeElement)
+                        || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_IMMUTABLE).contains(nonVoidMethodReturnTypeElement)
+                        || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_GENERATE_RECORD).contains(nonVoidMethodReturnTypeElement)
+                        || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_GENERATE_IMMUTABLE).contains(nonVoidMethodReturnTypeElement);
+    }
+
+    default String modifyFieldNameIfDuplicatesExist(String fieldName, Element nonVoidMethodElement, List<String> fieldsList) {
+        return Collections.frequency(fieldsList, fieldName) > 1
+                ? fieldName + nonVoidMethodElement.getEnclosingElement().getSimpleName()
+                : fieldName;
     }
 }
 

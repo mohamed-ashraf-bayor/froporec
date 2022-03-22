@@ -34,7 +34,7 @@ import static org.froporec.extractor.AnnotationInfoExtractor.FIELDS_INFO_EXTRACT
 import static org.froporec.extractor.AnnotationInfoExtractor.METHOD_PARAMS_INFO_EXTRACTOR_PREDICATE;
 import static org.froporec.extractor.AnnotationInfoExtractor.POJO_CLASSES_INFO_EXTRACTOR_PREDICATE;
 import static org.froporec.extractor.AnnotationInfoExtractor.RECORD_CLASSES_INFO_EXTRACTOR_PREDICATE;
-import static org.froporec.extractor.AnnotationInfoExtractor.extractList;
+import static org.froporec.extractor.AnnotationInfoExtractor.extractAttributeValuesList;
 import static org.froporec.generator.helpers.StringGenerator.ALSO_CONVERT_ATTRIBUTE;
 import static org.froporec.generator.helpers.StringGenerator.INCLUDE_TYPES_ATTRIBUTE;
 import static org.froporec.generator.helpers.StringGenerator.MERGE_WITH_ATTRIBUTE;
@@ -67,10 +67,10 @@ public final class FroporecAnnotationInfoExtractor {
                 Map<Element, Map<String, List<Element>>> internalMap = new HashMap<>();
                 filteredAnnotatedElements.forEach(element -> internalMap.put(
                         element,
-                        Map.of(INCLUDE_TYPES_ATTRIBUTE, extractList(INCLUDE_TYPES_ATTRIBUTE, element, annotation, processingEnv),
-                                ALSO_CONVERT_ATTRIBUTE, extractList(ALSO_CONVERT_ATTRIBUTE, element, annotation, processingEnv),
-                                MERGE_WITH_ATTRIBUTE, extractList(MERGE_WITH_ATTRIBUTE, element, annotation, processingEnv),
-                                SUPER_INTERFACES_ATTRIBUTE, extractList(SUPER_INTERFACES_ATTRIBUTE, element, annotation, processingEnv))
+                        Map.of(INCLUDE_TYPES_ATTRIBUTE, extractAttributeValuesList(INCLUDE_TYPES_ATTRIBUTE, element, annotation, processingEnv),
+                                ALSO_CONVERT_ATTRIBUTE, extractAttributeValuesList(ALSO_CONVERT_ATTRIBUTE, element, annotation, processingEnv),
+                                MERGE_WITH_ATTRIBUTE, extractAttributeValuesList(MERGE_WITH_ATTRIBUTE, element, annotation, processingEnv),
+                                SUPER_INTERFACES_ATTRIBUTE, extractAttributeValuesList(SUPER_INTERFACES_ATTRIBUTE, element, annotation, processingEnv))
                 ));
                 allFilteredAnnotatedElementsToProcess.put(annotation.toString(), internalMap);
             });
@@ -78,10 +78,10 @@ public final class FroporecAnnotationInfoExtractor {
             return allFilteredAnnotatedElementsToProcess;
         };
 
-        var allAnnotatedPojosElementsInfosByAnnotation = annotationInfoExtractor.extract(allAnnotatedElementsByAnnotation, POJO_CLASSES_INFO_EXTRACTOR_PREDICATE);
-        var annotatedRecordsElementsInfosByAnnotation = annotationInfoExtractor.extract(allAnnotatedElementsByAnnotation, RECORD_CLASSES_INFO_EXTRACTOR_PREDICATE);
-        var annotatedFieldsElementsInfosByAnnotation = annotationInfoExtractor.extract(allAnnotatedElementsByAnnotation, FIELDS_INFO_EXTRACTOR_PREDICATE);
-        var annotatedParamsElementsInfosByAnnotation = annotationInfoExtractor.extract(allAnnotatedElementsByAnnotation, METHOD_PARAMS_INFO_EXTRACTOR_PREDICATE);
+        var allAnnotatedPojosElementsInfosByAnnotation = annotationInfoExtractor.extractInfoBasedOnPredicate(allAnnotatedElementsByAnnotation, POJO_CLASSES_INFO_EXTRACTOR_PREDICATE);
+        var annotatedRecordsElementsInfosByAnnotation = annotationInfoExtractor.extractInfoBasedOnPredicate(allAnnotatedElementsByAnnotation, RECORD_CLASSES_INFO_EXTRACTOR_PREDICATE);
+        var annotatedFieldsElementsInfosByAnnotation = annotationInfoExtractor.extractInfoBasedOnPredicate(allAnnotatedElementsByAnnotation, FIELDS_INFO_EXTRACTOR_PREDICATE);
+        var annotatedParamsElementsInfosByAnnotation = annotationInfoExtractor.extractInfoBasedOnPredicate(allAnnotatedElementsByAnnotation, METHOD_PARAMS_INFO_EXTRACTOR_PREDICATE);
 
         final Map<String, Map<Element, Map<String, List<Element>>>> allAnnotatedElementsInfosByAnnotation = new HashMap<>();
         allAnnotatedElementsByAnnotation.keySet().forEach(annotation -> {

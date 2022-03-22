@@ -22,6 +22,7 @@
 package org.froporec.generator.helpers;
 
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.Element;
 import java.util.Map;
 import java.util.Set;
 
@@ -46,7 +47,7 @@ public final class CollectionsGenerator implements SupportedCollectionsFieldsGen
     private static final String MAP_FIELD_MAPPING_LOGIC_STRING_FORMAT = "java.util.Optional.ofNullable(%s.%s).isEmpty() ? java.util.Map.of() : " +
             "%s.%s.entrySet().stream().collect(java.util.stream.Collectors.toUnmodifiableMap(entry -> %s(entry.getKey()), entry -> %s(entry.getValue()))), ";
 
-    private final Set<String> allElementsTypesToConvertByAnnotation;
+    private final Map<String, Set<Element>> allElementsTypesToConvertByAnnotation; // was just Set<String>
 
     private final ProcessingEnvironment processingEnvironment;
 
@@ -55,7 +56,7 @@ public final class CollectionsGenerator implements SupportedCollectionsFieldsGen
      *
      * @param allElementsTypesToConvertByAnnotation - {@link Set} of all annotated elements types
      */
-    public CollectionsGenerator(ProcessingEnvironment processingEnvironment, Map<String, Set<String>> allElementsTypesToConvertByAnnotation) {
+    public CollectionsGenerator(ProcessingEnvironment processingEnvironment, Map<String, Set<Element>> allElementsTypesToConvertByAnnotation) {
         this.processingEnvironment = processingEnvironment;
         this.allElementsTypesToConvertByAnnotation = allElementsTypesToConvertByAnnotation; // TODO consolidate and remove Suffix
     }

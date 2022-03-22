@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import static java.lang.String.format;
 import static org.froporec.generator.helpers.StringGenerator.constructImmutableQualifiedNameBasedOnElementType;
@@ -48,53 +50,65 @@ public final class FieldsGenerator implements CodeGenerator {
 
     private final ProcessingEnvironment processingEnvironment;
 
-    private final Set<String> allElementsTypesToConvert;
+    private final Map<String, Set<Element>> allElementsTypesToConvertByAnnotation;
+
+    private final Map<String, Map<Element, List<Element>>> mergeWithListByAnnotatedElementAndByAnnotation;
 
     private final SupportedCollectionsFieldsGenerator collectionsGenerator;
 
     /**
      * FieldsGenerationHelper constructor. Instantiates needed instance of {@link CollectionsGenerator}
      *
-     * @param processingEnvironment     {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @param processingEnvironment                 {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
      * @param allElementsTypesToConvertByAnnotation {@link Set} of all annotated elements types string representations
      */
-    public FieldsGenerator(ProcessingEnvironment processingEnvironment, Map<String, Set<String>> allElementsTypesToConvertByAnnotation) {
+    public FieldsGenerator(ProcessingEnvironment processingEnvironment,
+                           Map<String, Set<Element>> allElementsTypesToConvertByAnnotation,
+                           Map<String, Map<Element, List<Element>>> mergeWithListByAnnotatedElementAndByAnnotation) {
         this.processingEnvironment = processingEnvironment;
         // TODO do renameing by element name not type -> will reduce issue while calling canonical cnstructor
         // TODO do the duplicate check/rename process here // NOT HERE DO THAT IN FIELDS & CNSTRCTORS GEN...
-        this.allElementsTypesToConvert = allElementsTypesToConvertByAnnotation; // TODO cnsolidate and ...
+        this.allElementsTypesToConvertByAnnotation = allElementsTypesToConvertByAnnotation;
+        this.mergeWithListByAnnotatedElementAndByAnnotation = mergeWithListByAnnotatedElementAndByAnnotation;
         this.collectionsGenerator = new CollectionsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation);
     }
 
-    private void buildRecordFieldsFromNonVoidMethodsList(
-            final StringBuilder recordClassContent,
-            final Map<? extends Element, String> nonVoidMethodsElementsReturnTypesMap,
-            final List<? extends Element> nonVoidMethodsElementList) {
-        nonVoidMethodsElementList.forEach(nonVoidMethodElement -> {
+    private void buildRecordFieldsFromNonVoidMethodsList(StringBuilder recordClassContent, List<? extends Element> nonVoidMethodsElementsList) {
+        var nonVoidMethodsElementsReturnTypesMap = constructNonVoidMethodsElementsReturnTypesMapFromList(nonVoidMethodsElementsList);
+        // TODO build the fields list here
+//        nonVoidMethodsElementsList.stream()
+//                .map(element -> element.toString().substring(0, element.toString().indexOf(OPENING_PARENTHESIS)))
+        nonVoidMethodsElementsList.forEach(nonVoidMethodElement -> {
             var enclosingElementIsRecord = ElementKind.RECORD.equals(nonVoidMethodElement.getEnclosingElement().getKind());
             var nonVoidMethodReturnTypeAsString = nonVoidMethodsElementsReturnTypesMap.get(nonVoidMethodElement);
-            var nonVoidMethodReturnTypeElementOpt = Optional.ofNullable(processingEnvironment.getTypeUtils().asElement(((ExecutableType) nonVoidMethodElement.asType()).getReturnType())); // for collections, Element.toString() will NOT return the generic part
-            // TODO ifpresentorelse here ???
-            if (nonVoidMethodReturnTypeElementOpt.isEmpty()) { // primitives
-                buildSingleField(recordClassContent, nonVoidMethodElement, nonVoidMethodReturnTypeAsString, false, enclosingElementIsRecord);
-            } else { // non-primitives
-                // if the type has already been annotated somewhere else in the code, the field type is the corresponding generated record class
-                // if not annotated and not a collection then keep the received type as is
-                buildSingleField(recordClassContent, nonVoidMethodElement, nonVoidMethodReturnTypeAsString,
-                        allElementsTypesToConvertByAnnotation.contains(nonVoidMethodReturnTypeElementOpt.get().toString()), enclosingElementIsRecord);
-            }
+            var nonVoidMethodReturnTypeElementOpt = Optional.ofNullable(
+                    processingEnvironment.getTypeUtils().asElement(((ExecutableType) nonVoidMethodElement.asType()).getReturnType())
+            ); // for collections, Element.toString() will NOT return the generic part
+            // Consumer to run in case of non-primitives i.e nonVoidMethodReturnTypeElementOpt.isPresent()
+            Consumer<Element> consumer = nonVoidMethodReturnTypeElement ->
+                    buildSingleField(recordClassContent, nonVoidMethodElement, nonVoidMethodReturnTypeAsString,
+                            isElementAnnotatedAsRecordOrImmutable(allElementsTypesToConvertByAnnotation).test(nonVoidMethodReturnTypeElement),
+                            enclosingElementIsRecord, nonVoidMethodsElementsList); // TODO pass in the fieldslist here
+            // Runnable to execute in case of primitives i.e nonVoidMethodReturnTypeElementOpt.isEmpty()
+            Runnable runnable = () -> buildSingleField(recordClassContent, nonVoidMethodElement, nonVoidMethodReturnTypeAsString,
+                    false, enclosingElementIsRecord, nonVoidMethodsElementsList);
+            // if the type has already been annotated somewhere else in the code, the field type is the corresponding generated record class (consumer is executed)
+            // if not annotated and not a collection then keep the received type as is (runnable is executed)
+            nonVoidMethodReturnTypeElementOpt.ifPresentOrElse(consumer, runnable);
         });
         recordClassContent.deleteCharAt(recordClassContent.length() - 1).deleteCharAt(recordClassContent.length() - 1);
     }
 
     private void buildSingleField(StringBuilder recordClassContent, Element nonVoidMethodElement,
                                   String nonVoidMethodReturnTypeAsString, boolean processAsImmutable,
-                                  boolean enclosingElementIsRecord) {
-        var recordFieldsListFormat = "%s %s, "; // type fieldName,<SPACE>
+                                  boolean enclosingElementIsRecord, List<? extends Element> nonVoidMethodsElementsList) {
+        var recordFieldsListFormat = "%s %s, "; // fieldType<SPACE>fieldName<COMMA><SPACE>
         if (enclosingElementIsRecord) {
             // Record class, handle all non-void methods
             var nonVoidMethodElementAsString = nonVoidMethodElement.toString();
-            var fieldName = nonVoidMethodElementAsString.substring(0, nonVoidMethodElementAsString.indexOf(OPENING_PARENTHESIS)); // fieldname or record component name
+            var fieldName = modifyFieldNameIfDuplicatesExist(
+                    nonVoidMethodElementAsString.substring(0, nonVoidMethodElementAsString.indexOf(OPENING_PARENTHESIS)),
+                    nonVoidMethodsElementsList);
             // if the type of the field being processed is a collection process it differently and return
             if (collectionsGenerator.isCollectionWithGeneric(nonVoidMethodReturnTypeAsString)) {
                 collectionsGenerator.replaceGenericWithRecordClassNameIfAny(recordClassContent, fieldName, nonVoidMethodReturnTypeAsString);
@@ -105,12 +119,13 @@ public final class FieldsGenerator implements CodeGenerator {
                     processAsImmutable
                             ? constructImmutableQualifiedNameBasedOnElementType(constructElementInstanceValueFromTypeString(processingEnvironment, nonVoidMethodReturnTypeAsString))
                             : nonVoidMethodReturnTypeAsString,
-                    fieldName)
-            );
+                    fieldName));
         } else {
-            // POJO class, handle only getters (only methods process methods starting with get or is)
+            // POJO class, handle only getters (only methods starting with get or is)
             var getterAsString = nonVoidMethodElement.toString();
-            var fieldNameNonBoolean = getterAsString.substring(3, 4).toLowerCase() + getterAsString.substring(4, getterAsString.indexOf(OPENING_PARENTHESIS));
+            var fieldNameNonBoolean = modifyFieldNameIfDuplicatesExist(
+                    getterAsString.substring(3, 4).toLowerCase() + getterAsString.substring(4, getterAsString.indexOf(OPENING_PARENTHESIS)),
+                    nonVoidMethodsElementsList);
             if (getterAsString.startsWith(GET)) {
                 // if the type of the field being processed is a collection process it differently and return
                 if (collectionsGenerator.isCollectionWithGeneric(nonVoidMethodReturnTypeAsString)) {
@@ -122,10 +137,11 @@ public final class FieldsGenerator implements CodeGenerator {
                         processAsImmutable
                                 ? constructImmutableQualifiedNameBasedOnElementType(constructElementInstanceValueFromTypeString(processingEnvironment, nonVoidMethodReturnTypeAsString))
                                 : nonVoidMethodReturnTypeAsString,
-                        fieldNameNonBoolean)
-                );
+                        fieldNameNonBoolean));
             } else if (getterAsString.startsWith(IS)) {
-                var fieldNameBoolean = getterAsString.substring(2, 3).toLowerCase() + getterAsString.substring(3, getterAsString.indexOf(OPENING_PARENTHESIS));
+                var fieldNameBoolean = modifyFieldNameIfDuplicatesExist(
+                        getterAsString.substring(2, 3).toLowerCase() + getterAsString.substring(3, getterAsString.indexOf(OPENING_PARENTHESIS)),
+                        nonVoidMethodsElementsList);
                 recordClassContent.append(format(recordFieldsListFormat, nonVoidMethodReturnTypeAsString, fieldNameBoolean));
             }
         }
@@ -135,6 +151,6 @@ public final class FieldsGenerator implements CodeGenerator {
     @SuppressWarnings("unchecked")
     public void generateCode(StringBuilder recordClassContent, Map<String, Object> params) {
         var nonVoidMethodsElementsList = (List<? extends Element>) params.get(CodeGenerator.NON_VOID_METHODS_ELEMENTS_LIST);
-        buildRecordFieldsFromNonVoidMethodsList(recordClassContent, constructNonVoidMethodsElementsReturnTypesMapFromList(nonVoidMethodsElementsList), nonVoidMethodsElementsList);
+        buildRecordFieldsFromNonVoidMethodsList(recordClassContent, nonVoidMethodsElementsList);
     }
 }
