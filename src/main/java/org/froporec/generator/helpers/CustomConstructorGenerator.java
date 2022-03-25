@@ -24,15 +24,21 @@ package org.froporec.generator.helpers;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ExecutableType;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
 import static org.froporec.generator.helpers.StringGenerator.constructImmutableSimpleNameBasedOnElementType;
 import static org.froporec.generator.helpers.StringGenerator.constructImmutableQualifiedNameBasedOnElementType;
+import static org.froporec.generator.helpers.StringGenerator.constructSuperRecordSimpleNameBasedOnElementType;
+import static org.froporec.generator.helpers.StringGenerator.lowerCase1stChar;
 
 /**
  * Builds the custom 1-arg constructor section for the record class being generated.<br>
@@ -46,56 +52,75 @@ public final class CustomConstructorGenerator implements CodeGenerator {
 
     private final ProcessingEnvironment processingEnvironment;
 
-    private final Set<String> allElementsTypesToConvertByAnnotation;
+    private final Map<String, Set<Element>> allElementsTypesToConvertByAnnotation;
+
+    private final Map<String, Map<Element, List<Element>>> mergeWithListByAnnotatedElementAndByAnnotation;
 
     private final SupportedCollectionsMappingLogicGenerator collectionsGenerator;
 
     /**
+     * // TODO jdoc
      * CustomConstructorGenerationHelper constructor. Instantiates needed instances of {@link ProcessingEnvironment} and {@link CollectionsGenerator}
      *
-     * @param processingEnvironment     {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @param processingEnvironment                 {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
      * @param allElementsTypesToConvertByAnnotation {@link Set} of all annotated elements types
      */
-    public CustomConstructorGenerator(ProcessingEnvironment processingEnvironment, Map<String, Set<String>> allElementsTypesToConvertByAnnotation) {
+    public CustomConstructorGenerator(ProcessingEnvironment processingEnvironment,
+                                      Map<String, Set<Element>> allElementsTypesToConvertByAnnotation,
+                                      Map<String, Map<Element, List<Element>>> mergeWithListByAnnotatedElementAndByAnnotation) {
         this.processingEnvironment = processingEnvironment;
-        this.allElementsTypesToConvertByAnnotation = allElementsTypesToConvertByAnnotation; // TODO consolidate and ...
+        this.allElementsTypesToConvertByAnnotation = allElementsTypesToConvertByAnnotation;
+        this.mergeWithListByAnnotatedElementAndByAnnotation = mergeWithListByAnnotatedElementAndByAnnotation;
         this.collectionsGenerator = new CollectionsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation);
     }
 
-    private void buildRecordCustom1ArgConstructor(
-            final StringBuilder recordClassContent,
-            final String qualifiedClassName,
-            final Map<? extends Element, String> nonVoidMethodsElementsReturnTypesMap,
-            final List<? extends Element> nonVoidMethodsElementsList) {
-        var simpleClassName = qualifiedClassName.substring(qualifiedClassName.lastIndexOf(DOT) + 1);
-        var fieldName = simpleClassName.substring(0, 1).toLowerCase() + simpleClassName.substring(1); // simpleClassName starting with lowercase char
-        // %s = generated simple class name, %s = pojo class qualified name , %s = field name
-        recordClassContent.append(format(
-                "\tpublic %s(%s %s) {%n",
-                constructImmutableSimpleNameBasedOnElementType(constructElementInstanceValueFromTypeString(processingEnvironment, qualifiedClassName)),
-                qualifiedClassName,
-                fieldName
-        )); // line declaring the constructor
-        recordClassContent.append("\t\tthis("); // calling canonical constructor
+    private void buildRecordCustom1ArgConstructor(StringBuilder recordClassContent, Element annotatedElement,
+                                                  Map<? extends Element, String> nonVoidMethodsElementsReturnTypesMap,
+                                                  List<? extends Element> nonVoidMethodsElementsList,
+                                                  boolean isSuperRecord) {
+        var annotatedTypeElement = (TypeElement) processingEnvironment.getTypeUtils().asElement(annotatedElement.asType());
+        var annotatedElementQualifiedName = annotatedTypeElement.getQualifiedName().toString();
+        var annotatedElementSimpleName = annotatedElementQualifiedName.substring(annotatedElementQualifiedName.lastIndexOf(DOT) + 1);
+        var annotatedElementFieldName = lowerCase1stChar(annotatedElementSimpleName);
+        // %s = generated simple class name, %s = pojo class qualified name + field name // if isSuperRecord = false
+        recordClassContent.append(format( // line declaring the constructor
+                TAB + PUBLIC + " %s(%s) " + OPENING_BRACE + NEW_LINE,
+                isSuperRecord
+                        ? constructSuperRecordSimpleNameBasedOnElementType(annotatedTypeElement)
+                        : constructImmutableSimpleNameBasedOnElementType(annotatedTypeElement),
+                annotatedElementQualifiedName + SPACE + annotatedElementFieldName
+                        + (isSuperRecord ? COMMA_SEPARATOR + buildConstructorArgsForMergeWithElements(annotatedElement) : EMPTY_STRING)
+        ));
+        recordClassContent.append(TAB + TAB + THIS + OPENING_PARENTHESIS); // calling canonical constructor
         // building canonical constructor content
         nonVoidMethodsElementsList.forEach(nonVoidMethodElement -> {
-            var enclosingElementIsRecord = ElementKind.RECORD.equals(nonVoidMethodElement.getEnclosingElement().getKind());
+            var enclosingElement = nonVoidMethodElement.getEnclosingElement();
+            var enclosingElementIsRecord = ElementKind.RECORD.equals(enclosingElement.getKind());
             var nonVoidMethodReturnTypeAsString = nonVoidMethodsElementsReturnTypesMap.get(nonVoidMethodElement);
-            var nonVoidMethodReturnTypeElementOpt = Optional.ofNullable(processingEnvironment.getTypeUtils().asElement(((ExecutableType) nonVoidMethodElement.asType()).getReturnType())); // for collections, Element.toString() will NOT return the generic part
-            // TODO check ifpresentorelse ???
-            // if the pojo constructor param is another pojo, check if it's been annotated. if yes, use the corresponding generated record class
-            if (nonVoidMethodReturnTypeElementOpt.isEmpty()) {
-                // primitives
-                buildCanonicalConstructorCallSingleParameter(recordClassContent, fieldName, nonVoidMethodElement, nonVoidMethodReturnTypeAsString, false, enclosingElementIsRecord);
-            } else {
-                // non-primitives
-                buildCanonicalConstructorCallSingleParameter(recordClassContent, fieldName, nonVoidMethodElement, nonVoidMethodReturnTypeAsString, allElementsTypesToConvertByAnnotation.contains(nonVoidMethodReturnTypeElementOpt.get().toString()), enclosingElementIsRecord);
-            }
+            var nonVoidMethodReturnTypeElementOpt = Optional.ofNullable(
+                    processingEnvironment.getTypeUtils().asElement(((ExecutableType) nonVoidMethodElement.asType()).getReturnType())); // for collections, Element.toString() will NOT return the generic part
+            // Consumer to run in case of non-primitives i.e nonVoidMethodReturnTypeElementOpt.isPresent()
+            Consumer<Element> consumer = nonVoidMethodReturnTypeElement ->
+                    buildCanonicalConstructorCallSingleParameter(recordClassContent, lowerCase1stChar(enclosingElement.getSimpleName().toString()), nonVoidMethodElement,
+                            nonVoidMethodReturnTypeAsString, isElementAnnotatedAsRecordOrImmutable(allElementsTypesToConvertByAnnotation).test(nonVoidMethodReturnTypeElement),
+                            enclosingElementIsRecord);
+            // Runnable to execute in case of primitives i.e nonVoidMethodReturnTypeElementOpt.isEmpty()
+            Runnable runnable = () -> buildCanonicalConstructorCallSingleParameter(recordClassContent, lowerCase1stChar(enclosingElement.getSimpleName().toString()),
+                    nonVoidMethodElement, nonVoidMethodReturnTypeAsString, false, enclosingElementIsRecord);
+            // if the type has already been annotated somewhere else in the code, the field type is the corresponding generated record class (consumer is executed)
+            // if not annotated and not a collection then keep the received type as is (runnable is executed)
+            nonVoidMethodReturnTypeElementOpt.ifPresentOrElse(consumer, runnable);
         });
         recordClassContent.deleteCharAt(recordClassContent.length() - 1).deleteCharAt(recordClassContent.length() - 1);
         // finished building canonical constructor content
         recordClassContent.append(CLOSING_PARENTHESIS + SEMI_COLON + NEW_LINE);
         recordClassContent.append(TAB + CLOSING_BRACE + NEW_LINE);
+    }
+
+    private String buildConstructorArgsForMergeWithElements(Element annotatedElement) {
+        return mergeWithListByAnnotatedElementAndByAnnotation.get(ORG_FROPOREC_SUPER_RECORD).get(annotatedElement).stream()
+                .map(element -> element.toString() + SPACE + lowerCase1stChar(element.getSimpleName().toString()))
+                .collect(joining(COMMA_SEPARATOR + SPACE));
     }
 
     private void buildCanonicalConstructorCallSingleParameter(
@@ -108,7 +133,8 @@ public final class CustomConstructorGenerator implements CodeGenerator {
         var nonVoidMethodElementAsString = nonVoidMethodElement.toString();
         if (nonVoidMethodElementAsString.startsWith(GET) || enclosingElementIsRecord) {
             if (collectionsGenerator.isCollectionWithGeneric(nonVoidMethodReturnTypeAsString)) {
-                collectionsGenerator.generateCollectionFieldMappingIfGenericIsAnnotated(recordClassContent, fieldName, nonVoidMethodElementAsString, nonVoidMethodReturnTypeAsString);
+                collectionsGenerator.generateCollectionFieldMappingIfGenericIsAnnotated(recordClassContent, fieldName,
+                        nonVoidMethodElementAsString, nonVoidMethodReturnTypeAsString);
             } else {
                 if (processAsImmutable) {
                     recordClassContent.append(format(
@@ -131,8 +157,11 @@ public final class CustomConstructorGenerator implements CodeGenerator {
     @Override
     @SuppressWarnings("unchecked")
     public void generateCode(StringBuilder recordClassContent, Map<String, Object> params) {
-        var qualifiedClassName = (String) params.get(CodeGenerator.ANNOTATED_ELEMENT);
+        var annotatedElement = (Element) params.get(CodeGenerator.ANNOTATED_ELEMENT);
         var nonVoidMethodsElementsList = (List<? extends Element>) params.get(CodeGenerator.NON_VOID_METHODS_ELEMENTS_LIST);
-        buildRecordCustom1ArgConstructor(recordClassContent, qualifiedClassName, constructNonVoidMethodsElementsReturnTypesMapFromList(nonVoidMethodsElementsList), nonVoidMethodsElementsList);
+        var isSuperRecord = (Boolean) params.get(CodeGenerator.IS_SUPER_RECORD);
+        buildRecordCustom1ArgConstructor(recordClassContent, annotatedElement,
+                constructNonVoidMethodsElementsReturnTypesMapFromList(nonVoidMethodsElementsList),
+                nonVoidMethodsElementsList, isSuperRecord);
     }
 }

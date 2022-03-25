@@ -43,7 +43,7 @@ import static org.froporec.generator.helpers.StringGenerator.constructSuperRecor
 
 public sealed interface RecordSourceFileGenerator extends StringGenerator permits FroporecRecordSourceFileGenerator {
 
-    String generateRecordClassContent(Element annotatedElement, String generatedQualifiedClassName, List<? extends Element> nonVoidMethodsElementsList);
+    String generateRecordClassContent(Element annotatedElement, String generatedQualifiedClassName, List<? extends Element> nonVoidMethodsElementsList, boolean isSuperRecord);
 
     default Map<String, List<String>> generateForRecordAnnotatedElements(List<Element> elementsListToProcess,
                                                                          ProcessingEnvironment processingEnv) {
@@ -103,18 +103,17 @@ public sealed interface RecordSourceFileGenerator extends StringGenerator permit
                 .toList();
     }
 
-    // TODO add the annot string/name of the annotation being processed
     private Map<String, String> performRecordSourceFileGeneration(Element annotatedElement,
                                                                   List<? extends Element> nonVoidMethodsElementsList,
                                                                   ProcessingEnvironment processingEnv,
-                                                                  boolean isSuperRecord) { // TODO check abv, might no longer be needed
+                                                                  boolean isSuperRecord) {
         var generationReport = new HashMap<String, String>();
         var annotatedTypeElement = (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType());
         var generatedQualifiedClassName = isSuperRecord
                 ? constructSuperRecordQualifiedNameBasedOnElementType(annotatedTypeElement)
                 : constructImmutableQualifiedNameBasedOnElementType(annotatedTypeElement);
         try {
-            writeRecordSourceFile(annotatedElement, generatedQualifiedClassName, nonVoidMethodsElementsList, processingEnv);
+            writeRecordSourceFile(annotatedElement, generatedQualifiedClassName, nonVoidMethodsElementsList, processingEnv, isSuperRecord);
             generationReport.put(SUCCESS, generatedQualifiedClassName);
         } catch (FilerException e) {
             // File was already generated - do nothing
@@ -127,10 +126,11 @@ public sealed interface RecordSourceFileGenerator extends StringGenerator permit
     private void writeRecordSourceFile(Element annotatedElement,
                                        String generatedQualifiedClassName,
                                        List<? extends Element> nonVoidMethodsElementsList,
-                                       ProcessingEnvironment processingEnv) throws IOException {
+                                       ProcessingEnvironment processingEnv,
+                                       boolean isSuperRecord) throws IOException {
         var recordClassFile = processingEnv.getFiler().createSourceFile(generatedQualifiedClassName); // if file already exists, this line throws a FilerException
         try (var out = new PrintWriter(recordClassFile.openWriter())) {
-            out.println(generateRecordClassContent(annotatedElement, generatedQualifiedClassName, nonVoidMethodsElementsList));
+            out.println(generateRecordClassContent(annotatedElement, generatedQualifiedClassName, nonVoidMethodsElementsList, isSuperRecord));
         }
     }
 

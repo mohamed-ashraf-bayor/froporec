@@ -47,7 +47,7 @@ public final class CollectionsGenerator implements SupportedCollectionsFieldsGen
     private static final String MAP_FIELD_MAPPING_LOGIC_STRING_FORMAT = "java.util.Optional.ofNullable(%s.%s).isEmpty() ? java.util.Map.of() : " +
             "%s.%s.entrySet().stream().collect(java.util.stream.Collectors.toUnmodifiableMap(entry -> %s(entry.getKey()), entry -> %s(entry.getValue()))), ";
 
-    private final Map<String, Set<Element>> allElementsTypesToConvertByAnnotation; // was just Set<String>
+    private final Map<String, Set<Element>> allElementsTypesToConvertByAnnotation;
 
     private final ProcessingEnvironment processingEnvironment;
 
@@ -58,7 +58,7 @@ public final class CollectionsGenerator implements SupportedCollectionsFieldsGen
      */
     public CollectionsGenerator(ProcessingEnvironment processingEnvironment, Map<String, Set<Element>> allElementsTypesToConvertByAnnotation) {
         this.processingEnvironment = processingEnvironment;
-        this.allElementsTypesToConvertByAnnotation = allElementsTypesToConvertByAnnotation; // TODO consolidate and remove Suffix
+        this.allElementsTypesToConvertByAnnotation = allElementsTypesToConvertByAnnotation;
     }
 
     @Override
@@ -93,7 +93,7 @@ public final class CollectionsGenerator implements SupportedCollectionsFieldsGen
     private String buildReplacementStringForListOrSetGeneric(String collectionType,
                                                              String genericType,
                                                              String nonVoidMethodReturnTypeAsString) {
-        if (allElementsTypesToConvertByAnnotation.contains(genericType)) {
+        if (isTypeAnnotatedAsRecordOrImmutable(processingEnvironment, allElementsTypesToConvertByAnnotation).test(genericType)) {
             var elementFromGenericTypeStringOpt = constructElementInstanceFromTypeString(processingEnvironment, genericType);
             return format(
                     "%s<%s>",
@@ -108,10 +108,10 @@ public final class CollectionsGenerator implements SupportedCollectionsFieldsGen
     private String buildReplacementStringForMapGeneric(String collectionType, String keyType, String valueType) {
         return format("%s<%s, %s>",
                 collectionType,
-                allElementsTypesToConvertByAnnotation.contains(keyType)
+                isTypeAnnotatedAsRecordOrImmutable(processingEnvironment, allElementsTypesToConvertByAnnotation).test(keyType)
                         ? constructImmutableQualifiedNameBasedOnElementType(constructElementInstanceValueFromTypeString(processingEnvironment, keyType))
                         : keyType,
-                allElementsTypesToConvertByAnnotation.contains(valueType)
+                isTypeAnnotatedAsRecordOrImmutable(processingEnvironment, allElementsTypesToConvertByAnnotation).test(valueType)
                         ? constructImmutableQualifiedNameBasedOnElementType(constructElementInstanceValueFromTypeString(processingEnvironment, valueType))
                         : valueType
         );
@@ -131,7 +131,7 @@ public final class CollectionsGenerator implements SupportedCollectionsFieldsGen
                     nonVoidMethodElementAsString,
                     fieldName,
                     nonVoidMethodElementAsString,
-                    allElementsTypesToConvertByAnnotation.contains(genericType)
+                    isTypeAnnotatedAsRecordOrImmutable(processingEnvironment, allElementsTypesToConvertByAnnotation).test(genericType)
                             ? NEW + constructImmutableQualifiedNameBasedOnElementType(constructElementInstanceValueFromTypeString(processingEnvironment, genericType))
                             : EMPTY_STRING
             ));
@@ -144,7 +144,7 @@ public final class CollectionsGenerator implements SupportedCollectionsFieldsGen
                     nonVoidMethodElementAsString,
                     fieldName,
                     nonVoidMethodElementAsString,
-                    allElementsTypesToConvertByAnnotation.contains(genericType)
+                    isTypeAnnotatedAsRecordOrImmutable(processingEnvironment, allElementsTypesToConvertByAnnotation).test(genericType)
                             ? NEW + constructImmutableQualifiedNameBasedOnElementType(constructElementInstanceValueFromTypeString(processingEnvironment, genericType))
                             : EMPTY_STRING
             ));
@@ -153,7 +153,8 @@ public final class CollectionsGenerator implements SupportedCollectionsFieldsGen
         if (collectionType.contains(SupportedCollectionTypes.MAP.getType())) {
             // only for maps
             var keyValueArray = genericType.split(COMMA_SEPARATOR); // the key/value entries in a Map genericType
-            if (!allElementsTypesToConvertByAnnotation.contains(keyValueArray[0]) && !allElementsTypesToConvertByAnnotation.contains(keyValueArray[1])) {
+            if (!isTypeAnnotatedAsRecordOrImmutable(processingEnvironment, allElementsTypesToConvertByAnnotation).test(keyValueArray[0])
+                    && !isTypeAnnotatedAsRecordOrImmutable(processingEnvironment, allElementsTypesToConvertByAnnotation).test(keyValueArray[1])) {
                 // both key and value are annotated pojos
                 recordClassContent.append(format("%s.%s, ", fieldName, nonVoidMethodElementAsString));
                 return;
@@ -165,10 +166,10 @@ public final class CollectionsGenerator implements SupportedCollectionsFieldsGen
                     nonVoidMethodElementAsString,
                     fieldName,
                     nonVoidMethodElementAsString,
-                    allElementsTypesToConvertByAnnotation.contains(keyValueArray[0])
+                    isTypeAnnotatedAsRecordOrImmutable(processingEnvironment, allElementsTypesToConvertByAnnotation).test(keyValueArray[0])
                             ? NEW + constructImmutableQualifiedNameBasedOnElementType(constructElementInstanceValueFromTypeString(processingEnvironment, keyValueArray[0]))
                             : EMPTY_STRING,
-                    allElementsTypesToConvertByAnnotation.contains(keyValueArray[1])
+                    isTypeAnnotatedAsRecordOrImmutable(processingEnvironment, allElementsTypesToConvertByAnnotation).test(keyValueArray[1])
                             ? NEW + constructImmutableQualifiedNameBasedOnElementType(constructElementInstanceValueFromTypeString(processingEnvironment, keyValueArray[1]))
                             : EMPTY_STRING
             ));

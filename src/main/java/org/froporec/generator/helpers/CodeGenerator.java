@@ -26,12 +26,14 @@ import org.froporec.annotations.GenerateRecord;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.type.ExecutableType;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static java.util.stream.Collectors.toMap;
@@ -64,10 +66,15 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
     String NON_VOID_METHOD_AS_STRING = "nonVoidMethodAsString";
 
     /**
-     * parameter name: "nonVoidMethodsElementsList", expected type: List&lt;? extends javax.lang.model.element.Element&gt;.<br>
+     * parameter name: "nonVoidMethodsElementsList", expected type: {@link List}&lt;? extends {@link Element}&gt;.<br>
      * toString representation ex: [getLastname(), getAge(), getMark(), getGrade(), getSchool()]
      */
     String NON_VOID_METHODS_ELEMENTS_LIST = "nonVoidMethodsElementsList";
+
+    /**
+     * parameter name: "isSuperRecord", expected type: {@link Boolean}, indicates whether the Element is being processed as a SuperRecord
+     */
+    String IS_SUPER_RECORD = "isSuperRecord";
 
     /**
      * Generates the requested code fragment, based on the parameters provided in the params object and appends it to the provided recordClassContent param
@@ -122,6 +129,33 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
                         || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_IMMUTABLE).contains(nonVoidMethodReturnTypeElement)
                         || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_GENERATE_RECORD).contains(nonVoidMethodReturnTypeElement)
                         || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_GENERATE_IMMUTABLE).contains(nonVoidMethodReturnTypeElement);
+    }
+
+    default Predicate<String> isTypeAnnotatedAsRecordOrImmutable(ProcessingEnvironment processingEnvironment, Map<String, Set<Element>> allElementsTypesToConvertByAnnotation) {
+        Function<String, Element> convertToElement = typeString -> constructElementInstanceValueFromTypeString(processingEnvironment, typeString);
+        return typeString ->
+                allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_RECORD).contains(convertToElement.apply(typeString))
+                        || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_IMMUTABLE).contains(convertToElement.apply(typeString))
+                        || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_GENERATE_RECORD).contains(convertToElement.apply(typeString))
+                        || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_GENERATE_IMMUTABLE).contains(convertToElement.apply(typeString));
+    }
+
+    default List<String> buildFieldsListFromNonVoidMethodsElementsList(ProcessingEnvironment processingEnvironment, List<? extends Element> nonVoidMethodsElementsList) {
+        Function<Element, String> convertToFieldName = element -> {
+            var fieldName = element.toString().substring(0, element.toString().indexOf(OPENING_PARENTHESIS));
+            if (ElementKind.CLASS.equals((processingEnvironment.getTypeUtils().asElement(element.getEnclosingElement().asType())).getKind())) {
+                if (fieldName.startsWith(GET)) {
+                    return fieldName.substring(3, 4).toLowerCase() + fieldName.substring(4);
+                }
+                if (fieldName.startsWith(IS)) {
+                    return fieldName.substring(2, 3).toLowerCase() + fieldName.substring(3);
+                }
+            }
+            return fieldName;
+        };
+        return nonVoidMethodsElementsList.stream()
+                .map(element -> convertToFieldName.apply(element))
+                .toList();
     }
 
     default String modifyFieldNameIfDuplicatesExist(String fieldName, Element nonVoidMethodElement, List<String> fieldsList) {

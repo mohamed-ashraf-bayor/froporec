@@ -28,7 +28,7 @@ import org.froporec.annotations.Record;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.TypeElement;
+import java.util.List;
 
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
@@ -64,9 +64,21 @@ public interface StringGenerator {
     String RECORD = "Record";
 
     /**
+     * "GenerateRecord" string literal
+     */
+    @Deprecated(forRemoval = true, since = "1.3")
+    String GENERATE_RECORD = "GenerateRecord";
+
+    /**
      * "Immutable" String literal
      */
     String IMMUTABLE = "Immutable";
+
+    /**
+     * "GenerateImmutable" String literal
+     */
+    @Deprecated(forRemoval = true, since = "1.3")
+    String GENERATE_IMMUTABLE = "GenerateImmutable";
 
     /**
      * "SuperRecord" string literal
@@ -101,6 +113,12 @@ public interface StringGenerator {
     String ORG_FROPOREC_IMMUTABLE = "org.froporec.annotations.Immutable";
 
     /**
+     * all Froporec annotations qualified names
+     */
+    List<String> ALL_ANNOTATIONS_QUALIFIED_NAMES = List.of(ORG_FROPOREC_GENERATE_RECORD, ORG_FROPOREC_GENERATE_IMMUTABLE,
+            ORG_FROPOREC_RECORD, ORG_FROPOREC_IMMUTABLE, ORG_FROPOREC_SUPER_RECORD);
+
+    /**
      * "includeTypes" attribute String literal
      *
      * @deprecated use 'alsoConvert' instead
@@ -122,6 +140,11 @@ public interface StringGenerator {
      * "superInterfaces" attribute String literal
      */
     String SUPER_INTERFACES_ATTRIBUTE = "superInterfaces";
+
+    /**
+     * "implements" String literal
+     */
+    String IMPLEMENTS = "implements";
 
     /**
      * " " whitespace
@@ -189,6 +212,16 @@ public interface StringGenerator {
     String TAB = "\t";
 
     /**
+     * "this" String literal
+     */
+    String THIS = "this";
+
+    /**
+     * "public" String literal
+     */
+    String PUBLIC = "public";
+
+    /**
      * "get" String literal. Starting string of Pojos non-boolean getters
      */
     String GET = "get";
@@ -216,12 +249,12 @@ public interface StringGenerator {
     /**
      * Generation report info message format
      */
-    String GENERATION_REPORT_MSG_FORMAT = "%s - %s:%n\t\t";
+    String GENERATION_REPORT_MSG_FORMAT = "%s for %s:\n\t\t%s";
 
     /**
      * Separator used while displaying each one of the generated or skipped filenames
      */
-    String GENERATION_REPORT_ELEMENTS_SEPARATOR = "%n\t\t";
+    String GENERATION_REPORT_ELEMENTS_SEPARATOR = "\n\t\t";
 
     /**
      * Warning message displayed during code compilation, indicating annotated elements skipped during generation process
@@ -291,12 +324,31 @@ public interface StringGenerator {
     }
 
     /**
+     * Constructs the simple name of the generated super record class.
+     * Based on whether or not the simple name of the passed in element ends with 'Record'
+     *
+     * @param element {@link Element} instance of the annotated class
+     * @return the qualified name of the fully immutable super record class being generated from an annotated Pojo or Record class.<br>
+     * ex: ...RecordClassName+"SuperRecord" or ...PojoClassName+"SuperRecord"
+     */
+    static String constructSuperRecordSimpleNameBasedOnElementType(Element element) {
+        var simpleName = element.getSimpleName().toString();
+        return simpleName.endsWith(RECORD)
+                ? simpleName.substring(0, simpleName.lastIndexOf(RECORD)) + SUPER_RECORD
+                : simpleName + SUPER_RECORD;
+    }
+
+    /**
      * Removes all commas from the provided string
      *
      * @param text contains commas as a string separator
      * @return provided text with all commas removed
      */
-    static String removeCommaSeparator(final String text) {
+    static String removeCommaSeparator(String text) {
         return asList(text.split(COMMA_SEPARATOR)).stream().collect(joining());
+    }
+
+    static String lowerCase1stChar(String text) {
+        return text.substring(0, 1).toLowerCase() + text.substring(1);
     }
 }

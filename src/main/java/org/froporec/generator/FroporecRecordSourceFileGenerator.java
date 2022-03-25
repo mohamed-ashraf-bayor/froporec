@@ -40,6 +40,7 @@ import static org.froporec.extractor.AnnotationInfoExtractor.extractAllElementsT
 import static org.froporec.extractor.AnnotationInfoExtractor.extractMergeWithElementsListByAnnotatedElement;
 import static org.froporec.extractor.AnnotationInfoExtractor.extractSuperInterfacesListByAnnotatedElement;
 import static org.froporec.generator.helpers.CodeGenerator.ANNOTATED_ELEMENT;
+import static org.froporec.generator.helpers.CodeGenerator.IS_SUPER_RECORD;
 import static org.froporec.generator.helpers.CodeGenerator.NON_VOID_METHODS_ELEMENTS_LIST;
 
 /**
@@ -78,8 +79,8 @@ public final class FroporecRecordSourceFileGenerator implements RecordSourceFile
         this.allElementsTypesToConvertByAnnotation = extractAllElementsTypesToConvert(this.processingEnvironment, allAnnotatedElementsByAnnotation);
         this.superInterfacesListByAnnotatedElementAndByAnnotation = extractSuperInterfacesListByAnnotatedElement(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, allAnnotatedElementsByAnnotation);
         this.mergeWithListByAnnotatedElementAndByAnnotation = extractMergeWithElementsListByAnnotatedElement(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, allAnnotatedElementsByAnnotation);
-        this.fieldsGenerator = new FieldsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, this.mergeWithListByAnnotatedElementAndByAnnotation);
-        this.superInterfacesGenerator = new SuperInterfacesGenerator(this.processingEnvironment, this.superInterfacesListByAnnotatedElementAndByAnnotation);
+        this.fieldsGenerator = new FieldsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation);
+        this.superInterfacesGenerator = new SuperInterfacesGenerator(this.superInterfacesListByAnnotatedElementAndByAnnotation);
         this.customConstructorGenerator = new CustomConstructorGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, this.mergeWithListByAnnotatedElementAndByAnnotation);
         this.javaxGeneratedGenerator = new JavaxGeneratedGenerator();
     }
@@ -87,7 +88,8 @@ public final class FroporecRecordSourceFileGenerator implements RecordSourceFile
     @Override
     public String generateRecordClassContent(Element annotatedElement,
                                              String generatedQualifiedClassName,
-                                             List<? extends Element> nonVoidMethodsElementsList) {
+                                             List<? extends Element> nonVoidMethodsElementsList,
+                                             boolean isSuperRecord) {
         var recordClassContent = new StringBuilder();
         var annotatedTypeElement = (TypeElement) processingEnvironment.getTypeUtils().asElement(annotatedElement.asType());
         var qualifiedClassName = annotatedTypeElement.getQualifiedName().toString();
@@ -103,13 +105,13 @@ public final class FroporecRecordSourceFileGenerator implements RecordSourceFile
         recordClassContent.append(recordSimpleClassName);
         // list all attributes next to the record name
         recordClassContent.append(OPENING_PARENTHESIS);
-        fieldsGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement, NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList)); // TODO SEE IF ANNOTATED_ELEMENT IS REALLY NEEDED
+        fieldsGenerator.generateCode(recordClassContent, Map.of(NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList));
         recordClassContent.append(CLOSING_PARENTHESIS + SPACE);
         // list all provided superinterfaces
         superInterfacesGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement));
-        recordClassContent.append(OPENING_BRACE + NEW_LINE);
+        recordClassContent.append(SPACE + OPENING_BRACE + NEW_LINE);
         // Custom 1 arg constructor statement
-        customConstructorGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement, NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList));
+        customConstructorGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement, NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList, IS_SUPER_RECORD, isSuperRecord));
         // no additional content: close the body of the class
         recordClassContent.append(CLOSING_BRACE);
         return recordClassContent.toString();

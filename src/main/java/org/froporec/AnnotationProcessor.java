@@ -116,6 +116,6 @@ public sealed interface AnnotationProcessor permits FroporecAnnotationProcessor 
         var elementsMapToProcess = annotatedElementsMap.keySet().stream()
                 .filter(element -> !skippedElements.contains(element))
                 .collect(toMap(element -> element, element -> annotatedElementsMap.get(element).get(MERGE_WITH_ATTRIBUTE)));
-        return recordSourceFileGenerator.generateForSuperRecordAnnotatedElements(elementsMapToProcess, processingEnv); // TODO add the annot string/name
+        return recordSourceFileGenerator.generateForSuperRecordAnnotatedElements(elementsMapToProcess, processingEnv);
     }
 }

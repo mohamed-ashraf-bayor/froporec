@@ -43,8 +43,6 @@ import static java.util.stream.Collectors.joining;
  */
 public final class SuperInterfacesGenerator implements CodeGenerator {
 
-    private final ProcessingEnvironment processingEnvironment;
-
     private final Map<String, Map<Element, List<Element>>> superInterfacesListByAnnotatedElementAndByAnnotation;
 
     /**
@@ -54,8 +52,7 @@ public final class SuperInterfacesGenerator implements CodeGenerator {
      * @param processingEnvironment                 {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
      * @param allElementsTypesToConvertByAnnotation {@link Set} of all annotated elements types string representations
      */
-    public SuperInterfacesGenerator(ProcessingEnvironment processingEnvironment, Map<String, Map<Element, List<Element>>> superInterfacesListByAnnotatedElementAndByAnnotation) {
-        this.processingEnvironment = processingEnvironment;
+    public SuperInterfacesGenerator(Map<String, Map<Element, List<Element>>> superInterfacesListByAnnotatedElementAndByAnnotation) {
         this.superInterfacesListByAnnotatedElementAndByAnnotation = superInterfacesListByAnnotatedElementAndByAnnotation;
     }
 
@@ -64,21 +61,30 @@ public final class SuperInterfacesGenerator implements CodeGenerator {
         var immutableAnnotatedElementsMap = superInterfacesListByAnnotatedElementAndByAnnotation.get(ORG_FROPOREC_IMMUTABLE);
         var superRecordAnnotatedElementsMap = superInterfacesListByAnnotatedElementAndByAnnotation.get(ORG_FROPOREC_SUPER_RECORD);
         if (recordAnnotatedElementsMap.containsKey(annotatedElement)) {
-            recordClassContent.append(buildCommaSeparatedList(recordAnnotatedElementsMap, annotatedElement));
+            var superInterfacesListString = buildCommaSeparatedList(recordAnnotatedElementsMap, annotatedElement);
+            if (!superInterfacesListString.isBlank()) {
+                recordClassContent.append(IMPLEMENTS + SPACE + superInterfacesListString);
+            }
             return;
         }
         if (immutableAnnotatedElementsMap.containsKey(annotatedElement)) {
-            recordClassContent.append(buildCommaSeparatedList(immutableAnnotatedElementsMap, annotatedElement));
+            var superInterfacesListString = buildCommaSeparatedList(immutableAnnotatedElementsMap, annotatedElement);
+            if (!superInterfacesListString.isBlank()) {
+                recordClassContent.append(IMPLEMENTS + SPACE + superInterfacesListString);
+            }
             return;
         }
         if (superRecordAnnotatedElementsMap.containsKey(annotatedElement)) {
-            recordClassContent.append(buildCommaSeparatedList(superRecordAnnotatedElementsMap, annotatedElement));
+            var superInterfacesListString = buildCommaSeparatedList(superRecordAnnotatedElementsMap, annotatedElement);
+            if (!superInterfacesListString.isBlank()) {
+                recordClassContent.append(IMPLEMENTS + SPACE + superInterfacesListString);
+            }
         }
     }
 
     private String buildCommaSeparatedList(Map<Element, List<Element>> annotatedElementsMap, Element annotatedElement) {
         return annotatedElementsMap.get(annotatedElement).stream()
-                .map(Object::toString) // TODO chck whthr we might need processingEnvironment here. if not, remove
+                .map(Object::toString)
                 .map(StringGenerator::removeCommaSeparator)
                 .collect(joining(COMMA_SEPARATOR + WHITESPACE));
     }

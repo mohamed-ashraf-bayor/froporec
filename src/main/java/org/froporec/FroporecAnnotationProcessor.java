@@ -48,8 +48,11 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.concat;
+import static org.froporec.generator.helpers.StringGenerator.ALL_ANNOTATIONS_QUALIFIED_NAMES;
 import static org.froporec.generator.helpers.StringGenerator.AT_SIGN;
 import static org.froporec.generator.helpers.StringGenerator.FAILURE;
+import static org.froporec.generator.helpers.StringGenerator.GENERATE_IMMUTABLE;
+import static org.froporec.generator.helpers.StringGenerator.GENERATE_RECORD;
 import static org.froporec.generator.helpers.StringGenerator.GENERATION_FAILURE_MSG;
 import static org.froporec.generator.helpers.StringGenerator.GENERATION_REPORT_ELEMENTS_SEPARATOR;
 import static org.froporec.generator.helpers.StringGenerator.GENERATION_REPORT_MSG_FORMAT;
@@ -82,10 +85,8 @@ public final class FroporecAnnotationProcessor extends AbstractProcessor impleme
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnvironment) {
         var allAnnotatedElementsByAnnotation = new HashMap<TypeElement, Set<? extends Element>>();
-        var allAnnotationsQualifiedNames = List.of(ORG_FROPOREC_GENERATE_RECORD, ORG_FROPOREC_GENERATE_IMMUTABLE,
-                ORG_FROPOREC_RECORD, ORG_FROPOREC_IMMUTABLE, ORG_FROPOREC_SUPER_RECORD);
         annotations.forEach(annotation -> {
-            if (allAnnotationsQualifiedNames.stream().anyMatch(annotation.toString()::contains)) {
+            if (ALL_ANNOTATIONS_QUALIFIED_NAMES.stream().anyMatch(annotation.toString()::contains)) {
                 allAnnotatedElementsByAnnotation.merge(
                         annotation,
                         roundEnvironment.getElementsAnnotatedWith(annotation),
@@ -96,14 +97,26 @@ public final class FroporecAnnotationProcessor extends AbstractProcessor impleme
         if (!allAnnotatedElementsByAnnotation.isEmpty()) {
             var allAnnotatedElementsToProcessByAnnotation =
                     new FroporecAnnotationInfoExtractor(processingEnv).extractAnnotatedElementsByAnnotation(allAnnotatedElementsByAnnotation);
+            // add empty maps for non-provided annotations before returning
+            ALL_ANNOTATIONS_QUALIFIED_NAMES.stream()
+                    .filter(annotationString -> !allAnnotatedElementsToProcessByAnnotation.keySet().contains(annotationString))
+                    .forEach(annotationString -> allAnnotatedElementsToProcessByAnnotation.put(annotationString, Map.of()));
             RecordSourceFileGenerator recordSourceFileGenerator = new FroporecRecordSourceFileGenerator(processingEnv, allAnnotatedElementsToProcessByAnnotation);
             displayReport(
                     AT_SIGN + RECORD,
                     processRecordAnnotatedElements(allAnnotatedElementsToProcessByAnnotation.get(ORG_FROPOREC_RECORD), recordSourceFileGenerator, processingEnv)
             );
             displayReport(
+                    AT_SIGN + GENERATE_RECORD,
+                    processRecordAnnotatedElements(allAnnotatedElementsToProcessByAnnotation.get(ORG_FROPOREC_GENERATE_RECORD), recordSourceFileGenerator, processingEnv)
+            );
+            displayReport(
                     AT_SIGN + IMMUTABLE,
                     processImmutableAnnotatedElements(allAnnotatedElementsToProcessByAnnotation.get(ORG_FROPOREC_IMMUTABLE), recordSourceFileGenerator, processingEnv)
+            );
+            displayReport(
+                    AT_SIGN + GENERATE_IMMUTABLE,
+                    processImmutableAnnotatedElements(allAnnotatedElementsToProcessByAnnotation.get(ORG_FROPOREC_GENERATE_IMMUTABLE), recordSourceFileGenerator, processingEnv)
             );
             displayReport(
                     AT_SIGN + SUPER_RECORD,
@@ -123,7 +136,7 @@ public final class FroporecAnnotationProcessor extends AbstractProcessor impleme
             log.info(() -> format(
                     GENERATION_REPORT_MSG_FORMAT,
                     GENERATION_SUCCESS_MSG,
-                    AT_SIGN + processedAnnotation,
+                    processedAnnotation,
                     generatedClassesMap.get(SUCCESS).stream().collect(joining(format(GENERATION_REPORT_ELEMENTS_SEPARATOR)))
             ));
         }

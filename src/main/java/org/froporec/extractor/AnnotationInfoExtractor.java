@@ -49,6 +49,7 @@ import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_RECORD
 import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_SUPER_RECORD;
 import static org.froporec.generator.helpers.StringGenerator.SUPER_INTERFACES_ATTRIBUTE;
 
+// TODO all jdocs
 @FunctionalInterface
 public interface AnnotationInfoExtractor {
 
@@ -67,7 +68,7 @@ public interface AnnotationInfoExtractor {
     Predicate<Element> METHOD_PARAMS_INFO_EXTRACTOR_PREDICATE = element -> ElementKind.PARAMETER.equals(element.getKind());
 
     /**
-     * // TODO jdoc
+     *
      * @param allAnnotatedElementsByAnnotation
      * @param filterPredicate
      * @return map organized according to the structure: Map<String, Map<Element, Map<String, List<Element>>>>, detailed below:

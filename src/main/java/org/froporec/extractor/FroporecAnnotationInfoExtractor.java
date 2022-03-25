@@ -79,7 +79,7 @@ public final class FroporecAnnotationInfoExtractor {
         };
 
         var allAnnotatedPojosElementsInfosByAnnotation = annotationInfoExtractor.extractInfoBasedOnPredicate(allAnnotatedElementsByAnnotation, POJO_CLASSES_INFO_EXTRACTOR_PREDICATE);
-        var annotatedRecordsElementsInfosByAnnotation = annotationInfoExtractor.extractInfoBasedOnPredicate(allAnnotatedElementsByAnnotation, RECORD_CLASSES_INFO_EXTRACTOR_PREDICATE);
+        var annotatedRecordsElementsInfosByAnnotation = annotationInfoExtractor.extractInfoBasedOnPredicate(allAnnotatedElementsByAnnotation, RECORD_CLASSES_INFO_EXTRACTOR_PREDICATE); // TODO chck why not working
         var annotatedFieldsElementsInfosByAnnotation = annotationInfoExtractor.extractInfoBasedOnPredicate(allAnnotatedElementsByAnnotation, FIELDS_INFO_EXTRACTOR_PREDICATE);
         var annotatedParamsElementsInfosByAnnotation = annotationInfoExtractor.extractInfoBasedOnPredicate(allAnnotatedElementsByAnnotation, METHOD_PARAMS_INFO_EXTRACTOR_PREDICATE);
 
