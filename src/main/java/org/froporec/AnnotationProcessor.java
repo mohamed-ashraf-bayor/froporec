@@ -44,10 +44,29 @@ import static org.froporec.generator.helpers.StringGenerator.RECORD;
 import static org.froporec.generator.helpers.StringGenerator.SKIPPED_ELEMENTS_WARNING_MSG_FORMAT;
 import static org.froporec.generator.helpers.StringGenerator.SUPER_RECORD;
 
+/**
+ * Exposes:<br>
+ * - default (concrete) methods to be called from the Annotation Processor main class to perform the processing of the annotated elements<br>
+ * - abstract methods to be implemented by the Annotation Processor main class
+ */
 public sealed interface AnnotationProcessor permits FroporecAnnotationProcessor {
 
+    /**
+     * Notifies the Annotation Processor main class with a message intended to be displayed as a Warning
+     *
+     * @param warningMsg a String object containing the warning message
+     */
     void notifyWarning(String warningMsg);
 
+    /**
+     * Processes elements annotated with &#64;{@link org.froporec.annotations.Record}
+     *
+     * @param annotatedElementsMap      {@link Map} containing annotated {@link Element} instances along with the provided
+     *                                  attributes with their respective values
+     * @param recordSourceFileGenerator instance of {@link RecordSourceFileGenerator} used to perform the Record class generation
+     * @param processingEnv             {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @return {@link Map} containing 2 keys: SUCCESS and FAILURE, each one's values being the list of qualified names of the generated Record classes
+     */
     default Map<String, List<String>> processRecordAnnotatedElements(Map<Element, Map<String, List<Element>>> annotatedElementsMap,
                                                                      RecordSourceFileGenerator recordSourceFileGenerator,
                                                                      ProcessingEnvironment processingEnv) {
@@ -73,6 +92,15 @@ public sealed interface AnnotationProcessor permits FroporecAnnotationProcessor 
         return recordSourceFileGenerator.generateForRecordAnnotatedElements(elementsListToProcess, processingEnv);
     }
 
+    /**
+     * Processes elements annotated with &#64;{@link org.froporec.annotations.Immutable}
+     *
+     * @param annotatedElementsMap      {@link Map} containing annotated {@link Element} instances along with the provided
+     *                                  attributes with their respective values
+     * @param recordSourceFileGenerator instance of {@link RecordSourceFileGenerator} used to perform the Record class generation
+     * @param processingEnv             {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @return {@link Map} containing 2 keys: SUCCESS and FAILURE, each one's values being the list of qualified names of the generated Record classes
+     */
     default Map<String, List<String>> processImmutableAnnotatedElements(Map<Element, Map<String, List<Element>>> annotatedElementsMap,
                                                                         RecordSourceFileGenerator recordSourceFileGenerator,
                                                                         ProcessingEnvironment processingEnv) {
@@ -98,6 +126,15 @@ public sealed interface AnnotationProcessor permits FroporecAnnotationProcessor 
         return recordSourceFileGenerator.generateForImmutableAnnotatedElements(elementsListToProcess, processingEnv);
     }
 
+    /**
+     * Processes elements annotated with &#64;{@link org.froporec.annotations.SuperRecord}
+     *
+     * @param annotatedElementsMap      {@link Map} containing annotated {@link Element} instances along with the provided
+     *                                  attributes with their respective values
+     * @param recordSourceFileGenerator instance of {@link RecordSourceFileGenerator} used to perform the Record class generation
+     * @param processingEnv             {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @return {@link Map} containing 2 keys: SUCCESS and FAILURE, each one's values being the list of qualified names of the generated Record classes
+     */
     default Map<String, List<String>> processSuperRecordAnnotatedElements(Map<Element, Map<String, List<Element>>> annotatedElementsMap,
                                                                           RecordSourceFileGenerator recordSourceFileGenerator,
                                                                           ProcessingEnvironment processingEnv) {

@@ -28,62 +28,36 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * TODO document use of "mergeWith" . no alsoConvert no includEtypes
- * // TODO CAN BE USED ON BOTH POJO CLSSES and RECORDS
- * Annotation to be applied in 3 different ways:<br><br>
+ * May be used <b>only</b> on top of either POJO or Record classes<br><br>
  * <p>
- * - on top of a POJO class declaration.<br>
- * As a result, a record class with the name pojo_class_name + "SuperRecord" will be generated:<br><br>
+ * As a result, a record class with the name pojo_class_name + "SuperRecord" will be generated and all fields from the list of
+ * Pojo and/or Record classes provided in the <u>mandatory</u> <b>mergeWith</b> attribute will be added to the fields list of the
+ * annotated POJO or Record class:<br><br>
  * <p>
- * &#64;SuperRecord()<br>
+ * &#64;SuperRecord(mergeWith = { Pojo1.class, Record1.class, Pojo2.class,... })<br>
  * public class PojoA {<br>
  * // class content<br>
  * }<br><br>
  * <p>
- * - next to a class field type declaration for classes containing enclosed POJOs.<br>
- * Add the annotation before the POJO type name, in the field declaration. As a result, a record class will be generated for the
- * classname of the annotated field, and the record class generated for the enclosing POJO will contain a field referencing the
- * corresponding record class generated for the enclosed POJO.<br>
- * Not needed if the POJO class was already annotated in its own declaration or added to the list of .class values of the "includeTypes" attribute.<br><br>
- * <p>
- * &#64;SuperRecord<br>
- * public class PojoA {<br>
- * private &#64;SuperRecord PojoB pojoB;<br>
- * }<br><br>
- * <p>
- * Above code can be written using the "includeTypes" attribute, avoiding multiple uses of &#64;SuperRecord:<br><br>
- * &#64;SuperRecord(includeTypes = { PojoB.class })<br>
- * public class PojoA {<br>
- * private PojoB pojoB;<br>
- * }<br><br>
- * <p>
- * - next to a method parameter type.<br>
- * As a result, a record class will be generated for the classname of the annotated parameter.<br>
- * Not needed if the POJO class was already annotated in its own declaration.<br><br>
- * <p>
- * public void doSomething(&#64;SuperRecord PojoA pojoA) {<br>
- * // method content...<br>
- * }<br><br>
- * <p>
- * Important Note: the annotation should be used ONLY on POJO classes created in your own project. Any other types are not supported. <br><br>
- * <p>
- * The "includeTypes" attribute allows specifying additional types to be transformed into their fully immutable equivalent.<br>
- * The provided "includeTypes" array value can contain a mix of your existing Records or POJOs .class values.
+ * Important Note: the annotation should be used ONLY on POJO or Record classes created in your own project. Any other types are not supported. <br><br>
  */
 @Retention(RetentionPolicy.SOURCE)
-@Target({ElementType.TYPE, ElementType.FIELD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
+@Target({ElementType.TYPE})
 @Documented
 public @interface SuperRecord {
 
     /**
-     * TODO HERE HERE
-     * @return
+     * <b>MANDATORY</b> attribute.<br>
+     * Allows specifying a list of POJO and/or Record classes whose fields will be added along with the fields of the Record class to be generated
+     *
+     * @return an array of .class values
      */
-    Class<?>[] mergeWith(); // mandataory atrib
+    Class<?>[] mergeWith();
 
     /**
-     * kjhkj
-     * @return
+     * allows specifying a list of interfaces implemented by the generated Record class
+     *
+     * @return an array of .class values
      */
     Class<?>[] superInterfaces() default {};
 }

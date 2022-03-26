@@ -28,7 +28,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * // TODO RECOMMEND TO USE ON POJO CLSSES ONLY FOR CODE CLARITY / IF NOT GENERATE AN IMMUTABLERECORD CLASS W AN WARNG MSG
+ * <b> Use only on top of POJO classes </b><br><br>
  * Annotation to be applied in 3 different ways:<br><br>
  * <p>
  * - on top of a POJO class declaration.<br>
@@ -43,15 +43,15 @@ import java.lang.annotation.Target;
  * Add the annotation before the POJO type name, in the field declaration. As a result, a record class will be generated for the
  * classname of the annotated field, and the record class generated for the enclosing POJO will contain a field referencing the
  * corresponding record class generated for the enclosed POJO.<br>
- * Not needed if the POJO class was already annotated in its own declaration or added to the list of .class values of the "includeTypes" attribute.<br><br>
+ * Not needed if the POJO class was already annotated in its own declaration or added to the list of .class values of the "alsoConvert" attribute.<br><br>
  * <p>
  * &#64;Record<br>
  * public class PojoA {<br>
  * private &#64;Record PojoB pojoB;<br>
  * }<br><br>
  * <p>
- * Above code can be written using the "includeTypes" attribute, avoiding multiple uses of &#64;Record:<br><br>
- * &#64;Record(includeTypes = { PojoB.class })<br>
+ * Above code can be written using the "alsoConvert" attribute, avoiding multiple uses of &#64;Record:<br><br>
+ * &#64;Record(alsoConvert = { PojoB.class })<br>
  * public class PojoA {<br>
  * private PojoB pojoB;<br>
  * }<br><br>
@@ -66,8 +66,8 @@ import java.lang.annotation.Target;
  * <p>
  * Important Note: the annotation should be used ONLY on POJO classes created in your own project. Any other types are not supported. <br><br>
  * <p>
- * The "includeTypes" attribute allows specifying additional types to be transformed into their fully immutable equivalent.<br>
- * The provided "includeTypes" array value can contain a mix of your existing Records or POJOs .class values.
+ * The "alsoConvert" attribute allows specifying additional types to be transformed into their fully immutable equivalent.<br>
+ * The provided "alsoConvert" array value <b>can contain a mix of your existing Record or POJO .class values</b>.
  */
 @Retention(RetentionPolicy.SOURCE)
 @Target({ElementType.TYPE, ElementType.FIELD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
@@ -82,8 +82,9 @@ public @interface Record {
     Class<?>[] alsoConvert() default {};
 
     /**
-     * hjklhllh
-     * @return
+     * allows specifying a list of interfaces implemented by the generated Record class
+     *
+     * @return an array of .class values
      */
     Class<?>[] superInterfaces() default {};
 }

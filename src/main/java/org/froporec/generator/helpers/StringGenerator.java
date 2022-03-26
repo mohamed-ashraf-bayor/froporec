@@ -348,6 +348,12 @@ public interface StringGenerator {
         return asList(text.split(COMMA_SEPARATOR)).stream().collect(joining());
     }
 
+    /**
+     * Returns the provided string with its 1st char 'lowercased'
+     *
+     * @param text string to convert
+     * @return the provided string with its 1st char 'lowercased'
+     */
     static String lowerCase1stChar(String text) {
         return text.substring(0, 1).toLowerCase() + text.substring(1);
     }

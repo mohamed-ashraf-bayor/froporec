@@ -65,14 +65,14 @@ public final class FroporecRecordSourceFileGenerator implements RecordSourceFile
     private final CodeGenerator customConstructorGenerator;
 
     /**
-     * RecordSourceFileGenerator constructor. Instantiates needed instances of {@link FieldsGenerator}, {@link CustomConstructorGenerator} and {@link JavaxGeneratedGenerator}
+     * RecordSourceFileGenerator constructor. Instantiates needed instances of {@link FieldsGenerator}, {@link SuperInterfacesGenerator}, {@link CustomConstructorGenerator} and {@link JavaxGeneratedGenerator}
      *
      * @param processingEnvironment            {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
-     * @param allAnnotatedElementsByAnnotation @{@link Map} of all annotated elements. The Map content (key/value) structure is organized as:
-     *                                         String = annotation toString representation,
-     *                                         Element = the annotated class or record,
-     *                                         String = the attribute name,
-     *                                         List<Element> = list of all elements specified as values of: alsoConvert, includeTypes,...
+     * @param allAnnotatedElementsByAnnotation @{@link Map} of all annotated elements. The Map content (key/value) structure is organized as:<br>
+     *                                         String = annotation toString representation,<br>
+     *                                         Element = the annotated class or record,<br>
+     *                                         String = the attribute name,<br>
+     *                                         List<Element> = list of all elements specified as values of: alsoConvert, superInterfaces,...
      */
     public FroporecRecordSourceFileGenerator(ProcessingEnvironment processingEnvironment, Map<String, Map<Element, Map<String, List<Element>>>> allAnnotatedElementsByAnnotation) {
         this.processingEnvironment = processingEnvironment;

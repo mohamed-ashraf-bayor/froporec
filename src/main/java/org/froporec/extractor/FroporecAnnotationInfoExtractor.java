@@ -40,6 +40,9 @@ import static org.froporec.generator.helpers.StringGenerator.INCLUDE_TYPES_ATTRI
 import static org.froporec.generator.helpers.StringGenerator.MERGE_WITH_ATTRIBUTE;
 import static org.froporec.generator.helpers.StringGenerator.SUPER_INTERFACES_ATTRIBUTE;
 
+/**
+ * Extracts info about the annotated POJO or Record classes and applies grouping by annotated elements or annotations strings
+ */
 public final class FroporecAnnotationInfoExtractor {
 
     private final ProcessingEnvironment processingEnv;
@@ -48,19 +51,21 @@ public final class FroporecAnnotationInfoExtractor {
         this.processingEnv = processingEnv;
     }
 
+    /**
+     * Extracts {@link Map} of annotated POJO or Record classes, grouping them by annotated element and annotation string
+     *
+     * @param allAnnotatedElementsByAnnotation contains annotated elements organized by the annotation type value
+     * @return map organized according to the structure: Map&#60;String, Map&#60;Element, Map&#60;String, List&#60;Element&#62;&#62;&#62;&#62;, detailed below:<br>
+     * - String : toString representation of the annotation being processed (org.froporec.annotations.Record, org.froporec.annotations.Immutable, ...)<br>
+     * - Element : the annotated element (either a class, a field or parameter,...)<br>
+     * - String : the attribute name of the annotation (includeTypes, alsoConvert, mergeWith, superInterfaces,...)<br>
+     * - List&#60;Element&#62; : list of Element instances converted from the .class String values listed in the attributes names mentioned above
+     */
     public Map<String, Map<Element, Map<String, List<Element>>>> extractAnnotatedElementsByAnnotation(Map<TypeElement, Set<? extends Element>> allAnnotatedElementsByAnnotation) {
 
         // implementation of the AnnotationInfoExtractor functional interface
         final AnnotationInfoExtractor annotationInfoExtractor = (annotatedElementsByAnnotation, filterPredicate) -> {
-
-            // Map to return:
             final Map<String, Map<Element, Map<String, List<Element>>>> allFilteredAnnotatedElementsToProcess = new HashMap<>();
-            // returned Map content structure in the order shown in above declaration:
-            // String : toString representation of the annotation being processed (org.froporec.annotations.Record, org.froporec.annotations.Immutable, ...)
-            // Element : the annotated element (either a class, a field or parameter,...)
-            // String : the attribute name of the annotation (includeTypes, alsoConvert, mergeWith, superInterfaces,...)
-            // List<Element> : list of Element instances converted from the .class String values listed in the attributes names mentioned above
-
             annotatedElementsByAnnotation.forEach((annotation, annotatedElements) -> {
                 // prcss each annot in here
                 var filteredAnnotatedElements = annotatedElements.stream().filter(filterPredicate).collect(toSet());
@@ -74,12 +79,11 @@ public final class FroporecAnnotationInfoExtractor {
                 ));
                 allFilteredAnnotatedElementsToProcess.put(annotation.toString(), internalMap);
             });
-
             return allFilteredAnnotatedElementsToProcess;
         };
 
         var allAnnotatedPojosElementsInfosByAnnotation = annotationInfoExtractor.extractInfoBasedOnPredicate(allAnnotatedElementsByAnnotation, POJO_CLASSES_INFO_EXTRACTOR_PREDICATE);
-        var annotatedRecordsElementsInfosByAnnotation = annotationInfoExtractor.extractInfoBasedOnPredicate(allAnnotatedElementsByAnnotation, RECORD_CLASSES_INFO_EXTRACTOR_PREDICATE); // TODO chck why not working
+        var annotatedRecordsElementsInfosByAnnotation = annotationInfoExtractor.extractInfoBasedOnPredicate(allAnnotatedElementsByAnnotation, RECORD_CLASSES_INFO_EXTRACTOR_PREDICATE);
         var annotatedFieldsElementsInfosByAnnotation = annotationInfoExtractor.extractInfoBasedOnPredicate(allAnnotatedElementsByAnnotation, FIELDS_INFO_EXTRACTOR_PREDICATE);
         var annotatedParamsElementsInfosByAnnotation = annotationInfoExtractor.extractInfoBasedOnPredicate(allAnnotatedElementsByAnnotation, METHOD_PARAMS_INFO_EXTRACTOR_PREDICATE);
 

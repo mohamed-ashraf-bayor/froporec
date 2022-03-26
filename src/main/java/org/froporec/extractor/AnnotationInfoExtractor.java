@@ -49,43 +49,68 @@ import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_RECORD
 import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_SUPER_RECORD;
 import static org.froporec.generator.helpers.StringGenerator.SUPER_INTERFACES_ATTRIBUTE;
 
-// TODO all jdocs
+/**
+ * Provides a bunch of methods allowing to extract different types of info from the annotated POJO or Record classes
+ */
 @FunctionalInterface
 public interface AnnotationInfoExtractor {
 
+    /**
+     * Used to identify an annotated element as a POJO class
+     */
     Predicate<Element> POJO_CLASSES_INFO_EXTRACTOR_PREDICATE = element ->
             !element.getClass().isRecord()
                     && !element.getClass().isEnum()
                     && !ElementKind.INTERFACE.equals(element.getKind())
                     && ElementKind.CLASS.equals(element.getKind());
 
+    /**
+     * Used to identify an annotated element as a Record class
+     */
     Predicate<Element> RECORD_CLASSES_INFO_EXTRACTOR_PREDICATE = element -> ElementKind.RECORD.equals(element.getKind());
 
+    /**
+     * Used to identify an annotated element as a POJO class field or Record class component
+     */
     Predicate<Element> FIELDS_INFO_EXTRACTOR_PREDICATE = element ->
             !ElementKind.ENUM_CONSTANT.equals(element.getKind())
                     && (ElementKind.FIELD.equals(element.getKind()) || ElementKind.RECORD_COMPONENT.equals(element.getKind()));
 
+    /**
+     * Used to identify an annotated element as a method parameter
+     */
     Predicate<Element> METHOD_PARAMS_INFO_EXTRACTOR_PREDICATE = element -> ElementKind.PARAMETER.equals(element.getKind());
 
     /**
+     * Extract info based on provided Predicate
      *
-     * @param allAnnotatedElementsByAnnotation
-     * @param filterPredicate
-     * @return map organized according to the structure: Map<String, Map<Element, Map<String, List<Element>>>>, detailed below:
-     * String : toString representation of the annotation being processed (org.froporec.annotations.Record, org.froporec.annotations.Immutable, ...)
-     * Element : the annotated element (either a class, a field or parameter,...)
-     * String : the attribute name of the annotation (includeTypes, alsoConvert, mergeWith, superInterfaces,...)
-     * List<Element> : list of Element instances converted from the .class String values listed in the attributes names mentioned above
+     * @param allAnnotatedElementsByAnnotation contains annotated elements organized by the annotation type value
+     * @param filterPredicate                  used to identify annotated elements as either POJO classes, Record classes, fields, parameters,...
+     * @return map organized according to the structure: Map&#60;String, Map&#60;Element, Map&#60;String, List&#60;Element&#62;&#62;&#62;&#62;, detailed below:<br>
+     * - String : toString representation of the annotation being processed (org.froporec.annotations.Record, org.froporec.annotations.Immutable, ...)<br>
+     * - Element : the annotated element (either a class, a field or parameter,...)<br>
+     * - String : the attribute name of the annotation (includeTypes, alsoConvert, mergeWith, superInterfaces,...)<br>
+     * - List&#60;Element&#62; : list of Element instances converted from the .class String values listed in the attributes names mentioned above
      */
-    Map<String, Map<Element, Map<String, List<Element>>>> extractInfoBasedOnPredicate(Map<TypeElement, Set<? extends Element>> allAnnotatedElementsByAnnotation, Predicate<Element> filterPredicate);
+    Map<String, Map<Element, Map<String, List<Element>>>> extractInfoBasedOnPredicate(Map<TypeElement, Set<? extends Element>> allAnnotatedElementsByAnnotation,
+                                                                                      Predicate<Element> filterPredicate);
 
+    /**
+     * Extracts a {@link List} of the {@link Element} instances provided as attributes arrays values of the annotations
+     *
+     * @param attributeName    either 'alsoConvert', 'superInterfaces', or 'mergeWith'
+     * @param annotatedElement {@link Element} instance of the annotated POJO or Record class
+     * @param annotation       {@link TypeElement} instance of the annotation being processed
+     * @param processingEnv    {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @return {@link List} of {@link Element} instances
+     */
     static List<Element> extractAttributeValuesList(String attributeName, Element annotatedElement, TypeElement annotation, ProcessingEnvironment processingEnv) {
         var extractedElementsList = new ArrayList<Element>();
         processingEnv.getElementUtils().getAllAnnotationMirrors(annotatedElement).stream()
                 .filter(annotationMirror -> annotationMirror.toString().contains(annotation.toString()))
                 .map(AnnotationMirror::getElementValues)
                 .forEach(map -> map.forEach((executableElement, annotationValue) -> {
-                    // toString() sample values: executableElement: "includeTypes()", "superInterfaces()" , annotationValue: "{org.froporec...School.class, org.froporec...Student.class}"
+                    // toString() sample values: executableElement: "alsoConvert()", "superInterfaces()" , annotationValue: "{org.froporec...School.class, org.froporec...Student.class}"
                     if (executableElement.toString().contains(attributeName)) {
                         extractedElementsList.addAll(
                                 asList(annotationValue.getValue().toString().split(COMMA_SEPARATOR)).stream() // maintain provided order
@@ -99,6 +124,17 @@ public interface AnnotationInfoExtractor {
         return extractedElementsList;
     }
 
+    /**
+     * Extracts a {@link Set} of annotated {@link Element} instances grouped by annotation String representations
+     *
+     * @param processingEnvironment            {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @param allAnnotatedElementsByAnnotation map organized according to the structure: Map&#60;String, Map&#60;Element, Map&#60;String, List&#60;Element&#62;&#62;&#62;&#62;, detailed below:<br>
+     *                                         - String : toString representation of the annotation being processed (org.froporec.annotations.Record, org.froporec.annotations.Immutable, ...)<br>
+     *                                         - Element : the annotated element (either a class, a field or parameter,...)<br>
+     *                                         - String : the attribute name of the annotation (includeTypes, alsoConvert, mergeWith, superInterfaces,...)<br>
+     *                                         - List&#60;Element&#62; : list of Element instances converted from the .class String values listed in the attributes names mentioned above
+     * @return {@link Set} of annotated {@link Element} instances grouped by annotation String representations
+     */
     static Map<String, Set<Element>> extractAllElementsTypesToConvert(ProcessingEnvironment processingEnvironment,
                                                                       Map<String, Map<Element, Map<String, List<Element>>>> allAnnotatedElementsByAnnotation) {
         var allElementsTypesToConvert = new HashMap<String, Set<Element>>(); // String = annotation toString value , Element = Element instance of the annotated element type
@@ -128,6 +164,20 @@ public interface AnnotationInfoExtractor {
                 || (ORG_FROPOREC_SUPER_RECORD.equals(annotationString) && (isAClass || isARecord));
     }
 
+    /**
+     * Extracts a {@link List} of annotated {@link Element} instances representing the provided superInterfaces and grouped by
+     * the corresponding annotated {@link Element} instance and the annotation String representation
+     *
+     * @param processingEnvironment                 {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @param allElementsTypesToConvertByAnnotation {@link Set} of {@link Element} instances grouped by the annotation String representation
+     * @param allAnnotatedElementsByAnnotation      map organized according to the structure: Map&#60;String, Map&#60;Element, Map&#60;String, List&#60;Element&#62;&#62;&#62;&#62;, detailed below:<br>
+     *                                              - String : toString representation of the annotation being processed (org.froporec.annotations.Record, org.froporec.annotations.Immutable, ...)<br>
+     *                                              - Element : the annotated element (either a class, a field or parameter,...)<br>
+     *                                              - String : the attribute name of the annotation (includeTypes, alsoConvert, mergeWith, superInterfaces,...)<br>
+     *                                              - List&#60;Element&#62; : list of Element instances converted from the .class String values listed in the attributes names mentioned above
+     * @return {@link List} of annotated {@link Element} instances representing the provided superInterfaces and grouped by
+     * the corresponding annotated {@link Element} instance and the annotation String representation
+     */
     static Map<String, Map<Element, List<Element>>> extractSuperInterfacesListByAnnotatedElement(ProcessingEnvironment processingEnvironment,
                                                                                                  Map<String, Set<Element>> allElementsTypesToConvertByAnnotation,
                                                                                                  Map<String, Map<Element, Map<String, List<Element>>>> allAnnotatedElementsByAnnotation) {
@@ -146,6 +196,20 @@ public interface AnnotationInfoExtractor {
         return superInterfacesListByAnnotatedElementAndByAnnotation;
     }
 
+    /**
+     * Extracts a {@link List} of annotated {@link Element} instances representing the provided 'mergeWith' array and grouped by
+     * the corresponding annotated {@link Element} instance and the annotation String representation
+     *
+     * @param processingEnvironment                 {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @param allElementsTypesToConvertByAnnotation {@link Set} of {@link Element} instances grouped by the annotation String representation
+     * @param allAnnotatedElementsByAnnotation      map organized according to the structure: Map&#60;String, Map&#60;Element, Map&#60;String, List&#60;Element&#62;&#62;&#62;&#62;, detailed below:<br>
+     *                                              - String : toString representation of the annotation being processed (org.froporec.annotations.Record, org.froporec.annotations.Immutable, ...)<br>
+     *                                              - Element : the annotated element (either a class, a field or parameter,...)<br>
+     *                                              - String : the attribute name of the annotation (includeTypes, alsoConvert, mergeWith, superInterfaces,...)<br>
+     *                                              - List&#60;Element&#62; : list of Element instances converted from the .class String values listed in the attributes names mentioned above
+     * @return {@link List} of annotated {@link Element} instances representing the provided 'mergeWith' array elements and grouped by
+     * the corresponding annotated {@link Element} instance and the annotation String representation
+     */
     static Map<String, Map<Element, List<Element>>> extractMergeWithElementsListByAnnotatedElement(ProcessingEnvironment processingEnvironment,
                                                                                                    Map<String, Set<Element>> allElementsTypesToConvertByAnnotation,
                                                                                                    Map<String, Map<Element, Map<String, List<Element>>>> allAnnotatedElementsByAnnotation) {

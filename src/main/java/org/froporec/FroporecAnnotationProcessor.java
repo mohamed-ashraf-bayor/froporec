@@ -70,7 +70,6 @@ import static org.froporec.generator.helpers.StringGenerator.SUPER_RECORD;
 /**
  * FroPoRec annotation processor class. Picks up and processes all elements (classes, fields and method params) annotated
  * with @{@link Record}, {@link Immutable} and {@link SuperRecord}.<br>
- * The order of processing is: classes, then fields and then the method parameters<br>
  * For each annotated element a fully immutable Record class is generated. If the generated class already exists (in case the
  * corresponding pojo or record has been annotated more than once), the generation process will be skipped
  */
@@ -102,6 +101,7 @@ public final class FroporecAnnotationProcessor extends AbstractProcessor impleme
                     .filter(annotationString -> !allAnnotatedElementsToProcessByAnnotation.keySet().contains(annotationString))
                     .forEach(annotationString -> allAnnotatedElementsToProcessByAnnotation.put(annotationString, Map.of()));
             RecordSourceFileGenerator recordSourceFileGenerator = new FroporecRecordSourceFileGenerator(processingEnv, allAnnotatedElementsToProcessByAnnotation);
+            // process annotated elements and display reports
             displayReport(
                     AT_SIGN + RECORD,
                     processRecordAnnotatedElements(allAnnotatedElementsToProcessByAnnotation.get(ORG_FROPOREC_RECORD), recordSourceFileGenerator, processingEnv)
@@ -126,11 +126,6 @@ public final class FroporecAnnotationProcessor extends AbstractProcessor impleme
         return true;
     }
 
-    @Override
-    public void notifyWarning(String warningMsg) {
-        log.warning(() -> warningMsg);
-    }
-
     private void displayReport(String processedAnnotation, Map<String, List<String>> generatedClassesMap) {
         if (!generatedClassesMap.get(SUCCESS).isEmpty()) {
             log.info(() -> format(
@@ -148,5 +143,10 @@ public final class FroporecAnnotationProcessor extends AbstractProcessor impleme
                     generatedClassesMap.get(FAILURE).stream().collect(joining(format(GENERATION_REPORT_ELEMENTS_SEPARATOR)))
             ));
         }
+    }
+
+    @Override
+    public void notifyWarning(String warningMsg) {
+        log.warning(() -> warningMsg);
     }
 }
