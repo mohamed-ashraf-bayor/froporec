@@ -26,10 +26,7 @@ import org.froporec.generator.helpers.StringGenerator;
 import javax.annotation.processing.FilerException;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeKind;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -37,7 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static java.util.Arrays.asList;
+import static org.froporec.generator.helpers.CodeGenerator.buildNonVoidMethodsElementsList;
 import static org.froporec.generator.helpers.StringGenerator.constructImmutableQualifiedNameBasedOnElementType;
 import static org.froporec.generator.helpers.StringGenerator.constructSuperRecordQualifiedNameBasedOnElementType;
 
@@ -70,37 +67,11 @@ public sealed interface RecordSourceFileGenerator extends StringGenerator permit
         Map<String, List<String>> generationReport = Map.of(SUCCESS, new ArrayList<>(), FAILURE, new ArrayList<>());
         annotatedElementsWithMergeWithInfo.forEach((annotatedElement, mergeWithElementsList) -> {
             var nonVoidMethodsElements = new ArrayList<Element>(buildNonVoidMethodsElementsList(annotatedElement, processingEnv));
-            // besides all nonVoidMethodsElements of the annotated Element we also add nonVoidMethodsElements from all specified mergeWithElementsList
-            nonVoidMethodsElements.addAll(mergeWithElementsList.stream()
-                    .flatMap(element -> buildNonVoidMethodsElementsList(element, processingEnv).stream())
-                    .toList());
+            // ...skipped processing mergeWithElementsList here, left it to FieldsGenerator and CustomConstructorGenerator
             var individualReport = performRecordSourceFileGeneration(annotatedElement, nonVoidMethodsElements, processingEnv, true);
             mergeIndividualReportInMainReport(individualReport, generationReport);
         });
         return generationReport;
-    }
-
-    private List<? extends Element> buildNonVoidMethodsElementsList(Element annotatedElement,
-                                                                    ProcessingEnvironment processingEnv) {
-        return ElementKind.RECORD.equals((processingEnv.getTypeUtils().asElement(annotatedElement.asType())).getKind())
-                ? processingEnv.getElementUtils().getAllMembers(
-                        (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())
-                ).stream()
-                .filter(element -> ElementKind.METHOD.equals(element.getKind()))
-                .filter(element -> (!TypeKind.VOID.equals(((ExecutableElement) element).getReturnType().getKind())))
-                .filter(element -> asList(METHODS_TO_EXCLUDE).stream().noneMatch(excludedMeth ->
-                        element.toString().contains(excludedMeth + OPENING_PARENTHESIS))) // exclude known Object methds
-                .filter(element -> ((ExecutableElement) element).getParameters().isEmpty()) // only methods with no params
-                .toList()
-                : processingEnv.getElementUtils().getAllMembers(
-                        (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())
-                ).stream()
-                .filter(element -> ElementKind.METHOD.equals(element.getKind()))
-                .filter(element -> element.getSimpleName().toString().startsWith(GET) || element.getSimpleName().toString().startsWith(IS))
-                .filter(element -> asList(METHODS_TO_EXCLUDE).stream().noneMatch(excludedMeth ->
-                        element.toString().contains(excludedMeth + OPENING_PARENTHESIS)))
-                .filter(element -> ((ExecutableElement) element).getParameters().isEmpty())
-                .toList();
     }
 
     private Map<String, String> performRecordSourceFileGeneration(Element annotatedElement,

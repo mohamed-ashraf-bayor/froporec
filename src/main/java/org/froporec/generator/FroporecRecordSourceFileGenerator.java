@@ -79,7 +79,7 @@ public final class FroporecRecordSourceFileGenerator implements RecordSourceFile
         this.allElementsTypesToConvertByAnnotation = extractAllElementsTypesToConvert(this.processingEnvironment, allAnnotatedElementsByAnnotation);
         this.superInterfacesListByAnnotatedElementAndByAnnotation = extractSuperInterfacesListByAnnotatedElement(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, allAnnotatedElementsByAnnotation);
         this.mergeWithListByAnnotatedElementAndByAnnotation = extractMergeWithElementsListByAnnotatedElement(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, allAnnotatedElementsByAnnotation);
-        this.fieldsGenerator = new FieldsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation);
+        this.fieldsGenerator = new FieldsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, this.mergeWithListByAnnotatedElementAndByAnnotation);
         this.superInterfacesGenerator = new SuperInterfacesGenerator(this.superInterfacesListByAnnotatedElementAndByAnnotation);
         this.customConstructorGenerator = new CustomConstructorGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, this.mergeWithListByAnnotatedElementAndByAnnotation);
         this.javaxGeneratedGenerator = new JavaxGeneratedGenerator();
@@ -105,7 +105,7 @@ public final class FroporecRecordSourceFileGenerator implements RecordSourceFile
         recordClassContent.append(recordSimpleClassName);
         // list all attributes next to the record name
         recordClassContent.append(OPENING_PARENTHESIS);
-        fieldsGenerator.generateCode(recordClassContent, Map.of(NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList));
+        fieldsGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement, NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList, IS_SUPER_RECORD, isSuperRecord));
         recordClassContent.append(CLOSING_PARENTHESIS + SPACE);
         // list all provided superinterfaces
         superInterfacesGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement));

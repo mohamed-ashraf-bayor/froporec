@@ -27,7 +27,10 @@ import org.froporec.annotations.GenerateRecord;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ExecutableType;
+import javax.lang.model.type.TypeKind;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +39,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toMap;
 
 /**
@@ -140,28 +144,26 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
                         || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_GENERATE_IMMUTABLE).contains(convertToElement.apply(typeString));
     }
 
-    default List<String> buildFieldsListFromNonVoidMethodsElementsList(ProcessingEnvironment processingEnvironment, List<? extends Element> nonVoidMethodsElementsList) {
-        Function<Element, String> convertToFieldName = element -> {
-            var fieldName = element.toString().substring(0, element.toString().indexOf(OPENING_PARENTHESIS));
-            if (ElementKind.CLASS.equals((processingEnvironment.getTypeUtils().asElement(element.getEnclosingElement().asType())).getKind())) {
-                if (fieldName.startsWith(GET)) {
-                    return fieldName.substring(3, 4).toLowerCase() + fieldName.substring(4);
-                }
-                if (fieldName.startsWith(IS)) {
-                    return fieldName.substring(2, 3).toLowerCase() + fieldName.substring(3);
-                }
-            }
-            return fieldName;
-        };
-        return nonVoidMethodsElementsList.stream()
-                .map(element -> convertToFieldName.apply(element))
+    static List<? extends Element> buildNonVoidMethodsElementsList(Element annotatedElement, ProcessingEnvironment processingEnv) {
+        return ElementKind.RECORD.equals((processingEnv.getTypeUtils().asElement(annotatedElement.asType())).getKind())
+                ? processingEnv.getElementUtils().getAllMembers(
+                        (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())
+                ).stream()
+                .filter(element -> ElementKind.METHOD.equals(element.getKind()))
+                .filter(element -> (!TypeKind.VOID.equals(((ExecutableElement) element).getReturnType().getKind())))
+                .filter(element -> asList(METHODS_TO_EXCLUDE).stream().noneMatch(excludedMeth ->
+                        element.toString().contains(excludedMeth + OPENING_PARENTHESIS))) // exclude known Object methds
+                .filter(element -> ((ExecutableElement) element).getParameters().isEmpty()) // only methods with no params
+                .toList()
+                : processingEnv.getElementUtils().getAllMembers(
+                        (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())
+                ).stream()
+                .filter(element -> ElementKind.METHOD.equals(element.getKind()))
+                .filter(element -> element.getSimpleName().toString().startsWith(GET) || element.getSimpleName().toString().startsWith(IS))
+                .filter(element -> asList(METHODS_TO_EXCLUDE).stream().noneMatch(excludedMeth ->
+                        element.toString().contains(excludedMeth + OPENING_PARENTHESIS)))
+                .filter(element -> ((ExecutableElement) element).getParameters().isEmpty())
                 .toList();
-    }
-
-    default String modifyFieldNameIfDuplicatesExist(String fieldName, Element nonVoidMethodElement, List<String> fieldsList) {
-        return Collections.frequency(fieldsList, fieldName) > 1
-                ? fieldName + nonVoidMethodElement.getEnclosingElement().getSimpleName()
-                : fieldName;
     }
 }
 
