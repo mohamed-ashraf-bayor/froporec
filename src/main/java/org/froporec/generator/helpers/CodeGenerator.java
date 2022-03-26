@@ -44,7 +44,8 @@ import static java.util.stream.Collectors.toMap;
 /**
  * Exposes contract for a CodeGenerator class to fulfill
  */
-public sealed interface CodeGenerator extends StringGenerator permits CustomConstructorGenerator, FieldsGenerator, SuperInterfacesGenerator, JavaxGeneratedGenerator, SupportedCollectionsGenerator {
+public sealed interface CodeGenerator extends StringGenerator permits CustomConstructorGenerator, FieldsGenerator,
+        SuperInterfacesGenerator, JavaxGeneratedGenerator, SupportedCollectionsGenerator {
 
     // List of the parameters expected in the params Map object of the generateCode method:
 
@@ -294,6 +295,7 @@ sealed interface SupportedCollectionsMappingLogicGenerator extends SupportedColl
      * added as .class values within the "includeTypes" attribute of {@link GenerateRecord} or {@link GenerateImmutable}).<br>
      * This happens inside the generated custom constructor inside which we call the canonical constructor of the Record class being generated
      *
+     * @param recordClassContent              content being built, containing the record source string
      * @param fieldName                       field name being processed
      * @param nonVoidMethodElementAsString    non-void method name
      * @param nonVoidMethodReturnTypeAsString qualified name of the method's return type, also the type of the field being processed

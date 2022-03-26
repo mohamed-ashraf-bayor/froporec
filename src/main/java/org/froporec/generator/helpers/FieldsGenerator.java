@@ -58,7 +58,7 @@ public final class FieldsGenerator implements CodeGenerator {
     private final SupportedCollectionsFieldsGenerator collectionsGenerator;
 
     /**
-     * FieldsGenerationHelper constructor. Instantiates needed instance of {@link ProcessingEnvironment} and {@link CollectionsGenerator}
+     * FieldsGenerationHelper constructor. Instantiates needed instance of {@link CollectionsGenerator}
      *
      * @param processingEnvironment                          {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
      * @param allElementsTypesToConvertByAnnotation          {@link Set} of {@link Element} instances grouped by the annotation String representation

@@ -52,7 +52,7 @@ public final class CollectionsGenerator implements SupportedCollectionsFieldsGen
     private final ProcessingEnvironment processingEnvironment;
 
     /**
-     * CollectionsGenerationHelper constructor. Instantiates needed instance of {@link ProcessingEnvironment}
+     * CollectionsGenerationHelper constructor
      *
      * @param allElementsTypesToConvertByAnnotation - {@link Set} of all annotated elements types
      */

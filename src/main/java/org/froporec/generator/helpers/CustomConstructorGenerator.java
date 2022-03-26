@@ -60,7 +60,7 @@ public final class CustomConstructorGenerator implements CodeGenerator {
     private final SupportedCollectionsMappingLogicGenerator collectionsGenerator;
 
     /**
-     * CustomConstructorGenerationHelper constructor. Instantiates needed instances of {@link ProcessingEnvironment} and {@link CollectionsGenerator}
+     * CustomConstructorGenerationHelper constructor. Instantiates needed instance of {@link CollectionsGenerator}
      *
      * @param processingEnvironment                          {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
      * @param allElementsTypesToConvertByAnnotation          {@link Set} of {@link Element} instances grouped by the annotation String representation

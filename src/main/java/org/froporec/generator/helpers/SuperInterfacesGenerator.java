@@ -29,7 +29,7 @@ import static java.util.stream.Collectors.joining;
 
 /**
  * Builds the list of super interfaces implemented by the Record class being generated. Based on the array provided as
- * value of the 'superInterfaces' attribute.<br>OF
+ * value of the 'superInterfaces' attribute.<br>
  * The params {@link Map} parameter of the provided implementation of the generateCode() method (from {@link CodeGenerator}) MUST contain
  * the following parameters names:<br>
  * - {@link CodeGenerator#ANNOTATED_ELEMENT}<br>

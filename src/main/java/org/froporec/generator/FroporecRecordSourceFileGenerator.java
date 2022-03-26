@@ -65,7 +65,8 @@ public final class FroporecRecordSourceFileGenerator implements RecordSourceFile
     private final CodeGenerator customConstructorGenerator;
 
     /**
-     * RecordSourceFileGenerator constructor. Instantiates needed instances of {@link FieldsGenerator}, {@link SuperInterfacesGenerator}, {@link CustomConstructorGenerator} and {@link JavaxGeneratedGenerator}
+     * RecordSourceFileGenerator constructor. Instantiates needed instances of {@link FieldsGenerator}, {@link SuperInterfacesGenerator},
+     * {@link CustomConstructorGenerator} and {@link JavaxGeneratedGenerator}
      *
      * @param processingEnvironment            {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
      * @param allAnnotatedElementsByAnnotation @{@link Map} of all annotated elements. The Map content (key/value) structure is organized as:<br>

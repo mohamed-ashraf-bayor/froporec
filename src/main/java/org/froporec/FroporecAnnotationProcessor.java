@@ -139,7 +139,7 @@ public final class FroporecAnnotationProcessor extends AbstractProcessor impleme
             log.log(Level.SEVERE, format(
                     GENERATION_REPORT_MSG_FORMAT,
                     GENERATION_FAILURE_MSG,
-                    AT_SIGN + processedAnnotation,
+                    processedAnnotation,
                     generatedClassesMap.get(FAILURE).stream().collect(joining(format(GENERATION_REPORT_ELEMENTS_SEPARATOR)))
             ));
         }
