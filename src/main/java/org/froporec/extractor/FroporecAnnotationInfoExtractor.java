@@ -47,6 +47,11 @@ public final class FroporecAnnotationInfoExtractor {
 
     private final ProcessingEnvironment processingEnv;
 
+    /**
+     * FroporecAnnotationInfoExtractor constructor. Instantiates needed instances of {@link ProcessingEnvironment}
+     *
+     * @param processingEnv {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     */
     public FroporecAnnotationInfoExtractor(ProcessingEnvironment processingEnv) {
         this.processingEnv = processingEnv;
     }

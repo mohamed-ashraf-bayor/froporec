@@ -31,7 +31,6 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -127,23 +126,47 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
         return processingEnvironment.getTypeUtils().asElement(processingEnvironment.getElementUtils().getTypeElement(qualifiedName).asType());
     }
 
+    /**
+     * Checks whether the provided {@link Element} instance is annotated with either &#64;{@link org.froporec.annotations.Record}
+     * or &#64;{@link org.froporec.annotations.Immutable}
+     *
+     * @param allElementsTypesToConvertByAnnotation {@link Map} of annotated {@link Element} instances grouped by their
+     *                                              respective annotation String representation
+     * @return {@link java.util.function.Predicate} instance to apply on the {@link Element} instance to check
+     */
     default Predicate<Element> isElementAnnotatedAsRecordOrImmutable(Map<String, Set<Element>> allElementsTypesToConvertByAnnotation) {
-        return nonVoidMethodReturnTypeElement ->
-                allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_RECORD).contains(nonVoidMethodReturnTypeElement)
-                        || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_IMMUTABLE).contains(nonVoidMethodReturnTypeElement)
-                        || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_GENERATE_RECORD).contains(nonVoidMethodReturnTypeElement)
-                        || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_GENERATE_IMMUTABLE).contains(nonVoidMethodReturnTypeElement);
+        return element -> allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_RECORD).contains(element)
+                || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_IMMUTABLE).contains(element)
+                || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_GENERATE_RECORD).contains(element)
+                || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_GENERATE_IMMUTABLE).contains(element);
     }
 
+    /**
+     * Checks whether the provided type String is annotated with either &#64;{@link org.froporec.annotations.Record}
+     * or &#64;{@link org.froporec.annotations.Immutable}
+     *
+     * @param processingEnvironment                 {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @param allElementsTypesToConvertByAnnotation {@link Map} of annotated {@link Element} instances grouped by their
+     *                                              respective annotation String representation
+     * @return {@link java.util.function.Predicate} instance to apply on the type String to check
+     */
     default Predicate<String> isTypeAnnotatedAsRecordOrImmutable(ProcessingEnvironment processingEnvironment, Map<String, Set<Element>> allElementsTypesToConvertByAnnotation) {
         Function<String, Element> convertToElement = typeString -> constructElementInstanceValueFromTypeString(processingEnvironment, typeString);
-        return typeString ->
-                allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_RECORD).contains(convertToElement.apply(typeString))
-                        || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_IMMUTABLE).contains(convertToElement.apply(typeString))
-                        || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_GENERATE_RECORD).contains(convertToElement.apply(typeString))
-                        || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_GENERATE_IMMUTABLE).contains(convertToElement.apply(typeString));
+        return typeString -> allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_RECORD).contains(convertToElement.apply(typeString))
+                || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_IMMUTABLE).contains(convertToElement.apply(typeString))
+                || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_GENERATE_RECORD).contains(convertToElement.apply(typeString))
+                || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_GENERATE_IMMUTABLE).contains(convertToElement.apply(typeString));
     }
 
+    /**
+     * Returns a {@link java.util.List} of {@link Element} instances representing each non-void non-args methods of the
+     * provided annotated {@link Element} instance
+     *
+     * @param annotatedElement {@link Element} instance of the annotated Pojo or Record class
+     * @param processingEnv    {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @return {@link java.util.List} of {@link Element} instances representing each non-void non-args methods of the
+     * provided annotated {@link Element} instance
+     */
     static List<? extends Element> buildNonVoidMethodsElementsList(Element annotatedElement, ProcessingEnvironment processingEnv) {
         return ElementKind.RECORD.equals((processingEnv.getTypeUtils().asElement(annotatedElement.asType())).getKind())
                 ? processingEnv.getElementUtils().getAllMembers(

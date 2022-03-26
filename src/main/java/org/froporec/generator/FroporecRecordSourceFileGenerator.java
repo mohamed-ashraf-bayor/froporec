@@ -72,7 +72,7 @@ public final class FroporecRecordSourceFileGenerator implements RecordSourceFile
      *                                         String = annotation toString representation,<br>
      *                                         Element = the annotated class or record,<br>
      *                                         String = the attribute name,<br>
-     *                                         List<Element> = list of all elements specified as values of: alsoConvert, superInterfaces,...
+     *                                         List&#60;Element&#62; = list of all elements specified as values of: alsoConvert, superInterfaces,...
      */
     public FroporecRecordSourceFileGenerator(ProcessingEnvironment processingEnvironment, Map<String, Map<Element, Map<String, List<Element>>>> allAnnotatedElementsByAnnotation) {
         this.processingEnvironment = processingEnvironment;

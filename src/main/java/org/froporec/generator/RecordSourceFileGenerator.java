@@ -52,7 +52,8 @@ public sealed interface RecordSourceFileGenerator extends StringGenerator permit
      * @param annotatedElement            {@link Element} instance of the annotated Pojo or Record class
      * @param generatedQualifiedClassName Qualified name of the Record class being generated
      * @param nonVoidMethodsElementsList  Non-void methods list of the Record class being generated
-     * @param isSuperRecord               indicates whether the Pojo or Record class being processed was annotated with @{@link org.froporec.annotations.SuperRecord}
+     * @param isSuperRecord               indicates whether the Pojo or Record class being processed was annotated
+     *                                    with @{@link org.froporec.annotations.SuperRecord}
      * @return the Record class content
      */
     String generateRecordClassContent(Element annotatedElement,

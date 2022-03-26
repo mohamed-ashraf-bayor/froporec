@@ -21,9 +21,6 @@
  */
 package org.froporec.generator.helpers;
 
-import org.froporec.annotations.GenerateImmutable;
-import org.froporec.annotations.GenerateRecord;
-
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -43,10 +40,12 @@ import static org.froporec.generator.helpers.StringGenerator.constructImmutableQ
 /**
  * Builds the list of fields of the record class being generated. ex: int a, String s, Person p.<br>
  * Considerations will be made for fields whose types have also been annotated or added as a .class value within the
- * "includeTypes" attribute of {@link GenerateRecord} or {@link GenerateImmutable}).<br>
+ * "alsoConvert" attribute of {@link org.froporec.annotations.Record} or {@link org.froporec.annotations.Immutable}).<br>
  * The params {@link Map} parameter of the provided implementation of the generateCode() method (from {@link CodeGenerator}) MUST contain
  * the following parameters names:<br>
+ * - {@link CodeGenerator#ANNOTATED_ELEMENT}<br>
  * - {@link CodeGenerator#NON_VOID_METHODS_ELEMENTS_LIST}<br>
+ * - {@link CodeGenerator#IS_SUPER_RECORD}<br>
  */
 public final class FieldsGenerator implements CodeGenerator {
 
@@ -59,11 +58,13 @@ public final class FieldsGenerator implements CodeGenerator {
     private final SupportedCollectionsFieldsGenerator collectionsGenerator;
 
     /**
-     * // TODO jdoc
-     * FieldsGenerationHelper constructor. Instantiates needed instance of {@link CollectionsGenerator}
+     * FieldsGenerationHelper constructor. Instantiates needed instance of {@link ProcessingEnvironment} and {@link CollectionsGenerator}
      *
-     * @param processingEnvironment                 {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
-     * @param allElementsTypesToConvertByAnnotation {@link Set} of all annotated elements types string representations
+     * @param processingEnvironment                          {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @param allElementsTypesToConvertByAnnotation          {@link Set} of {@link Element} instances grouped by the annotation String representation
+     * @param mergeWithListByAnnotatedElementAndByAnnotation {@link List} of provided 'mergeWith' {@link Element} POJO and/or Record instances
+     *                                                       grouped by their respective annotated {@link Element} instances
+     *                                                       and by their respective annotation String representation
      */
     public FieldsGenerator(ProcessingEnvironment processingEnvironment,
                            Map<String, Set<Element>> allElementsTypesToConvertByAnnotation,

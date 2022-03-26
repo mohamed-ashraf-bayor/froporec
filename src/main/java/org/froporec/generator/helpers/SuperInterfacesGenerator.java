@@ -21,36 +21,29 @@
  */
 package org.froporec.generator.helpers;
 
-import org.froporec.annotations.GenerateImmutable;
-import org.froporec.annotations.GenerateRecord;
-
-import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static java.util.stream.Collectors.joining;
 
 /**
- * // TODO jdoc
- * Builds the list of fields of the record class being generated. ex: int a, String s, Person p.<br>
- * Considerations will be made for fields whose types have also been annotated or added as a .class value within the
- * "includeTypes" attribute of {@link GenerateRecord} or {@link GenerateImmutable}).<br>
+ * Builds the list of super interfaces implemented by the Record class being generated. Based on the array provided as
+ * value of the 'superInterfaces' attribute.<br>OF
  * The params {@link Map} parameter of the provided implementation of the generateCode() method (from {@link CodeGenerator}) MUST contain
  * the following parameters names:<br>
- * - {@link CodeGenerator#NON_VOID_METHODS_ELEMENTS_LIST}<br>
+ * - {@link CodeGenerator#ANNOTATED_ELEMENT}<br>
  */
 public final class SuperInterfacesGenerator implements CodeGenerator {
 
     private final Map<String, Map<Element, List<Element>>> superInterfacesListByAnnotatedElementAndByAnnotation;
 
     /**
-     * // TODO jdoc
-     * FieldsGenerationHelper constructor. Instantiates needed instance of {@link CollectionsGenerator}
+     * SuperInterfacesGenerator constructor
      *
-     * @param processingEnvironment                 {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
-     * @param allElementsTypesToConvertByAnnotation {@link Set} of all annotated elements types string representations
+     * @param superInterfacesListByAnnotatedElementAndByAnnotation {@link List} of provided super interfaces .class values
+     *                                                             grouped by their respective annotated {@link Element} instances
+     *                                                             and by their respective annotation String representation
      */
     public SuperInterfacesGenerator(Map<String, Map<Element, List<Element>>> superInterfacesListByAnnotatedElementAndByAnnotation) {
         this.superInterfacesListByAnnotatedElementAndByAnnotation = superInterfacesListByAnnotatedElementAndByAnnotation;

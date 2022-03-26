@@ -41,12 +41,13 @@ import static org.froporec.generator.helpers.StringGenerator.constructSuperRecor
 import static org.froporec.generator.helpers.StringGenerator.lowerCase1stChar;
 
 /**
- * Builds the custom 1-arg constructor section for the record class being generated.<br>
+ * Builds the custom args constructor section for the record class being generated.<br>
  * Starts with "public RecordName(list of fields)" and includes a call to the canonical constructor inside the body of the custom constructor.<br>
  * The params {@link Map} parameter of the provided implementation of the generateCode() method (from {@link CodeGenerator}) MUST contain
  * the following parameters names:<br>
  * - {@link CodeGenerator#ANNOTATED_ELEMENT}<br>
  * - {@link CodeGenerator#NON_VOID_METHODS_ELEMENTS_LIST}<br>
+ * - {@link CodeGenerator#IS_SUPER_RECORD}<br>
  */
 public final class CustomConstructorGenerator implements CodeGenerator {
 
@@ -59,11 +60,13 @@ public final class CustomConstructorGenerator implements CodeGenerator {
     private final SupportedCollectionsMappingLogicGenerator collectionsGenerator;
 
     /**
-     * // TODO jdoc
      * CustomConstructorGenerationHelper constructor. Instantiates needed instances of {@link ProcessingEnvironment} and {@link CollectionsGenerator}
      *
-     * @param processingEnvironment                 {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
-     * @param allElementsTypesToConvertByAnnotation {@link Set} of all annotated elements types
+     * @param processingEnvironment                          {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @param allElementsTypesToConvertByAnnotation          {@link Set} of {@link Element} instances grouped by the annotation String representation
+     * @param mergeWithListByAnnotatedElementAndByAnnotation {@link List} of provided 'mergeWith' {@link Element} POJO and/or Record instances
+     *                                                       grouped by their respective annotated {@link Element} instances
+     *                                                       and by their respective annotation String representation
      */
     public CustomConstructorGenerator(ProcessingEnvironment processingEnvironment,
                                       Map<String, Set<Element>> allElementsTypesToConvertByAnnotation,
