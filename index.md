@@ -78,8 +78,6 @@ public class PojoA {
     private @Record PojoB pojoB; 
 } 
 ```
-
-&nbsp;&nbsp;&nbsp;
 - Above code can be written using the **alsoConvert** attribute, avoiding multiple uses of @Record:<br>
 ```java
 @Record(alsoConvert = { PojoB.class }) 
@@ -117,8 +115,6 @@ Add the annotation before the Record type name, in the field declaration. As a r
 public record RecordA(int field1, String field2, @Immutable RecordB recordB) {
 }
 ```
-
-&nbsp;&nbsp;&nbsp;
 - Above code can be written using the **alsoConvert** attribute, avoiding multiple uses of @Immutable:<br>
 ```java
 @Immutable(alsoConvert = { RecordB.class })
