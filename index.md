@@ -147,6 +147,7 @@ public class PojoA {
 ```
 Important Note: the annotation should be used ONLY on POJO or Record classes created in your own project. Any other types are not supported.<br><br>
 
+<br>
 
 > The **alsoConvert** attribute available for both @Record and @Immutable, allows specifying additional types to be transformed into their fully immutable equivalent.
 > The provided alsoConvert array value may contain a mix of your existing Records or POJOs .class values.
