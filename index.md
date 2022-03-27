@@ -152,14 +152,12 @@ public class PojoA {
 <p>
 Important Note: the annotation should be used ONLY on POJO or Record classes created in your own project. Any other types are not supported. <br><br>
 
-<br>
 
-> The **alsoConvert** attribute available for both @Record and @Immutable, allows specifying additional types to be transformed into their fully immutable equivalent.<br>
+> The **alsoConvert** attribute available for both @Record and @Immutable, allows specifying additional types to be transformed into their fully immutable equivalent.
 > The provided alsoConvert array value may contain a mix of your existing Records or POJOs .class values.
 
 > The **superInterfaces** attribute available for all annotations, allows specifying a list of interfaces to be implemented by the generated Record class.<br>
 
-<br>
 
 ## Sample POJO and Record classes for testing
 [https://github.com/mohamed-ashraf-bayor/froporec-annotation-client](https://github.com/mohamed-ashraf-bayor/froporec-annotation-client)
