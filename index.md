@@ -1,5 +1,5 @@
 > ### Froporec 1.3 released:
-> - Deprecated existing annotations: ~~@GenerateRecord~~, ~~@GenerateImmutable~~. Replaced with: **@Record** and **@Immutable**, which also provide the new **alsoConvert** attribute as a replacement of the ~~**includeTypes**~~ attribute.
+> - Deprecated existing annotations: ~~@GenerateRecord~~, ~~@GenerateImmutable~~. Replaced with: **@Record** and **@Immutable**, which also provide the new **alsoConvert** attribute as a replacement of the ~~includeTypes~~ attribute.
 > - Added new annotation **@SuperRecord** allowing to bypass the known limitation of Java Records not able to extend any other class. The mandatory **mergeWith** attribute allows to specify a list of existing POJO and/or Record classes to extend from. The annotation can also be applied on existing POJO classes.
 > - Added new attribute **superInterfaces** to all annotations. Allows to provide a list of interfaces to be implemented by the generated Record class.
 > - Bug fixes and improvements
@@ -62,7 +62,7 @@ For other build tools, please check: [Maven Central](https://search.maven.org/ar
 ### @Record
 
 - on top of a POJO class declaration.<br>
-As a result, a record class with the name <_pojo_class_name_> + **Record** will be generated:  
+As a result, a record class with the name _pojo_class_name_ + **Record** will be generated:  
 ```java
 @Record 
 public class PojoA { 
@@ -80,7 +80,7 @@ public class PojoA {
 ```
 
 &nbsp;&nbsp;&nbsp;
- *** Above code can be written using the **alsoConvert** attribute, avoiding multiple uses of @Record:<br>
+ * Above code can be written using the **alsoConvert** attribute, avoiding multiple uses of @Record:<br>
 ```java
 @Record(alsoConvert = { PojoB.class }) 
 public class PojoA { 
@@ -102,7 +102,7 @@ Important Note: the annotation should be used ONLY on POJO classes created in yo
 ### @Immutable
 
 - on top of a Record class declaration.<br>
-As a result, a record class with the name **Immutable** + <_record_class_name_> will be generated:
+As a result, a record class with the name **Immutable** + _record_class_name_ will be generated:
 ```java
 @Immutable
 public record RecordA(int field1, String field2) {
@@ -119,7 +119,7 @@ public record RecordA(int field1, String field2, @Immutable RecordB recordB) {
 ```
 
 &nbsp;&nbsp;&nbsp;
-*** Above code can be written using the **alsoConvert** attribute, avoiding multiple uses of @Immutable:<br>
+* Above code can be written using the **alsoConvert** attribute, avoiding multiple uses of @Immutable:<br>
 ```java
 @Immutable(alsoConvert = { RecordB.class })
 public record RecordA(int field1, String field2, RecordB recordB) {
@@ -140,7 +140,7 @@ Important Note: the annotation should be used ONLY on Record classes created in 
 ### @SuperRecord
 
 To be used <b>only</b> on top of either POJO or Record classes.<br>
-As a result, a record class with the name <_pojo_or_record_class_name_> + "SuperRecord" will be generated and all fields from the list of
+As a result, a record class with the name _pojo_or_record_class_name_ + "SuperRecord" will be generated and all fields from the list of
 Pojo and/or Record classes provided in the <u>mandatory</u> <b>mergeWith</b> attribute, will be added to the fields list of the
 annotated POJO or Record class:<br>
 ```java
