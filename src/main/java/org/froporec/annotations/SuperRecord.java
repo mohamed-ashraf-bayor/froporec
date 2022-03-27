@@ -28,9 +28,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * May be used <b>only</b> on top of either POJO or Record classes<br><br>
+ * To be used <b>only</b> on top of either POJO or Record classes<br><br>
  * <p>
- * As a result, a record class with the name pojo_class_name + "SuperRecord" will be generated and all fields from the list of
+ * As a result, a record class with the name pojo_or_record_class_name + "SuperRecord" will be generated and all fields from the list of
  * Pojo and/or Record classes provided in the <u>mandatory</u> <b>mergeWith</b> attribute will be added to the fields list of the
  * annotated POJO or Record class:<br><br>
  * <p>
@@ -55,7 +55,7 @@ public @interface SuperRecord {
     Class<?>[] mergeWith();
 
     /**
-     * allows specifying a list of interfaces implemented by the generated Record class
+     * allows specifying a list of interfaces to be implemented by the generated Record class
      *
      * @return an array of .class values
      */

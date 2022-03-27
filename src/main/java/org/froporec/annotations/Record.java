@@ -82,7 +82,7 @@ public @interface Record {
     Class<?>[] alsoConvert() default {};
 
     /**
-     * allows specifying a list of interfaces implemented by the generated Record class
+     * allows specifying a list of interfaces to be implemented by the generated Record class
      *
      * @return an array of .class values
      */
