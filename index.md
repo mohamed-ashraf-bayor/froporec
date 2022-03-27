@@ -80,7 +80,7 @@ public class PojoA {
 ```
 
 &nbsp;&nbsp;&nbsp;
-Above code can be written using the **alsoConvert** attribute, avoiding multiple uses of @Record:<br>
+- Above code can be written using the **alsoConvert** attribute, avoiding multiple uses of @Record:<br>
 ```java
 @Record(alsoConvert = { PojoB.class }) 
 public class PojoA { 
@@ -119,7 +119,7 @@ public record RecordA(int field1, String field2, @Immutable RecordB recordB) {
 ```
 
 &nbsp;&nbsp;&nbsp;
-Above code can be written using the **alsoConvert** attribute, avoiding multiple uses of @Immutable:<br>
+- Above code can be written using the **alsoConvert** attribute, avoiding multiple uses of @Immutable:<br>
 ```java
 @Immutable(alsoConvert = { RecordB.class })
 public record RecordA(int field1, String field2, RecordB recordB) {
