@@ -4,7 +4,7 @@ Turn your POJOs into fully immutable Record objects with Froporec annotation pro
 <br>
 
 > ### Froporec 1.3 released:
-> - Deprecated existing annotations: ~~@GenerateRecord~~, ~~@GenerateImmutable~~. Replaced with: **@Record** and **@Immutable**, which also provide the new **alsoConvert** attribute as a replacement of the ~~**includeTypes**~~ attribute.
+> - Deprecated existing annotations: ~~@GenerateRecord~~, ~~@GenerateImmutable~~. Replaced with: **@Record** and **@Immutable**, which also provide the new **alsoConvert** attribute as a replacement of the ~~includeTypes~~ attribute.
 > - Added new annotation **@SuperRecord** allowing to bypass the known limitation of Java Records not able to extend any other class. The mandatory **mergeWith** attribute allows to specify a list of existing POJO and/or Record classes to extend from. The annotation can also be applied on existing POJO classes.
 > - Added new attribute **superInterfaces** to all annotations. Allows to provide a list of interfaces to be implemented by the generated Record class.
 > - Bug fixes and improvements
