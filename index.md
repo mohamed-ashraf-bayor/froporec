@@ -153,6 +153,7 @@ Important Note: the annotation should be used ONLY on POJO or Record classes cre
 
 > The **superInterfaces** attribute available for all annotations, allows specifying a list of interfaces to be implemented by the generated Record class.<br>
 
+<br><br>
 
 ## Sample POJO and Record classes for testing
 [https://github.com/mohamed-ashraf-bayor/froporec-annotation-client](https://github.com/mohamed-ashraf-bayor/froporec-annotation-client)
