@@ -21,47 +21,64 @@
  */
 package org.froporec.generator.helpers;
 
+import org.froporec.annotations.GenerateImmutable;
+import org.froporec.annotations.GenerateRecord;
+
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ExecutableType;
+import javax.lang.model.type.TypeKind;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toMap;
 
 /**
  * Exposes contract for a CodeGenerator class to fulfill
  */
-public sealed interface CodeGenerator extends StringGenerator permits JavaxGeneratedGenerator, FieldsGenerator, CustomConstructorGenerator, SupportedCollectionsGenerator {
+public sealed interface CodeGenerator extends StringGenerator permits CustomConstructorGenerator, FieldsGenerator,
+        SuperInterfacesGenerator, JavaxGeneratedGenerator, SupportedCollectionsGenerator {
 
     // List of the parameters expected in the params Map object of the generateCode method:
 
     /**
-     * parameter name: "qualifiedClassName", expected type: String
+     * parameter name: "annotatedElement", expected type: {@link Element}
      */
-    String QUALIFIED_CLASS_NAME = "qualifiedClassName";
+    String ANNOTATED_ELEMENT = "annotatedElement";
 
     /**
-     * parameter name: "fieldName", expected type: String
+     * parameter name: "fieldName", expected type: {@link String}
      */
     String FIELD_NAME = "fieldName";
 
     /**
-     * parameter name: "nonVoidMethodReturnTypeAsString", expected type: String, return type of the method being processed
+     * parameter name: "nonVoidMethodReturnTypeAsString", expected type: {@link String}, return type of the method being processed
      */
     String NON_VOID_METHOD_RETURN_TYPE_AS_STRING = "nonVoidMethodReturnTypeAsString";
 
     /**
-     * parameter name: "nonVoidMethodAsString", expected type: String, name of the method being processed
+     * parameter name: "nonVoidMethodAsString", expected type: {@link String}, name of the method being processed
      */
     String NON_VOID_METHOD_AS_STRING = "nonVoidMethodAsString";
 
     /**
-     * parameter name: "nonVoidMethodsElementsList", expected type: List&lt;? extends javax.lang.model.element.Element&gt;.<br>
+     * parameter name: "nonVoidMethodsElementsList", expected type: {@link List}&lt;? extends {@link Element}&gt;.<br>
      * toString representation ex: [getLastname(), getAge(), getMark(), getGrade(), getSchool()]
      */
     String NON_VOID_METHODS_ELEMENTS_LIST = "nonVoidMethodsElementsList";
+
+    /**
+     * parameter name: "isSuperRecord", expected type: {@link Boolean}, indicates whether the Element is being processed as a SuperRecord
+     */
+    String IS_SUPER_RECORD = "isSuperRecord";
 
     /**
      * Generates the requested code fragment, based on the parameters provided in the params object and appends it to the provided recordClassContent param
@@ -79,9 +96,10 @@ public sealed interface CodeGenerator extends StringGenerator permits JavaxGener
      * @param nonVoidMethodsElementsList {@link List} of {@link Element} objects representing non-void methods
      * @return {@link Map} containing non-void methods names as keys and their corresponding return types as String values
      */
-    default Map<Element, String> constructNonVoidMethodsElementsReturnTypesMapFromList(final List<? extends Element> nonVoidMethodsElementsList) {
+    default Map<Element, String> constructNonVoidMethodsElementsReturnTypesMapFromList(List<? extends Element> nonVoidMethodsElementsList) {
         return nonVoidMethodsElementsList.stream().collect(
-                toMap(nonVoidMethodElement -> nonVoidMethodElement, nonVoidMethodElement -> ((ExecutableType) nonVoidMethodElement.asType()).getReturnType().toString())
+                toMap(nonVoidMethodElement -> nonVoidMethodElement,
+                        nonVoidMethodElement -> ((ExecutableType) nonVoidMethodElement.asType()).getReturnType().toString())
         );
     }
 
@@ -92,7 +110,7 @@ public sealed interface CodeGenerator extends StringGenerator permits JavaxGener
      * @param qualifiedName         qualified name of the provided type
      * @return an {@link Optional} object wrapping the corresponding {@link Element} instance if any
      */
-    default Optional<Element> constructElementInstanceFromTypeString(final ProcessingEnvironment processingEnvironment, final String qualifiedName) {
+    default Optional<Element> constructElementInstanceFromTypeString(ProcessingEnvironment processingEnvironment, String qualifiedName) {
         return Optional.ofNullable(processingEnvironment.getElementUtils().getTypeElement(qualifiedName)).isEmpty()
                 ? Optional.empty()
                 : Optional.ofNullable(processingEnvironment.getTypeUtils().asElement(processingEnvironment.getElementUtils().getTypeElement(qualifiedName).asType()));
@@ -105,8 +123,71 @@ public sealed interface CodeGenerator extends StringGenerator permits JavaxGener
      * @param qualifiedName         qualified name of the provided type
      * @return the corresponding {@link Element} instance if the provided type is valid, null if not
      */
-    default Element constructElementInstanceValueFromTypeString(final ProcessingEnvironment processingEnvironment, final String qualifiedName) {
+    default Element constructElementInstanceValueFromTypeString(ProcessingEnvironment processingEnvironment, String qualifiedName) {
         return processingEnvironment.getTypeUtils().asElement(processingEnvironment.getElementUtils().getTypeElement(qualifiedName).asType());
+    }
+
+    /**
+     * Checks whether the provided {@link Element} instance is annotated with either &#64;{@link org.froporec.annotations.Record}
+     * or &#64;{@link org.froporec.annotations.Immutable}
+     *
+     * @param allElementsTypesToConvertByAnnotation {@link Map} of annotated {@link Element} instances grouped by their
+     *                                              respective annotation String representation
+     * @return {@link java.util.function.Predicate} instance to apply on the {@link Element} instance to check
+     */
+    default Predicate<Element> isElementAnnotatedAsRecordOrImmutable(Map<String, Set<Element>> allElementsTypesToConvertByAnnotation) {
+        return element -> allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_RECORD).contains(element)
+                || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_IMMUTABLE).contains(element)
+                || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_GENERATE_RECORD).contains(element)
+                || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_GENERATE_IMMUTABLE).contains(element);
+    }
+
+    /**
+     * Checks whether the provided type String is annotated with either &#64;{@link org.froporec.annotations.Record}
+     * or &#64;{@link org.froporec.annotations.Immutable}
+     *
+     * @param processingEnvironment                 {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @param allElementsTypesToConvertByAnnotation {@link Map} of annotated {@link Element} instances grouped by their
+     *                                              respective annotation String representation
+     * @return {@link java.util.function.Predicate} instance to apply on the type String to check
+     */
+    default Predicate<String> isTypeAnnotatedAsRecordOrImmutable(ProcessingEnvironment processingEnvironment, Map<String, Set<Element>> allElementsTypesToConvertByAnnotation) {
+        Function<String, Element> convertToElement = typeString -> constructElementInstanceValueFromTypeString(processingEnvironment, typeString);
+        return typeString -> allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_RECORD).contains(convertToElement.apply(typeString))
+                || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_IMMUTABLE).contains(convertToElement.apply(typeString))
+                || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_GENERATE_RECORD).contains(convertToElement.apply(typeString))
+                || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_GENERATE_IMMUTABLE).contains(convertToElement.apply(typeString));
+    }
+
+    /**
+     * Returns a {@link java.util.List} of {@link Element} instances representing each non-void non-args methods of the
+     * provided annotated {@link Element} instance
+     *
+     * @param annotatedElement {@link Element} instance of the annotated Pojo or Record class
+     * @param processingEnv    {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @return {@link java.util.List} of {@link Element} instances representing each non-void non-args methods of the
+     * provided annotated {@link Element} instance
+     */
+    static List<? extends Element> buildNonVoidMethodsElementsList(Element annotatedElement, ProcessingEnvironment processingEnv) {
+        return ElementKind.RECORD.equals((processingEnv.getTypeUtils().asElement(annotatedElement.asType())).getKind())
+                ? processingEnv.getElementUtils().getAllMembers(
+                        (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())
+                ).stream()
+                .filter(element -> ElementKind.METHOD.equals(element.getKind()))
+                .filter(element -> (!TypeKind.VOID.equals(((ExecutableElement) element).getReturnType().getKind())))
+                .filter(element -> asList(METHODS_TO_EXCLUDE).stream().noneMatch(excludedMeth ->
+                        element.toString().contains(excludedMeth + OPENING_PARENTHESIS))) // exclude known Object methds
+                .filter(element -> ((ExecutableElement) element).getParameters().isEmpty()) // only methods with no params
+                .toList()
+                : processingEnv.getElementUtils().getAllMembers(
+                        (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())
+                ).stream()
+                .filter(element -> ElementKind.METHOD.equals(element.getKind()))
+                .filter(element -> element.getSimpleName().toString().startsWith(GET) || element.getSimpleName().toString().startsWith(IS))
+                .filter(element -> asList(METHODS_TO_EXCLUDE).stream().noneMatch(excludedMeth ->
+                        element.toString().contains(excludedMeth + OPENING_PARENTHESIS)))
+                .filter(element -> ((ExecutableElement) element).getParameters().isEmpty())
+                .toList();
     }
 }
 
@@ -126,7 +207,7 @@ sealed interface SupportedCollectionsGenerator extends CodeGenerator {
 
         private final String type;
 
-        SupportedCollectionTypes(final String type) {
+        SupportedCollectionTypes(String type) {
             this.type = type;
         }
 
@@ -143,7 +224,7 @@ sealed interface SupportedCollectionsGenerator extends CodeGenerator {
      * @param nonVoidMethodReturnTypeAsString - qualified name of the method's return type
      * @return true if the provided type is a collection with a generic, false otherwise
      */
-    default boolean isCollectionWithGeneric(final String nonVoidMethodReturnTypeAsString) {
+    default boolean isCollectionWithGeneric(String nonVoidMethodReturnTypeAsString) {
         if (nonVoidMethodReturnTypeAsString.indexOf(INFERIOR_SIGN) == -1 && nonVoidMethodReturnTypeAsString.indexOf(SUPERIOR_SIGN) == -1) {
             return false;
         }
@@ -159,7 +240,7 @@ sealed interface SupportedCollectionsGenerator extends CodeGenerator {
      * @param nonVoidMethodReturnTypeAsString qualified name of the method's return type
      * @return the generic type as a String
      */
-    default String extractGenericType(final String nonVoidMethodReturnTypeAsString) {
+    default String extractGenericType(String nonVoidMethodReturnTypeAsString) {
         int idxFirstSign = nonVoidMethodReturnTypeAsString.indexOf(INFERIOR_SIGN);
         int idxLastSign = nonVoidMethodReturnTypeAsString.indexOf(SUPERIOR_SIGN);
         return nonVoidMethodReturnTypeAsString.substring(0, idxLastSign).substring(idxFirstSign + 1);
@@ -171,7 +252,7 @@ sealed interface SupportedCollectionsGenerator extends CodeGenerator {
      * @param nonVoidMethodReturnTypeAsString qualified name of the method's return type
      * @return the collection type
      */
-    default String extractCollectionType(final String nonVoidMethodReturnTypeAsString) {
+    default String extractCollectionType(String nonVoidMethodReturnTypeAsString) {
         int idxFirstSign = nonVoidMethodReturnTypeAsString.indexOf(INFERIOR_SIGN);
         return nonVoidMethodReturnTypeAsString.substring(0, idxFirstSign);
     }
@@ -184,7 +265,7 @@ sealed interface SupportedCollectionsFieldsGenerator extends SupportedCollection
 
     /**
      * Replaces every POJO or Record class within a generic with its generated record class name, only if the POJO or Record within
-     * the generic was also annotated or added as a .class value within the "includeTypes" attribute of {@link org.froporec.GenerateRecord} or {@link org.froporec.GenerateImmutable}).<br>
+     * the generic was also annotated or added as a .class value within the "includeTypes" attribute of {@link GenerateRecord} or {@link GenerateImmutable}).<br>
      * ex: if List&lt;Person&gt; is a member of an annotated POJO class, the generated record class of the POJO will have a member of List&lt;PersonRecord&gt;
      *
      * @param recordClassContent              content being built, containing the record source string
@@ -211,15 +292,19 @@ sealed interface SupportedCollectionsMappingLogicGenerator extends SupportedColl
     /**
      * Builds a Collection.stream()... logic to allow the mapping of a collection of POJO or Record classes to a collection of the
      * corresponding generated Record classes, only if the POJOs or Records defined as generics were also annotated or
-     * added as .class values within the "includeTypes" attribute of {@link org.froporec.GenerateRecord} or {@link org.froporec.GenerateImmutable}).<br>
+     * added as .class values within the "includeTypes" attribute of {@link GenerateRecord} or {@link GenerateImmutable}).<br>
      * This happens inside the generated custom constructor inside which we call the canonical constructor of the Record class being generated
      *
+     * @param recordClassContent              content being built, containing the record source string
      * @param fieldName                       field name being processed
      * @param nonVoidMethodElementAsString    non-void method name
      * @param nonVoidMethodReturnTypeAsString qualified name of the method's return type, also the type of the field being processed
      * @return return the mapping logic for the collection field being processed
      */
-    void generateCollectionFieldMappingIfGenericIsAnnotated(final StringBuilder recordClassContent, final String fieldName, final String nonVoidMethodElementAsString, final String nonVoidMethodReturnTypeAsString);
+    void generateCollectionFieldMappingIfGenericIsAnnotated(final StringBuilder recordClassContent,
+                                                            final String fieldName,
+                                                            final String nonVoidMethodElementAsString,
+                                                            final String nonVoidMethodReturnTypeAsString);
 
     @Override
     default void generateCode(final StringBuilder recordClassContent, final Map<String, Object> params) {

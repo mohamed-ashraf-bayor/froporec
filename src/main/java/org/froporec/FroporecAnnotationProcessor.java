@@ -22,142 +22,131 @@
 package org.froporec;
 
 import com.google.auto.service.AutoService;
+import org.froporec.annotations.Immutable;
+import org.froporec.annotations.Record;
+import org.froporec.annotations.SuperRecord;
+import org.froporec.extractor.FroporecAnnotationInfoExtractor;
+import org.froporec.generator.FroporecRecordSourceFileGenerator;
 import org.froporec.generator.RecordSourceFileGenerator;
-import org.froporec.generator.helpers.StringGenerator;
 
 import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.FilerException;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
-import java.io.IOException;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
-import static org.froporec.generator.helpers.StringGenerator.GENERATE_IMMUTABLE_QUALIFIED_NAME;
-import static org.froporec.generator.helpers.StringGenerator.GENERATE_RECORD_QUALIFIED_NAME;
+import static java.util.stream.Stream.concat;
+import static org.froporec.generator.helpers.StringGenerator.ALL_ANNOTATIONS_QUALIFIED_NAMES;
+import static org.froporec.generator.helpers.StringGenerator.AT_SIGN;
+import static org.froporec.generator.helpers.StringGenerator.FAILURE;
+import static org.froporec.generator.helpers.StringGenerator.GENERATE_IMMUTABLE;
+import static org.froporec.generator.helpers.StringGenerator.GENERATE_RECORD;
+import static org.froporec.generator.helpers.StringGenerator.GENERATION_FAILURE_MSG;
+import static org.froporec.generator.helpers.StringGenerator.GENERATION_REPORT_ELEMENTS_SEPARATOR;
+import static org.froporec.generator.helpers.StringGenerator.GENERATION_REPORT_MSG_FORMAT;
+import static org.froporec.generator.helpers.StringGenerator.GENERATION_SUCCESS_MSG;
+import static org.froporec.generator.helpers.StringGenerator.IMMUTABLE;
+import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_GENERATE_IMMUTABLE;
+import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_GENERATE_RECORD;
+import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_IMMUTABLE;
+import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_RECORD;
+import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_SUPER_RECORD;
+import static org.froporec.generator.helpers.StringGenerator.RECORD;
+import static org.froporec.generator.helpers.StringGenerator.SUCCESS;
+import static org.froporec.generator.helpers.StringGenerator.SUPER_RECORD;
 
 /**
- * FroPoRec annotation processor class. Picks up and processes all elements (classes, fields and method params) annotated with @{@link GenerateRecord} and {@link GenerateImmutable}.<br>
- * The order of processing is: classes, then fields and then the method parameters<br>
+ * FroPoRec annotation processor class. Picks up and processes all elements (classes, fields and method params) annotated
+ * with @{@link Record}, {@link Immutable} and {@link SuperRecord}.<br>
  * For each annotated element a fully immutable Record class is generated. If the generated class already exists (in case the
  * corresponding pojo or record has been annotated more than once), the generation process will be skipped
  */
-@SupportedAnnotationTypes({GENERATE_RECORD_QUALIFIED_NAME, GENERATE_IMMUTABLE_QUALIFIED_NAME})
+@SupportedAnnotationTypes({ORG_FROPOREC_RECORD, ORG_FROPOREC_SUPER_RECORD, ORG_FROPOREC_IMMUTABLE, ORG_FROPOREC_GENERATE_RECORD,
+        ORG_FROPOREC_GENERATE_IMMUTABLE})
 @SupportedSourceVersion(SourceVersion.RELEASE_17)
 @AutoService(Processor.class)
-public class FroporecAnnotationProcessor extends AbstractProcessor implements StringGenerator {
+public final class FroporecAnnotationProcessor extends AbstractProcessor implements AnnotationProcessor {
 
     private final Logger log = Logger.getLogger(FroporecAnnotationProcessor.class.getName());
 
     @Override
-    public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnvironment) {
-        var allAnnotatedElements = new HashSet<Element>();
-        for (var annotation : annotations) {
-            if (!annotation.toString().contains(GENERATE_RECORD_QUALIFIED_NAME) && !annotation.toString().contains(GENERATE_IMMUTABLE_QUALIFIED_NAME)) {
-                continue;
+    public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnvironment) {
+        var allAnnotatedElementsByAnnotation = new HashMap<TypeElement, Set<? extends Element>>();
+        annotations.forEach(annotation -> {
+            if (ALL_ANNOTATIONS_QUALIFIED_NAMES.stream().anyMatch(annotation.toString()::contains)) {
+                allAnnotatedElementsByAnnotation.merge(
+                        annotation,
+                        roundEnvironment.getElementsAnnotatedWith(annotation),
+                        (currentSet, newSet) -> concat(currentSet.stream(), newSet.stream()).collect(toSet())
+                );
             }
-            allAnnotatedElements.addAll(roundEnvironment.getElementsAnnotatedWith(annotation));
+        });
+        if (!allAnnotatedElementsByAnnotation.isEmpty()) {
+            var allAnnotatedElementsToProcessByAnnotation =
+                    new FroporecAnnotationInfoExtractor(processingEnv).extractAnnotatedElementsByAnnotation(allAnnotatedElementsByAnnotation);
+            // add empty maps for non-provided annotations before returning
+            ALL_ANNOTATIONS_QUALIFIED_NAMES.stream()
+                    .filter(annotationString -> !allAnnotatedElementsToProcessByAnnotation.keySet().contains(annotationString))
+                    .forEach(annotationString -> allAnnotatedElementsToProcessByAnnotation.put(annotationString, Map.of()));
+            RecordSourceFileGenerator recordSourceFileGenerator = new FroporecRecordSourceFileGenerator(processingEnv, allAnnotatedElementsToProcessByAnnotation);
+            // process annotated elements and display reports
+            displayReport(
+                    AT_SIGN + RECORD,
+                    processRecordAnnotatedElements(allAnnotatedElementsToProcessByAnnotation.get(ORG_FROPOREC_RECORD), recordSourceFileGenerator, processingEnv)
+            );
+            displayReport(
+                    AT_SIGN + GENERATE_RECORD,
+                    processRecordAnnotatedElements(allAnnotatedElementsToProcessByAnnotation.get(ORG_FROPOREC_GENERATE_RECORD), recordSourceFileGenerator, processingEnv)
+            );
+            displayReport(
+                    AT_SIGN + IMMUTABLE,
+                    processImmutableAnnotatedElements(allAnnotatedElementsToProcessByAnnotation.get(ORG_FROPOREC_IMMUTABLE), recordSourceFileGenerator, processingEnv)
+            );
+            displayReport(
+                    AT_SIGN + GENERATE_IMMUTABLE,
+                    processImmutableAnnotatedElements(allAnnotatedElementsToProcessByAnnotation.get(ORG_FROPOREC_GENERATE_IMMUTABLE), recordSourceFileGenerator, processingEnv)
+            );
+            displayReport(
+                    AT_SIGN + SUPER_RECORD,
+                    processSuperRecordAnnotatedElements(allAnnotatedElementsToProcessByAnnotation.get(ORG_FROPOREC_SUPER_RECORD), recordSourceFileGenerator, processingEnv)
+            );
         }
-        var allAnnotatedElementsToProcess = new HashSet<Element>();
-        extractAnnotatedPojoClassesWithIncludedTypes(allAnnotatedElements, allAnnotatedElementsToProcess);
-        extractAnnotatedRecordClassesWithIncludedTypes(allAnnotatedElements, allAnnotatedElementsToProcess);
-        extractAnnotatedFieldsWithIncludedTypes(allAnnotatedElements, allAnnotatedElementsToProcess);
-        extractAnnotatedMethodParamsWithIncludedTypes(allAnnotatedElements, allAnnotatedElementsToProcess);
-        var recordSourceFileGenerator = new RecordSourceFileGenerator(processingEnv, allAnnotatedElementsToProcess);
-        allAnnotatedElementsToProcess.forEach(annotatedElement -> processAnnotatedElement(annotatedElement, recordSourceFileGenerator));
         return true;
     }
 
-    private void extractAnnotatedPojoClassesWithIncludedTypes(final Set<? extends Element> allAnnotatedElements, final Set<Element> allAnnotatedElementsToProcess) {
-        var annotatedPojoClasses = allAnnotatedElements.stream()
-                .filter(element -> !allAnnotatedElementsToProcess.contains(element))
-                .filter(element -> !element.getClass().isRecord())
-                .filter(element -> !element.getClass().isEnum())
-                .filter(element -> !element.getClass().isSealed())
-                .filter(element -> ElementKind.CLASS.equals(element.getKind()))
-                .collect(toSet());
-        allAnnotatedElementsToProcess.addAll(annotatedPojoClasses);
-        allAnnotatedElementsToProcess.addAll(extractIncludedTypes(annotatedPojoClasses));
-    }
-
-    private void extractAnnotatedRecordClassesWithIncludedTypes(final Set<? extends Element> allAnnotatedElements, final Set<Element> allAnnotatedElementsToProcess) {
-        var annotatedRecordClasses = allAnnotatedElements.stream()
-                .filter(element -> !allAnnotatedElementsToProcess.contains(element))
-                .filter(element -> ElementKind.RECORD.equals(element.getKind()))
-                .collect(toSet());
-        allAnnotatedElementsToProcess.addAll(annotatedRecordClasses);
-        allAnnotatedElementsToProcess.addAll(extractIncludedTypes(annotatedRecordClasses));
-    }
-
-    private void extractAnnotatedFieldsWithIncludedTypes(final Set<? extends Element> allAnnotatedElements, final Set<Element> allAnnotatedElementsToProcess) {
-        var annotatedFields = allAnnotatedElements.stream()
-                .filter(element -> !allAnnotatedElementsToProcess.contains(element))
-                .filter(element -> ElementKind.FIELD.equals(element.getKind()))
-                .filter(element -> !ElementKind.ENUM_CONSTANT.equals(element.getKind()))
-                .collect(toSet());
-        allAnnotatedElementsToProcess.addAll(annotatedFields);
-        allAnnotatedElementsToProcess.addAll(extractIncludedTypes(annotatedFields));
-    }
-
-    private void extractAnnotatedMethodParamsWithIncludedTypes(final Set<? extends Element> allAnnotatedElements, final Set<Element> allAnnotatedElementsToProcess) {
-        var annotatedParams = allAnnotatedElements.stream()
-                .filter(element -> !allAnnotatedElementsToProcess.contains(element))
-                .filter(element -> ElementKind.PARAMETER.equals(element.getKind()))
-                .collect(toSet());
-        allAnnotatedElementsToProcess.addAll(annotatedParams);
-        allAnnotatedElementsToProcess.addAll(extractIncludedTypes(annotatedParams));
-    }
-
-    private Set<Element> extractIncludedTypes(Set<? extends Element> annotatedElement) {
-        var includedTypesAsElements = new HashSet<Element>();
-        annotatedElement.forEach(element -> processingEnv.getElementUtils().getAllAnnotationMirrors(element).stream()
-                .filter(annotationMirror -> annotationMirror.toString().contains(GENERATE_IMMUTABLE_QUALIFIED_NAME)
-                        || annotationMirror.toString().contains(GENERATE_RECORD_QUALIFIED_NAME))
-                .map(AnnotationMirror::getElementValues)
-                .forEach(map -> map.forEach((executableElement, annotationValue) -> {
-                    // annotationValue.getValue() sample value: com.bayor...School.class,com.bayor...Person.class
-                    if (executableElement.toString().contains(INCLUDE_TYPES_ATTRIBUTE)) {
-                        includedTypesAsElements.addAll(asList(annotationValue.getValue().toString().split(COMMA_SEPARATOR)).stream()
-                                .map(includedTypeDotClassString -> processingEnv.getTypeUtils().asElement(processingEnv.getElementUtils().getTypeElement(includedTypeDotClassString.strip().replace(DOT_CLASS, EMPTY_STRING)).asType()))
-                                .collect(toSet()));
-                    }
-                })));
-        return includedTypesAsElements;
-    }
-
-    private void processAnnotatedElement(final Element annotatedElement, final RecordSourceFileGenerator recordSourceFileGenerator) {
-        var nonVoidMethodsElementsList = ElementKind.RECORD.equals((processingEnv.getTypeUtils().asElement(annotatedElement.asType())).getKind())
-                ? processingEnv.getElementUtils().getAllMembers((TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())).stream()
-                .filter(element -> ElementKind.METHOD.equals(element.getKind()))
-                .filter(element -> asList(METHODS_TO_EXCLUDE).stream().noneMatch(excludedMeth -> element.toString().contains(excludedMeth + OPENING_PARENTHESIS)))
-                .toList()
-                : processingEnv.getElementUtils().getAllMembers((TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())).stream()
-                .filter(element -> ElementKind.METHOD.equals(element.getKind()))
-                .filter(element -> element.getSimpleName().toString().startsWith(GET) || element.getSimpleName().toString().startsWith(IS))
-                .filter(element -> asList(METHODS_TO_EXCLUDE).stream().noneMatch(excludedMeth -> element.toString().contains(excludedMeth + OPENING_PARENTHESIS)))
-                .toList();
-        var annotatedTypeElement = (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType());
-        var qualifiedClassName = annotatedTypeElement.getQualifiedName().toString();
-        var generatedQualifiedClassName = constructImmutableQualifiedNameBasedOnElementType(annotatedTypeElement);
-        try {
-            recordSourceFileGenerator.writeRecordSourceFile(qualifiedClassName, generatedQualifiedClassName, nonVoidMethodsElementsList);
-            log.info(() -> format(GENERATION_SUCCESS_MSG_FORMAT, generatedQualifiedClassName));
-        } catch (FilerException e) {
-            // File was already generated - do nothing
-        } catch (IOException e) {
-            log.log(Level.SEVERE, format(GENERATION_FAILURE_MSG_FORMAT, generatedQualifiedClassName), e);
+    private void displayReport(String processedAnnotation, Map<String, List<String>> generatedClassesMap) {
+        if (!generatedClassesMap.get(SUCCESS).isEmpty()) {
+            log.info(() -> format(
+                    GENERATION_REPORT_MSG_FORMAT,
+                    GENERATION_SUCCESS_MSG,
+                    processedAnnotation,
+                    generatedClassesMap.get(SUCCESS).stream().collect(joining(format(GENERATION_REPORT_ELEMENTS_SEPARATOR)))
+            ));
         }
+        if (!generatedClassesMap.get(FAILURE).isEmpty()) {
+            log.log(Level.SEVERE, format(
+                    GENERATION_REPORT_MSG_FORMAT,
+                    GENERATION_FAILURE_MSG,
+                    processedAnnotation,
+                    generatedClassesMap.get(FAILURE).stream().collect(joining(format(GENERATION_REPORT_ELEMENTS_SEPARATOR)))
+            ));
+        }
+    }
+
+    @Override
+    public void notifyWarning(String warningMsg) {
+        log.warning(() -> warningMsg);
     }
 }

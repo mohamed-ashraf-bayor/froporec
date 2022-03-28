@@ -32,15 +32,15 @@ import java.util.Properties;
 import static java.lang.String.format;
 
 /**
- * Generates the {@link javax.annotation.processing.Generated} annotation code fragment at the top of the generated record class
+ * Generates the {@link javax.annotation.processing.Generated} annotation code fragment on top of the generated record class
  * with the attributes: value, date and comments.<br>
  * The params {@link Map} parameter of the provided implementation of the generateCode() method (from {@link CodeGenerator}) is not required here.<br>
  */
 public final class JavaxGeneratedGenerator implements CodeGenerator {
 
-    private static final String DEFAULT_APP_VERSION = "1.2.0";
+    private static final String DEFAULT_APP_VERSION = "1.3.0";
 
-    private void buildGeneratedAnnotationSection(final StringBuilder recordClassContent) {
+    private void buildGeneratedAnnotationSection(StringBuilder recordClassContent) {
         recordClassContent.append(format("""
                         @javax.annotation.processing.Generated(
                             value = "%s",
@@ -66,7 +66,7 @@ public final class JavaxGeneratedGenerator implements CodeGenerator {
     }
 
     @Override
-    public void generateCode(final StringBuilder recordClassContent, final Map<String, Object> params) {
+    public void generateCode(StringBuilder recordClassContent, Map<String, Object> params) {
         buildGeneratedAnnotationSection(recordClassContent);
     }
 }

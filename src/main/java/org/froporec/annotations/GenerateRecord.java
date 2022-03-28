@@ -19,10 +19,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-module froporec {
-    exports org.froporec;
-    exports org.froporec.annotations;
-    requires java.compiler;
-    requires java.logging;
-    requires com.google.auto.service;
+package org.froporec.annotations;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+/**
+ * @deprecated Use &#64;{@link Record} instead<br>
+ */
+@Retention(RetentionPolicy.SOURCE)
+@Target({ElementType.TYPE, ElementType.FIELD, ElementType.PARAMETER, ElementType.RECORD_COMPONENT})
+@Documented
+@Deprecated(forRemoval = true, since = "1.3")
+public @interface GenerateRecord {
+    /**
+     * allows specifying additional types (POJOs or Records) to be transformed in their fully immutable equivalent (Records for POJOs and Immutable Records for Records)
+     *
+     * @return an array of .class values
+     */
+    Class<?>[] includeTypes() default {};
 }
