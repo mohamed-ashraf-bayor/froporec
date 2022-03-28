@@ -9,7 +9,7 @@
 
 ## Videos
 
-Froporec and Beyond: [https://youtu.be/nkbu6zxV3R0](https://youtu.be/nkbu6zxV3R0)
+Froporec and Beyond: [https://youtu.be/Gzv65UmWmzw](https://youtu.be/Gzv65UmWmzw)
 
 v1.2 Quick Intro: [https://youtu.be/Yu3bR8ZkpYE](https://youtu.be/Yu3bR8ZkpYE)
 
