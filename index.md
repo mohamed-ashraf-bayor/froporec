@@ -136,7 +136,7 @@ Important Note: the annotation should be used ONLY on Record classes created in 
 ### @SuperRecord
 
 To be used <b>only</b> on top of either POJO or Record classes.<br>
-As a result, a record class with the name _pojo_or_record_class_name_ + "SuperRecord" will be generated and all fields from the list of
+As a result, a record class with the name _pojo_or_record_class_name_ + **SuperRecord** will be generated and all fields from the list of
 Pojo and/or Record classes provided in the <u>mandatory</u> <b>mergeWith</b> attribute, will be added to the fields list of the
 annotated POJO or Record class:<br>
 ```java
