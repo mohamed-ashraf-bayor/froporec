@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021-2022 Mohamed Ashraf Bayor
+ * Copyright (c) 2021-2023 Mohamed Ashraf Bayor
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,8 +21,6 @@
  */
 package org.froporec.generator.helpers;
 
-import org.froporec.annotations.GenerateImmutable;
-import org.froporec.annotations.GenerateRecord;
 import org.froporec.annotations.Immutable;
 import org.froporec.annotations.Record;
 
@@ -64,38 +62,14 @@ public interface StringGenerator {
     String RECORD = "Record";
 
     /**
-     * "GenerateRecord" string literal
-     */
-    @Deprecated(forRemoval = true, since = "1.3")
-    String GENERATE_RECORD = "GenerateRecord";
-
-    /**
      * "Immutable" String literal
      */
     String IMMUTABLE = "Immutable";
 
     /**
-     * "GenerateImmutable" String literal
-     */
-    @Deprecated(forRemoval = true, since = "1.3")
-    String GENERATE_IMMUTABLE = "GenerateImmutable";
-
-    /**
      * "SuperRecord" string literal
      */
     String SUPER_RECORD = "SuperRecord";
-
-    /**
-     * {@link GenerateRecord} qualified name
-     */
-    @Deprecated(forRemoval = true, since = "1.3")
-    String ORG_FROPOREC_GENERATE_RECORD = "org.froporec.annotations.GenerateRecord";
-
-    /**
-     * {@link GenerateImmutable} qualified name
-     */
-    @Deprecated(forRemoval = true, since = "1.3")
-    String ORG_FROPOREC_GENERATE_IMMUTABLE = "org.froporec.annotations.GenerateImmutable";
 
     /**
      * {@link Record} qualified name
@@ -115,16 +89,7 @@ public interface StringGenerator {
     /**
      * all Froporec annotations qualified names
      */
-    List<String> ALL_ANNOTATIONS_QUALIFIED_NAMES = List.of(ORG_FROPOREC_GENERATE_RECORD, ORG_FROPOREC_GENERATE_IMMUTABLE,
-            ORG_FROPOREC_RECORD, ORG_FROPOREC_IMMUTABLE, ORG_FROPOREC_SUPER_RECORD);
-
-    /**
-     * "includeTypes" attribute String literal
-     *
-     * @deprecated use 'alsoConvert' instead
-     */
-    @Deprecated(forRemoval = true, since = "1.3")
-    String INCLUDE_TYPES_ATTRIBUTE = "includeTypes";
+    List<String> ALL_ANNOTATIONS_QUALIFIED_NAMES = List.of(ORG_FROPOREC_RECORD, ORG_FROPOREC_IMMUTABLE, ORG_FROPOREC_SUPER_RECORD);
 
     /**
      * "alsoConvert" attribute String literal

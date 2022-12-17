@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021-2022 Mohamed Ashraf Bayor
+ * Copyright (c) 2021-2023 Mohamed Ashraf Bayor
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,10 +40,7 @@ import static org.froporec.generator.helpers.StringGenerator.ALSO_CONVERT_ATTRIB
 import static org.froporec.generator.helpers.StringGenerator.COMMA_SEPARATOR;
 import static org.froporec.generator.helpers.StringGenerator.DOT_CLASS;
 import static org.froporec.generator.helpers.StringGenerator.EMPTY_STRING;
-import static org.froporec.generator.helpers.StringGenerator.INCLUDE_TYPES_ATTRIBUTE;
 import static org.froporec.generator.helpers.StringGenerator.MERGE_WITH_ATTRIBUTE;
-import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_GENERATE_IMMUTABLE;
-import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_GENERATE_RECORD;
 import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_IMMUTABLE;
 import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_RECORD;
 import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_SUPER_RECORD;
@@ -145,8 +142,6 @@ public interface AnnotationInfoExtractor {
                     annotatedElementsWithAlsoConvertAndIncludeTypes.add(processingEnvironment.getTypeUtils().asElement(annotatedElement.asType()));
                     annotatedElementsWithAlsoConvertAndIncludeTypes.addAll(attributesMap.get(ALSO_CONVERT_ATTRIBUTE).stream()
                             .map(element -> processingEnvironment.getTypeUtils().asElement(element.asType())).collect(toSet()));
-                    annotatedElementsWithAlsoConvertAndIncludeTypes.addAll(attributesMap.get(INCLUDE_TYPES_ATTRIBUTE).stream()
-                            .map(element -> processingEnvironment.getTypeUtils().asElement(element.asType())).collect(toSet()));
                 }
             });
             allElementsTypesToConvert.put(annotationString, annotatedElementsWithAlsoConvertAndIncludeTypes);
@@ -158,9 +153,7 @@ public interface AnnotationInfoExtractor {
         boolean isAClass = ElementKind.CLASS.equals(processingEnvironment.getTypeUtils().asElement(annotatedElement.asType()).getKind());
         boolean isARecord = ElementKind.RECORD.equals(processingEnvironment.getTypeUtils().asElement(annotatedElement.asType()).getKind());
         return (ORG_FROPOREC_RECORD.equals(annotationString) && isAClass)
-                || (ORG_FROPOREC_GENERATE_RECORD.equals(annotationString) && isAClass)
                 || (ORG_FROPOREC_IMMUTABLE.equals(annotationString) && isARecord)
-                || (ORG_FROPOREC_GENERATE_IMMUTABLE.equals(annotationString) && isARecord)
                 || (ORG_FROPOREC_SUPER_RECORD.equals(annotationString) && (isAClass || isARecord));
     }
 

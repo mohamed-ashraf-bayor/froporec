@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021-2022 Mohamed Ashraf Bayor
+ * Copyright (c) 2021-2023 Mohamed Ashraf Bayor
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,7 +37,6 @@ import static org.froporec.generator.helpers.StringGenerator.ALSO_CONVERT_ATTRIB
 import static org.froporec.generator.helpers.StringGenerator.AT_SIGN;
 import static org.froporec.generator.helpers.StringGenerator.GENERATION_REPORT_ELEMENTS_SEPARATOR;
 import static org.froporec.generator.helpers.StringGenerator.IMMUTABLE;
-import static org.froporec.generator.helpers.StringGenerator.INCLUDE_TYPES_ATTRIBUTE;
 import static org.froporec.generator.helpers.StringGenerator.MERGE_WITH_ATTRIBUTE;
 import static org.froporec.generator.helpers.StringGenerator.POJO;
 import static org.froporec.generator.helpers.StringGenerator.RECORD;
@@ -87,7 +86,6 @@ public sealed interface AnnotationProcessor permits FroporecAnnotationProcessor 
                 .forEach(element -> {
                     elementsListToProcess.add(element);
                     elementsListToProcess.addAll(annotatedElementsMap.get(element).get(ALSO_CONVERT_ATTRIBUTE));
-                    elementsListToProcess.addAll(annotatedElementsMap.get(element).get(INCLUDE_TYPES_ATTRIBUTE));
                 });
         return recordSourceFileGenerator.generateForRecordAnnotatedElements(elementsListToProcess, processingEnv);
     }
@@ -121,7 +119,6 @@ public sealed interface AnnotationProcessor permits FroporecAnnotationProcessor 
                 .forEach(element -> {
                     elementsListToProcess.add(element);
                     elementsListToProcess.addAll(annotatedElementsMap.get(element).get(ALSO_CONVERT_ATTRIBUTE));
-                    elementsListToProcess.addAll(annotatedElementsMap.get(element).get(INCLUDE_TYPES_ATTRIBUTE));
                 });
         return recordSourceFileGenerator.generateForImmutableAnnotatedElements(elementsListToProcess, processingEnv);
     }
@@ -147,7 +144,7 @@ public sealed interface AnnotationProcessor permits FroporecAnnotationProcessor 
                     SKIPPED_ELEMENTS_WARNING_MSG_FORMAT,
                     AT_SIGN + SUPER_RECORD,
                     POJO + " or " + RECORD,
-                    skippedElements.stream().map(Object::toString).collect(joining(format(GENERATION_REPORT_ELEMENTS_SEPARATOR)))
+                    skippedElements.stream().map(Object::toString).collect(joining(GENERATION_REPORT_ELEMENTS_SEPARATOR))
             ));
         }
         var elementsMapToProcess = annotatedElementsMap.keySet().stream()

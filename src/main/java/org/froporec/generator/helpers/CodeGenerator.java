@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021-2022 Mohamed Ashraf Bayor
+ * Copyright (c) 2021-2023 Mohamed Ashraf Bayor
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,9 +20,6 @@
  * SOFTWARE.
  */
 package org.froporec.generator.helpers;
-
-import org.froporec.annotations.GenerateImmutable;
-import org.froporec.annotations.GenerateRecord;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
@@ -137,9 +134,7 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
      */
     default Predicate<Element> isElementAnnotatedAsRecordOrImmutable(Map<String, Set<Element>> allElementsTypesToConvertByAnnotation) {
         return element -> allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_RECORD).contains(element)
-                || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_IMMUTABLE).contains(element)
-                || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_GENERATE_RECORD).contains(element)
-                || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_GENERATE_IMMUTABLE).contains(element);
+                || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_IMMUTABLE).contains(element);
     }
 
     /**
@@ -154,9 +149,7 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
     default Predicate<String> isTypeAnnotatedAsRecordOrImmutable(ProcessingEnvironment processingEnvironment, Map<String, Set<Element>> allElementsTypesToConvertByAnnotation) {
         Function<String, Element> convertToElement = typeString -> constructElementInstanceValueFromTypeString(processingEnvironment, typeString);
         return typeString -> allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_RECORD).contains(convertToElement.apply(typeString))
-                || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_IMMUTABLE).contains(convertToElement.apply(typeString))
-                || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_GENERATE_RECORD).contains(convertToElement.apply(typeString))
-                || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_GENERATE_IMMUTABLE).contains(convertToElement.apply(typeString));
+                || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_IMMUTABLE).contains(convertToElement.apply(typeString));
     }
 
     /**
@@ -265,7 +258,7 @@ sealed interface SupportedCollectionsFieldsGenerator extends SupportedCollection
 
     /**
      * Replaces every POJO or Record class within a generic with its generated record class name, only if the POJO or Record within
-     * the generic was also annotated or added as a .class value within the "includeTypes" attribute of {@link GenerateRecord} or {@link GenerateImmutable}).<br>
+     * the generic was also annotated or added as a .class value within the "alsoConvert" attribute of {@link org.froporec.annotations.Record} or {@link org.froporec.annotations.Immutable}).<br>
      * ex: if List&lt;Person&gt; is a member of an annotated POJO class, the generated record class of the POJO will have a member of List&lt;PersonRecord&gt;
      *
      * @param recordClassContent              content being built, containing the record source string

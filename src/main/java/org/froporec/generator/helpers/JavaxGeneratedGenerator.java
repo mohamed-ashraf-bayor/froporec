@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021-2022 Mohamed Ashraf Bayor
+ * Copyright (c) 2021-2023 Mohamed Ashraf Bayor
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,7 +38,7 @@ import static java.lang.String.format;
  */
 public final class JavaxGeneratedGenerator implements CodeGenerator {
 
-    private static final String DEFAULT_APP_VERSION = "1.3.0";
+    private static final String DEFAULT_APP_VERSION = "1.4.0";
 
     private void buildGeneratedAnnotationSection(StringBuilder recordClassContent) {
         recordClassContent.append(format("""
