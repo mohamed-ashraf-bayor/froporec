@@ -119,15 +119,15 @@ public final class FroporecAnnotationProcessor extends AbstractProcessor impleme
                     GENERATION_REPORT_MSG_FORMAT,
                     GENERATION_SUCCESS_MSG,
                     processedAnnotation,
-                    generatedClassesMap.get(SUCCESS).stream().collect(joining(format(GENERATION_REPORT_ELEMENTS_SEPARATOR)))
+                    generatedClassesMap.get(SUCCESS).stream().collect(joining(GENERATION_REPORT_ELEMENTS_SEPARATOR))
             ));
         }
         if (!generatedClassesMap.get(FAILURE).isEmpty()) {
-            log.log(Level.SEVERE, format(
+            log.log(Level.SEVERE, () -> format(
                     GENERATION_REPORT_MSG_FORMAT,
                     GENERATION_FAILURE_MSG,
                     processedAnnotation,
-                    generatedClassesMap.get(FAILURE).stream().collect(joining(format(GENERATION_REPORT_ELEMENTS_SEPARATOR)))
+                    generatedClassesMap.get(FAILURE).stream().collect(joining(GENERATION_REPORT_ELEMENTS_SEPARATOR))
             ));
         }
     }

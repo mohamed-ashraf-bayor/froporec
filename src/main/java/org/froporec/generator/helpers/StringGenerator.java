@@ -28,7 +28,9 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import java.util.List;
 
-import static java.util.Arrays.asList;
+import static java.lang.Character.isUpperCase;
+import static java.lang.Character.toUpperCase;
+import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 
 /**
@@ -47,9 +49,24 @@ public interface StringGenerator {
     String SPACE = " ";
 
     /**
+     * " String literal
+     */
+    String EQUALS_STR = "=";
+
+    /**
+     * " " String literal
+     */
+    String DOUBLE_QUOTES = "\"";
+
+    /**
      * @ string literal
      */
     String AT_SIGN = "@";
+
+    /**
+     * _ string literal
+     */
+    String UNDERSCORE = "_";
 
     /**
      * "Pojo" string literal
@@ -237,6 +254,16 @@ public interface StringGenerator {
     String[] METHODS_TO_EXCLUDE = {"getClass", "wait", "notifyAll", "hashCode", "equals", "notify", "toString", "clone", "finalize"};
 
     /**
+     * "static" String literal
+     */
+    String STATIC = "static";
+
+    /**
+     * "String" String literal
+     */
+    String STRING = "String";
+
+    /**
      * Constructs the qualified name of the fully immutable record class being generated from an annotated Record class
      *
      * @param qualifiedClassName qualified name of the annotated class
@@ -310,7 +337,7 @@ public interface StringGenerator {
      * @return provided text with all commas removed
      */
     static String removeCommaSeparator(String text) {
-        return asList(text.split(COMMA_SEPARATOR)).stream().collect(joining());
+        return stream(text.split(COMMA_SEPARATOR)).collect(joining());
     }
 
     /**
@@ -321,5 +348,14 @@ public interface StringGenerator {
      */
     static String lowerCase1stChar(String text) {
         return text.substring(0, 1).toLowerCase() + text.substring(1);
+    }
+
+    static String javaConstantNamingConvention(String fieldName) {
+        var allChars = fieldName.toCharArray();
+        var constantNameChars = new StringBuilder().append(toUpperCase(allChars[0]));
+        for (int i = 1; i < allChars.length; i++) {
+            constantNameChars.append(isUpperCase(allChars[i]) ? UNDERSCORE + toUpperCase(allChars[i]) : toUpperCase(allChars[i]));
+        }
+        return constantNameChars.toString();
     }
 }

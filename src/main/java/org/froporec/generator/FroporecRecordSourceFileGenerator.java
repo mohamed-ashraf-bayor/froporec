@@ -24,6 +24,7 @@ package org.froporec.generator;
 import org.froporec.generator.helpers.CodeGenerator;
 import org.froporec.generator.helpers.CustomConstructorGenerator;
 import org.froporec.generator.helpers.FieldsGenerator;
+import org.froporec.generator.helpers.FieldsNamesConstantsGenerator;
 import org.froporec.generator.helpers.JavaxGeneratedGenerator;
 import org.froporec.generator.helpers.SuperInterfacesGenerator;
 
@@ -64,6 +65,8 @@ public final class FroporecRecordSourceFileGenerator implements RecordSourceFile
 
     private final CodeGenerator customConstructorGenerator;
 
+    private final CodeGenerator fieldsNamesConstantsGenerator;
+
     /**
      * RecordSourceFileGenerator constructor. Instantiates needed instances of {@link FieldsGenerator}, {@link SuperInterfacesGenerator},
      * {@link CustomConstructorGenerator} and {@link JavaxGeneratedGenerator}
@@ -80,10 +83,11 @@ public final class FroporecRecordSourceFileGenerator implements RecordSourceFile
         this.allElementsTypesToConvertByAnnotation = extractAllElementsTypesToConvert(this.processingEnvironment, allAnnotatedElementsByAnnotation);
         this.superInterfacesListByAnnotatedElementAndByAnnotation = extractSuperInterfacesListByAnnotatedElement(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, allAnnotatedElementsByAnnotation);
         this.mergeWithListByAnnotatedElementAndByAnnotation = extractMergeWithElementsListByAnnotatedElement(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, allAnnotatedElementsByAnnotation);
+        this.javaxGeneratedGenerator = new JavaxGeneratedGenerator();
         this.fieldsGenerator = new FieldsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, this.mergeWithListByAnnotatedElementAndByAnnotation);
         this.superInterfacesGenerator = new SuperInterfacesGenerator(this.superInterfacesListByAnnotatedElementAndByAnnotation);
         this.customConstructorGenerator = new CustomConstructorGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, this.mergeWithListByAnnotatedElementAndByAnnotation);
-        this.javaxGeneratedGenerator = new JavaxGeneratedGenerator();
+        this.fieldsNamesConstantsGenerator = new FieldsNamesConstantsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, this.mergeWithListByAnnotatedElementAndByAnnotation);
     }
 
     @Override
@@ -111,6 +115,10 @@ public final class FroporecRecordSourceFileGenerator implements RecordSourceFile
         // list all provided superinterfaces
         superInterfacesGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement));
         recordClassContent.append(SPACE + OPENING_BRACE + NEW_LINE);
+        // Fields names constant variables
+        recordClassContent.append(NEW_LINE);
+        fieldsNamesConstantsGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement, NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList, IS_SUPER_RECORD, isSuperRecord));
+        recordClassContent.append(NEW_LINE + NEW_LINE);
         // Custom 1 arg constructor statement
         customConstructorGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement, NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList, IS_SUPER_RECORD, isSuperRecord));
         // no additional content: close the body of the class

@@ -42,7 +42,7 @@ import static java.util.stream.Collectors.toMap;
  * Exposes contract for a CodeGenerator class to fulfill
  */
 public sealed interface CodeGenerator extends StringGenerator permits CustomConstructorGenerator, FieldsGenerator,
-        SuperInterfacesGenerator, JavaxGeneratedGenerator, SupportedCollectionsGenerator {
+        FieldsNamesConstantsGenerator, JavaxGeneratedGenerator, SuperInterfacesGenerator, SupportedCollectionsGenerator {
 
     // List of the parameters expected in the params Map object of the generateCode method:
 
@@ -76,6 +76,11 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
      * parameter name: "isSuperRecord", expected type: {@link Boolean}, indicates whether the Element is being processed as a SuperRecord
      */
     String IS_SUPER_RECORD = "isSuperRecord";
+
+    /**
+     * parameter name: "fieldsListSeparator", expected type: {@link String}, indicates the separator to use while listing the generated record fields as a String
+     */
+    String FIELDS_LIST_SEPARATOR = "fieldsListSeparator";
 
     /**
      * Generates the requested code fragment, based on the parameters provided in the params object and appends it to the provided recordClassContent param
@@ -161,11 +166,12 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
      * @return {@link java.util.List} of {@link Element} instances representing each non-void non-args methods of the
      * provided annotated {@link Element} instance
      */
-    static List<? extends Element> buildNonVoidMethodsElementsList(Element annotatedElement, ProcessingEnvironment processingEnv) {
+    static List<Element> buildNonVoidMethodsElementsList(Element annotatedElement, ProcessingEnvironment processingEnv) {
         return ElementKind.RECORD.equals((processingEnv.getTypeUtils().asElement(annotatedElement.asType())).getKind())
                 ? processingEnv.getElementUtils().getAllMembers(
                         (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())
                 ).stream()
+                .map(Element.class::cast)
                 .filter(element -> ElementKind.METHOD.equals(element.getKind()))
                 .filter(element -> (!TypeKind.VOID.equals(((ExecutableElement) element).getReturnType().getKind())))
                 .filter(element -> asList(METHODS_TO_EXCLUDE).stream().noneMatch(excludedMeth ->
@@ -175,6 +181,7 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
                 : processingEnv.getElementUtils().getAllMembers(
                         (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())
                 ).stream()
+                .map(Element.class::cast)
                 .filter(element -> ElementKind.METHOD.equals(element.getKind()))
                 .filter(element -> element.getSimpleName().toString().startsWith(GET) || element.getSimpleName().toString().startsWith(IS))
                 .filter(element -> asList(METHODS_TO_EXCLUDE).stream().noneMatch(excludedMeth ->
@@ -218,6 +225,7 @@ sealed interface SupportedCollectionsGenerator extends CodeGenerator {
      * @return true if the provided type is a collection with a generic, false otherwise
      */
     default boolean isCollectionWithGeneric(String nonVoidMethodReturnTypeAsString) {
+        // TODO chnge the chck here +use sbclss is intceof
         if (nonVoidMethodReturnTypeAsString.indexOf(INFERIOR_SIGN) == -1 && nonVoidMethodReturnTypeAsString.indexOf(SUPERIOR_SIGN) == -1) {
             return false;
         }
@@ -285,7 +293,7 @@ sealed interface SupportedCollectionsMappingLogicGenerator extends SupportedColl
     /**
      * Builds a Collection.stream()... logic to allow the mapping of a collection of POJO or Record classes to a collection of the
      * corresponding generated Record classes, only if the POJOs or Records defined as generics were also annotated or
-     * added as .class values within the "includeTypes" attribute of {@link GenerateRecord} or {@link GenerateImmutable}).<br>
+     * added as .class values within the "alsoConvert" attribute of {@link org.froporec.annotations.Record} or {@link org.froporec.annotations.Immutable}).<br>
      * This happens inside the generated custom constructor inside which we call the canonical constructor of the Record class being generated
      *
      * @param recordClassContent              content being built, containing the record source string
