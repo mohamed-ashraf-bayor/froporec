@@ -39,52 +39,52 @@ import static java.util.stream.Collectors.joining;
 public interface StringGenerator {
 
     /**
-     * Empty string literal
+     * Empty string
      */
     String EMPTY_STRING = "";
 
     /**
-     * " " String literal
+     * " "
      */
     String SPACE = " ";
 
     /**
-     * " String literal
+     * "="
      */
     String EQUALS_STR = "=";
 
     /**
-     * " " String literal
+     * "\""
      */
     String DOUBLE_QUOTES = "\"";
 
     /**
-     * @ string literal
+     * "@"
      */
     String AT_SIGN = "@";
 
     /**
-     * _ string literal
+     * "_"
      */
     String UNDERSCORE = "_";
 
     /**
-     * "Pojo" string literal
+     * "Pojo"
      */
     String POJO = "Pojo";
 
     /**
-     * "Record" string literal
+     * "Record"
      */
     String RECORD = "Record";
 
     /**
-     * "Immutable" String literal
+     * "Immutable"
      */
     String IMMUTABLE = "Immutable";
 
     /**
-     * "SuperRecord" string literal
+     * "SuperRecord"
      */
     String SUPER_RECORD = "SuperRecord";
 
@@ -109,37 +109,32 @@ public interface StringGenerator {
     List<String> ALL_ANNOTATIONS_QUALIFIED_NAMES = List.of(ORG_FROPOREC_RECORD, ORG_FROPOREC_IMMUTABLE, ORG_FROPOREC_SUPER_RECORD);
 
     /**
-     * "alsoConvert" attribute String literal
+     * "alsoConvert"
      */
     String ALSO_CONVERT_ATTRIBUTE = "alsoConvert";
 
     /**
-     * "mergeWith" attribute String literal
+     * "mergeWith"
      */
     String MERGE_WITH_ATTRIBUTE = "mergeWith";
 
     /**
-     * "superInterfaces" attribute String literal
+     * "superInterfaces"
      */
     String SUPER_INTERFACES_ATTRIBUTE = "superInterfaces";
 
     /**
-     * "implements" String literal
+     * "implements"
      */
     String IMPLEMENTS = "implements";
 
     /**
-     * " " whitespace
-     */
-    String WHITESPACE = " ";
-
-    /**
-     * "," String literal
+     * ","
      */
     String COMMA_SEPARATOR = ",";
 
     /**
-     * ";" Semi-colon
+     * ";"
      */
     String SEMI_COLON = ";";
 
@@ -164,22 +159,22 @@ public interface StringGenerator {
     char SUPERIOR_SIGN = '>';
 
     /**
-     * "{" String literal
+     * "{"
      */
     String OPENING_BRACE = "{";
 
     /**
-     * "}" String literal
+     * "}"
      */
     String CLOSING_BRACE = "}";
 
     /**
-     * ".class" String literal
+     * ".class"
      */
     String DOT_CLASS = ".class";
 
     /**
-     * "." String literal
+     * "."
      */
     String DOT = ".";
 
@@ -194,32 +189,32 @@ public interface StringGenerator {
     String TAB = "\t";
 
     /**
-     * "this" String literal
+     * "this"
      */
     String THIS = "this";
 
     /**
-     * "public" String literal
+     * "public"
      */
     String PUBLIC = "public";
 
     /**
-     * "get" String literal. Starting string of Pojos non-boolean getters
+     * "get" - Starting string of Pojos non-boolean getters
      */
     String GET = "get";
 
     /**
-     * "is" String literal. Starting string of Pojos boolean getters
+     * "is" - Starting string of Pojos boolean getters
      */
     String IS = "is";
 
     /**
-     * "Success" String literal
+     * "Success"
      */
     String SUCCESS = "Success";
 
     /**
-     * "Failure" String literal
+     * "Failure"
      */
     String FAILURE = "Failure";
 
@@ -254,14 +249,39 @@ public interface StringGenerator {
     String[] METHODS_TO_EXCLUDE = {"getClass", "wait", "notifyAll", "hashCode", "equals", "notify", "toString", "clone", "finalize"};
 
     /**
-     * "static" String literal
+     * "static"
      */
     String STATIC = "static";
 
     /**
-     * "String" String literal
+     * "String"
      */
     String STRING = "String";
+
+    /**
+     * "buildWith"
+     */
+    String BUILD_WITH = "buildWith";
+
+    /**
+     * "return"
+     */
+    String RETURN = "return";
+
+    /**
+     * "true"
+     */
+    String TRUE = "true";
+
+    /**
+     * "false"
+     */
+    String FALSE = "false";
+
+    /**
+     * "null"
+     */
+    String NULL = "null";
 
     /**
      * Constructs the qualified name of the fully immutable record class being generated from an annotated Record class

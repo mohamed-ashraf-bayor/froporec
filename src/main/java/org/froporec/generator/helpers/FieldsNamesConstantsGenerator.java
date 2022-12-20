@@ -54,6 +54,7 @@ public final class FieldsNamesConstantsGenerator implements CodeGenerator {
     private final CodeGenerator fieldsGenerator;
 
     /**
+     * // TODO chnge jdoc
      * FieldsGenerationHelper constructor. Instantiates needed instance of {@link CollectionsGenerator}
      *
      * @param processingEnvironment                          {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations

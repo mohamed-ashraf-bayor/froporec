@@ -23,6 +23,7 @@ package org.froporec.generator;
 
 import org.froporec.generator.helpers.CodeGenerator;
 import org.froporec.generator.helpers.CustomConstructorGenerator;
+import org.froporec.generator.helpers.FactoryMethodsGenerator;
 import org.froporec.generator.helpers.FieldsGenerator;
 import org.froporec.generator.helpers.FieldsNamesConstantsGenerator;
 import org.froporec.generator.helpers.JavaxGeneratedGenerator;
@@ -67,6 +68,8 @@ public final class FroporecRecordSourceFileGenerator implements RecordSourceFile
 
     private final CodeGenerator fieldsNamesConstantsGenerator;
 
+    private final CodeGenerator factoryMethodsGenerator;
+
     /**
      * RecordSourceFileGenerator constructor. Instantiates needed instances of {@link FieldsGenerator}, {@link SuperInterfacesGenerator},
      * {@link CustomConstructorGenerator} and {@link JavaxGeneratedGenerator}
@@ -88,6 +91,7 @@ public final class FroporecRecordSourceFileGenerator implements RecordSourceFile
         this.superInterfacesGenerator = new SuperInterfacesGenerator(this.superInterfacesListByAnnotatedElementAndByAnnotation);
         this.customConstructorGenerator = new CustomConstructorGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, this.mergeWithListByAnnotatedElementAndByAnnotation);
         this.fieldsNamesConstantsGenerator = new FieldsNamesConstantsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, this.mergeWithListByAnnotatedElementAndByAnnotation);
+        this.factoryMethodsGenerator = new FactoryMethodsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation);
     }
 
     @Override
@@ -115,12 +119,14 @@ public final class FroporecRecordSourceFileGenerator implements RecordSourceFile
         // list all provided superinterfaces
         superInterfacesGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement));
         recordClassContent.append(SPACE + OPENING_BRACE + NEW_LINE);
-        // Fields names constant variables
+        // fields names constant variables
         recordClassContent.append(NEW_LINE);
         fieldsNamesConstantsGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement, NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList, IS_SUPER_RECORD, isSuperRecord));
         recordClassContent.append(NEW_LINE + NEW_LINE);
-        // Custom 1 arg constructor statement
+        // custom 1 arg constructor statement
         customConstructorGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement, NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList, IS_SUPER_RECORD, isSuperRecord));
+        // static factory methods
+        factoryMethodsGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement, NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList, IS_SUPER_RECORD, isSuperRecord));
         // no additional content: close the body of the class
         recordClassContent.append(CLOSING_BRACE);
         return recordClassContent.toString();

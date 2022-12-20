@@ -41,8 +41,8 @@ import static java.util.stream.Collectors.toMap;
 /**
  * Exposes contract for a CodeGenerator class to fulfill
  */
-public sealed interface CodeGenerator extends StringGenerator permits CustomConstructorGenerator, FieldsGenerator,
-        FieldsNamesConstantsGenerator, JavaxGeneratedGenerator, SuperInterfacesGenerator, SupportedCollectionsGenerator {
+public sealed interface CodeGenerator extends StringGenerator permits CustomConstructorGenerator, FieldsGenerator, FieldsNamesConstantsGenerator,
+        FactoryMethodsGenerator, JavaxGeneratedGenerator, SuperInterfacesGenerator, SupportedCollectionsGenerator {
 
     // List of the parameters expected in the params Map object of the generateCode method:
 

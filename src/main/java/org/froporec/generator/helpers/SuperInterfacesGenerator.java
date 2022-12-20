@@ -79,7 +79,7 @@ public final class SuperInterfacesGenerator implements CodeGenerator {
         return annotatedElementsMap.get(annotatedElement).stream()
                 .map(Object::toString)
                 .map(StringGenerator::removeCommaSeparator)
-                .collect(joining(COMMA_SEPARATOR + WHITESPACE));
+                .collect(joining(COMMA_SEPARATOR + SPACE));
     }
 
     @Override
