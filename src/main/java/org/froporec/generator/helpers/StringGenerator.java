@@ -284,6 +284,16 @@ public interface StringGenerator {
     String NULL = "null";
 
     /**
+     * "null"
+     */
+    String NEW = "new";
+
+    /**
+     * Regex expression to read any attribute value provided within {}
+     */
+    String METHOD_BODY_CONTENT_REGEX = "\\{(.*?)\\}";
+
+    /**
      * Constructs the qualified name of the fully immutable record class being generated from an annotated Record class
      *
      * @param qualifiedClassName qualified name of the annotated class

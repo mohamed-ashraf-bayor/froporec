@@ -90,7 +90,7 @@ public final class FroporecRecordSourceFileGenerator implements RecordSourceFile
         this.fieldsGenerator = new FieldsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, this.mergeWithListByAnnotatedElementAndByAnnotation);
         this.superInterfacesGenerator = new SuperInterfacesGenerator(this.superInterfacesListByAnnotatedElementAndByAnnotation);
         this.customConstructorGenerator = new CustomConstructorGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, this.mergeWithListByAnnotatedElementAndByAnnotation);
-        this.fieldsNamesConstantsGenerator = new FieldsNamesConstantsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, this.mergeWithListByAnnotatedElementAndByAnnotation);
+        this.fieldsNamesConstantsGenerator = new FieldsNamesConstantsGenerator();
         this.factoryMethodsGenerator = new FactoryMethodsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation);
     }
 
@@ -120,9 +120,8 @@ public final class FroporecRecordSourceFileGenerator implements RecordSourceFile
         superInterfacesGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement));
         recordClassContent.append(SPACE + OPENING_BRACE + NEW_LINE);
         // fields names constant variables
+        fieldsNamesConstantsGenerator.generateCode(recordClassContent, Map.of(NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList, IS_SUPER_RECORD, isSuperRecord));
         recordClassContent.append(NEW_LINE);
-        fieldsNamesConstantsGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement, NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList, IS_SUPER_RECORD, isSuperRecord));
-        recordClassContent.append(NEW_LINE + NEW_LINE);
         // custom 1 arg constructor statement
         customConstructorGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement, NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList, IS_SUPER_RECORD, isSuperRecord));
         // static factory methods

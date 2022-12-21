@@ -50,6 +50,7 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
 
     private final Map<String, Set<Element>> allElementsTypesToConvertByAnnotation;
 
+    private final CodeGenerator customConstructorGenerator;
 //    private final CodeGenerator fieldsGenerator;
 
     /**
@@ -63,6 +64,7 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
                                    Map<String, Set<Element>> allElementsTypesToConvertByAnnotation) {
         this.processingEnvironment = processingEnvironment;
         this.allElementsTypesToConvertByAnnotation = allElementsTypesToConvertByAnnotation;
+        this.customConstructorGenerator = new CustomConstructorGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, null);
 //        this.fieldsGenerator = new FieldsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, this.mergeWithListByAnnotatedElementAndByAnnotation);
     }
 
@@ -76,6 +78,7 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
         // "buildWith(<AnnotatedPojoOrRecordQualifiedName><SPACE><AnnotatedPojoOrRecordSimpleName>)"
         recordClassContent.append(BUILD_WITH + OPENING_PARENTHESIS + annotatedElementQualifiedName + SPACE + annotatedElementFieldName + CLOSING_PARENTHESIS + SPACE + OPENING_BRACE + NEW_LINE + TAB + TAB);
         // method body
+//        recordClassContent.append(RETURN + SPACE + NEW + SPACE + constructImmutableSimpleNameBasedOnElementType(annotatedTypeElement) + OPENING_PARENTHESIS + extract + OPENING_PARENTHESIS + SEMI_COLON + NEW_LINE);
         recordClassContent.append(RETURN + SPACE + NULL + SEMI_COLON + NEW_LINE);
         // closing
         recordClassContent.append(TAB + CLOSING_BRACE + NEW_LINE);

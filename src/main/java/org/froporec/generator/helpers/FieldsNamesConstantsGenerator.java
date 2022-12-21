@@ -21,15 +21,13 @@
  */
 package org.froporec.generator.helpers;
 
-import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
-import static java.util.Arrays.stream;
 import static org.froporec.generator.helpers.StringGenerator.javaConstantNamingConvention;
 
 /**
@@ -39,59 +37,53 @@ import static org.froporec.generator.helpers.StringGenerator.javaConstantNamingC
  * "alsoConvert" attribute of {@link org.froporec.annotations.Record} or {@link org.froporec.annotations.Immutable}).<br>
  * The params {@link Map} parameter of the provided implementation of the generateCode() method (from {@link CodeGenerator}) MUST contain
  * the following parameters names:<br>
- * - {@link CodeGenerator#ANNOTATED_ELEMENT}<br>
  * - {@link CodeGenerator#NON_VOID_METHODS_ELEMENTS_LIST}<br>
  * - {@link CodeGenerator#IS_SUPER_RECORD}<br>
  */
 public final class FieldsNamesConstantsGenerator implements CodeGenerator {
 
-    private final ProcessingEnvironment processingEnvironment;
-
-    private final Map<String, Set<Element>> allElementsTypesToConvertByAnnotation;
-
-    private final Map<String, Map<Element, List<Element>>> mergeWithListByAnnotatedElementAndByAnnotation;
-
-    private final CodeGenerator fieldsGenerator;
-
-    /**
-     * // TODO chnge jdoc
-     * FieldsGenerationHelper constructor. Instantiates needed instance of {@link CollectionsGenerator}
-     *
-     * @param processingEnvironment                          {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
-     * @param allElementsTypesToConvertByAnnotation          {@link Set} of {@link Element} instances grouped by the annotation String representation
-     * @param mergeWithListByAnnotatedElementAndByAnnotation {@link List} of provided 'mergeWith' {@link Element} POJO and/or Record instances
-     *                                                       grouped by their respective annotated {@link Element} instances
-     *                                                       and by their respective annotation String representation
-     */
-    public FieldsNamesConstantsGenerator(ProcessingEnvironment processingEnvironment,
-                                         Map<String, Set<Element>> allElementsTypesToConvertByAnnotation,
-                                         Map<String, Map<Element, List<Element>>> mergeWithListByAnnotatedElementAndByAnnotation) {
-        this.processingEnvironment = processingEnvironment;
-        this.allElementsTypesToConvertByAnnotation = allElementsTypesToConvertByAnnotation;
-        this.mergeWithListByAnnotatedElementAndByAnnotation = mergeWithListByAnnotatedElementAndByAnnotation;
-        this.fieldsGenerator = new FieldsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, this.mergeWithListByAnnotatedElementAndByAnnotation);
+    private void buildFieldsConstantsFromNonVoidMethodsList(StringBuilder recordClassContent, List<Element> nonVoidMethodsElementsList) {
+        recordClassContent.append(NEW_LINE + TAB);
+        nonVoidMethodsElementsList.forEach(nonVoidMethodElement -> {
+                    var enclosingElementIsRecord = ElementKind.RECORD.equals(nonVoidMethodElement.getEnclosingElement().getKind());
+                    buildFieldConstantDeclaration(nonVoidMethodElement, enclosingElementIsRecord).ifPresent(fieldName ->
+                            recordClassContent.append(
+                                    PUBLIC + SPACE + STATIC + SPACE + STRING + SPACE
+                                            + javaConstantNamingConvention(fieldName)
+                                            + SPACE + EQUALS_STR + SPACE
+                                            + DOUBLE_QUOTES + fieldName + DOUBLE_QUOTES
+                                            + SEMI_COLON + NEW_LINE + TAB
+                            )
+                    );
+                }
+        );
     }
 
-    private void buildFieldsConstantsFromNonVoidMethodsList(StringBuilder recordClassContent, Element annotatedElement, ArrayList<Element> nonVoidMethodsElementsList, Boolean isSuperRecord) {
-        var commaSeparatedFieldsTypesNamesPairs = new StringBuilder();
-        var separator = "##"; // make it 2 chars for now
-        fieldsGenerator.generateCode(commaSeparatedFieldsTypesNamesPairs,
-                Map.of(ANNOTATED_ELEMENT, annotatedElement, NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList, IS_SUPER_RECORD, isSuperRecord, FIELDS_LIST_SEPARATOR, separator));
-        recordClassContent.append(TAB);
-        recordClassContent.append(
-                stream(commaSeparatedFieldsTypesNamesPairs.toString().split(separator))
-                        .map(fieldDeclaration -> fieldDeclaration.strip().substring(fieldDeclaration.strip().lastIndexOf(SPACE) + 1))
-                        .map(fieldName -> PUBLIC + SPACE + STATIC + SPACE + STRING + SPACE + javaConstantNamingConvention(fieldName) + SPACE + EQUALS_STR + SPACE + DOUBLE_QUOTES + fieldName + DOUBLE_QUOTES + SEMI_COLON)
-                        .collect(Collectors.joining(NEW_LINE + TAB))
-        );
+    private Optional<String> buildFieldConstantDeclaration(Element nonVoidMethodElement, boolean enclosingElementIsRecord) {
+        if (enclosingElementIsRecord) {
+            // Record class, handle all non-void methods
+            var nonVoidMethodElementAsString = nonVoidMethodElement.toString();
+            return Optional.of(nonVoidMethodElementAsString.substring(0, nonVoidMethodElementAsString.indexOf(OPENING_PARENTHESIS)));
+        } else {
+            // POJO class, handle only getters (only methods starting with get or is)
+            var getterAsString = nonVoidMethodElement.toString();
+            if (getterAsString.startsWith(GET)) {
+                return Optional.of(getterAsString.substring(3, 4).toLowerCase() + getterAsString.substring(4, getterAsString.indexOf(OPENING_PARENTHESIS)));
+            } else if (getterAsString.startsWith(IS)) {
+                return Optional.of(getterAsString.substring(2, 3).toLowerCase() + getterAsString.substring(3, getterAsString.indexOf(OPENING_PARENTHESIS)));
+            }
+        }
+        return Optional.empty();
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public void generateCode(StringBuilder recordClassContent, Map<String, Object> params) {
-        var annotatedElement = (Element) params.get(CodeGenerator.ANNOTATED_ELEMENT);
         var nonVoidMethodsElementsList = new ArrayList<Element>((List<? extends Element>) params.get(CodeGenerator.NON_VOID_METHODS_ELEMENTS_LIST));
-        var isSuperRecord = (Boolean) params.get(CodeGenerator.IS_SUPER_RECORD);
-        buildFieldsConstantsFromNonVoidMethodsList(recordClassContent, annotatedElement, nonVoidMethodsElementsList, isSuperRecord);
+        var isSuperRecord = Optional.ofNullable((Boolean) params.get(CodeGenerator.IS_SUPER_RECORD)).orElse(false).booleanValue();
+        if (isSuperRecord) {
+            return; // fields names constants generation NOT YET supported for SuperRecord classes
+        }
+        buildFieldsConstantsFromNonVoidMethodsList(recordClassContent, nonVoidMethodsElementsList);
     }
 }

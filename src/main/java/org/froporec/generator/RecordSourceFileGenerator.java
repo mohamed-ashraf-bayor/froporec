@@ -143,7 +143,7 @@ public sealed interface RecordSourceFileGenerator extends StringGenerator permit
                                        boolean isSuperRecord) throws IOException {
         var recordClassFile = processingEnv.getFiler().createSourceFile(generatedQualifiedClassName); // if file already exists, this line throws a FilerException
         try (var out = new PrintWriter(recordClassFile.openWriter())) {
-            out.println(generateRecordClassContent(annotatedElement, generatedQualifiedClassName, nonVoidMethodsElementsList, isSuperRecord));
+            out.print(generateRecordClassContent(annotatedElement, generatedQualifiedClassName, nonVoidMethodsElementsList, isSuperRecord));
         }
     }
 
