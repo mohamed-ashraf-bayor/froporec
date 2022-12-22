@@ -27,6 +27,7 @@ import org.froporec.annotations.Record;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import java.util.List;
+import java.util.Optional;
 
 import static java.lang.Character.isUpperCase;
 import static java.lang.Character.toUpperCase;
@@ -51,7 +52,7 @@ public interface StringGenerator {
     /**
      * "="
      */
-    String EQUALS_STR = "=";
+    String EQUALS_STRING = "=";
 
     /**
      * "\""
@@ -149,12 +150,12 @@ public interface StringGenerator {
     String CLOSING_PARENTHESIS = ")";
 
     /**
-     * '<' sign used in java collection generic definition
+     * '&lt;' sign used in java collection generic definition
      */
     char INFERIOR_SIGN = '<';
 
     /**
-     * '>' sign used in java collection generic definition
+     * '&gt;' sign used in java collection generic definition
      */
     char SUPERIOR_SIGN = '>';
 
@@ -244,11 +245,6 @@ public interface StringGenerator {
     String GENERATION_FAILURE_MSG = "\t> Error generating";
 
     /**
-     * Array of methods to exclude while pulling the list of all methods of a Pojo or Record class
-     */
-    String[] METHODS_TO_EXCLUDE = {"getClass", "wait", "notifyAll", "hashCode", "equals", "notify", "toString", "clone", "finalize"};
-
-    /**
      * "static"
      */
     String STATIC = "static";
@@ -289,9 +285,14 @@ public interface StringGenerator {
     String NEW = "new";
 
     /**
-     * Regex expression to read any attribute value provided within {}
+     * Regex expression to read a method body. should be used with Pattern.DOTALL mode
      */
     String METHOD_BODY_CONTENT_REGEX = "\\{(.*?)\\}";
+
+    /**
+     * Regex expression to read the string content (params) within the call to a record canonical constructor: "this(...);"
+     */
+    String CANONICAL_CONSTRUCTOR_PARAMS_REGEX = "this\\((.*?)\\);";
 
     /**
      * Constructs the qualified name of the fully immutable record class being generated from an annotated Record class
@@ -387,5 +388,36 @@ public interface StringGenerator {
             constantNameChars.append(isUpperCase(allChars[i]) ? UNDERSCORE + toUpperCase(allChars[i]) : toUpperCase(allChars[i]));
         }
         return constantNameChars.toString();
+    }
+
+    /**
+     * // TODO ...
+     *
+     * @param nonVoidMethodElement
+     * @return
+     */
+    static Optional<String> constructFieldName(Element nonVoidMethodElement) {
+        var enclosingElementIsRecord = ElementKind.RECORD.equals(nonVoidMethodElement.getEnclosingElement().getKind());
+        if (enclosingElementIsRecord) {
+            // Record class, handle all non-void methods
+            var nonVoidMethodElementAsString = nonVoidMethodElement.toString();
+            return Optional.of(nonVoidMethodElementAsString.substring(0, nonVoidMethodElementAsString.indexOf(OPENING_PARENTHESIS)));
+        } else {
+            // POJO class, handle only getters (only methods starting with get or is)
+            var getterAsString = nonVoidMethodElement.toString();
+            if (getterAsString.startsWith(GET)) {
+                return Optional.of(getterAsString.substring(3, 4).toLowerCase() + getterAsString.substring(4, getterAsString.indexOf(OPENING_PARENTHESIS)));
+            } else if (getterAsString.startsWith(IS)) {
+                return Optional.of(getterAsString.substring(2, 3).toLowerCase() + getterAsString.substring(3, getterAsString.indexOf(OPENING_PARENTHESIS)));
+            }
+        }
+        return Optional.empty();
+    }
+
+    static void removeLastChars(StringBuilder text, int amountOfChars) {
+        if (amountOfChars > 0) {
+            text.deleteCharAt(text.length() - 1);
+            removeLastChars(text, amountOfChars - 1);
+        }
     }
 }

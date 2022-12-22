@@ -36,7 +36,7 @@ import static org.froporec.generator.helpers.StringGenerator.constructImmutableQ
  */
 public final class CollectionsGenerator implements SupportedCollectionsFieldsGenerator, SupportedCollectionsMappingLogicGenerator {
 
-    private static final String NEW = "new "; // new<SPACE>
+    private static final String NEW = StringGenerator.NEW + SPACE; // new<SPACE>
 
     private static final String LIST_FIELD_MAPPING_LOGIC_STRING_FORMAT = "java.util.Optional.ofNullable(%s.%s).isEmpty() ? java.util.List.of() : " +
             "%s.%s.stream().map(object -> %s(object)).collect(java.util.stream.Collectors.toUnmodifiableList()), ";

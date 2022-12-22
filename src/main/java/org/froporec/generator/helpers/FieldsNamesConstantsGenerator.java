@@ -22,13 +22,13 @@
 package org.froporec.generator.helpers;
 
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import static org.froporec.generator.helpers.StringGenerator.javaConstantNamingConvention;
+import static org.froporec.generator.helpers.StringGenerator.constructFieldName;
 
 /**
  * // TODO chnge jdoc
@@ -44,36 +44,17 @@ public final class FieldsNamesConstantsGenerator implements CodeGenerator {
 
     private void buildFieldsConstantsFromNonVoidMethodsList(StringBuilder recordClassContent, List<Element> nonVoidMethodsElementsList) {
         recordClassContent.append(NEW_LINE + TAB);
-        nonVoidMethodsElementsList.forEach(nonVoidMethodElement -> {
-                    var enclosingElementIsRecord = ElementKind.RECORD.equals(nonVoidMethodElement.getEnclosingElement().getKind());
-                    buildFieldConstantDeclaration(nonVoidMethodElement, enclosingElementIsRecord).ifPresent(fieldName ->
-                            recordClassContent.append(
-                                    PUBLIC + SPACE + STATIC + SPACE + STRING + SPACE
-                                            + javaConstantNamingConvention(fieldName)
-                                            + SPACE + EQUALS_STR + SPACE
-                                            + DOUBLE_QUOTES + fieldName + DOUBLE_QUOTES
-                                            + SEMI_COLON + NEW_LINE + TAB
-                            )
-                    );
-                }
+        nonVoidMethodsElementsList.forEach(nonVoidMethodElement ->
+                constructFieldName(nonVoidMethodElement).ifPresent(fieldName ->
+                        recordClassContent.append(
+                                PUBLIC + SPACE + STATIC + SPACE + STRING + SPACE
+                                        + javaConstantNamingConvention(fieldName)
+                                        + SPACE + EQUALS_STRING + SPACE
+                                        + DOUBLE_QUOTES + fieldName + DOUBLE_QUOTES
+                                        + SEMI_COLON + NEW_LINE + TAB
+                        )
+                )
         );
-    }
-
-    private Optional<String> buildFieldConstantDeclaration(Element nonVoidMethodElement, boolean enclosingElementIsRecord) {
-        if (enclosingElementIsRecord) {
-            // Record class, handle all non-void methods
-            var nonVoidMethodElementAsString = nonVoidMethodElement.toString();
-            return Optional.of(nonVoidMethodElementAsString.substring(0, nonVoidMethodElementAsString.indexOf(OPENING_PARENTHESIS)));
-        } else {
-            // POJO class, handle only getters (only methods starting with get or is)
-            var getterAsString = nonVoidMethodElement.toString();
-            if (getterAsString.startsWith(GET)) {
-                return Optional.of(getterAsString.substring(3, 4).toLowerCase() + getterAsString.substring(4, getterAsString.indexOf(OPENING_PARENTHESIS)));
-            } else if (getterAsString.startsWith(IS)) {
-                return Optional.of(getterAsString.substring(2, 3).toLowerCase() + getterAsString.substring(3, getterAsString.indexOf(OPENING_PARENTHESIS)));
-            }
-        }
-        return Optional.empty();
     }
 
     @Override

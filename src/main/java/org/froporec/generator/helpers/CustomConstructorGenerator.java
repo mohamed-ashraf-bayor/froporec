@@ -39,6 +39,7 @@ import static org.froporec.generator.helpers.StringGenerator.constructImmutableQ
 import static org.froporec.generator.helpers.StringGenerator.constructImmutableSimpleNameBasedOnElementType;
 import static org.froporec.generator.helpers.StringGenerator.constructSuperRecordSimpleNameBasedOnElementType;
 import static org.froporec.generator.helpers.StringGenerator.lowerCase1stChar;
+import static org.froporec.generator.helpers.StringGenerator.removeLastChars;
 
 /**
  * Builds the custom args constructor section for the record class being generated.<br>
@@ -106,7 +107,7 @@ public final class CustomConstructorGenerator implements CodeGenerator {
                     });
         }
         //
-        recordClassContent.deleteCharAt(recordClassContent.length() - 1).deleteCharAt(recordClassContent.length() - 1);
+        removeLastChars(recordClassContent, 2); // initially meant to remove to the 2 last chars of the returned string
         // finished building content of canonical constructor call
         recordClassContent.append(CLOSING_PARENTHESIS + SEMI_COLON + NEW_LINE);
         recordClassContent.append(TAB + CLOSING_BRACE + NEW_LINE);
@@ -185,7 +186,7 @@ public final class CustomConstructorGenerator implements CodeGenerator {
     public void generateCode(StringBuilder recordClassContent, Map<String, Object> params) {
         var annotatedElement = (Element) params.get(CodeGenerator.ANNOTATED_ELEMENT);
         var nonVoidMethodsElementsList = (List<? extends Element>) params.get(CodeGenerator.NON_VOID_METHODS_ELEMENTS_LIST);
-        var isSuperRecord = (Boolean) params.get(CodeGenerator.IS_SUPER_RECORD);
+        var isSuperRecord = Optional.ofNullable((Boolean) params.get(CodeGenerator.IS_SUPER_RECORD)).orElse(false).booleanValue();
         buildRecordCustomConstructor(recordClassContent, annotatedElement, nonVoidMethodsElementsList, isSuperRecord);
     }
 }

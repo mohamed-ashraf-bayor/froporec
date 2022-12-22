@@ -24,14 +24,23 @@ package org.froporec.generator.helpers;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.ExecutableType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
+import static java.lang.String.format;
+import static org.froporec.generator.helpers.StringGenerator.constructFieldName;
+import static org.froporec.generator.helpers.StringGenerator.constructImmutableQualifiedNameBasedOnElementType;
 import static org.froporec.generator.helpers.StringGenerator.constructImmutableSimpleNameBasedOnElementType;
+import static org.froporec.generator.helpers.StringGenerator.javaConstantNamingConvention;
 import static org.froporec.generator.helpers.StringGenerator.lowerCase1stChar;
+import static org.froporec.generator.helpers.StringGenerator.removeLastChars;
 
 /**
  * // TODO chnge jdoc
@@ -46,12 +55,18 @@ import static org.froporec.generator.helpers.StringGenerator.lowerCase1stChar;
  */
 public final class FactoryMethodsGenerator implements CodeGenerator {
 
+    private static final String FACTORY_METHODS_FIELDS_MAP_DECLARATION = "java.util.Map<String, Object> fieldsNameValuePairs";
+    public static final String FACTORY_METHODS_FIELDS_MAP_USE_FORMAT = "(%s) fieldsNameValuePairs.getOrDefault(%s, %s)";
+    private static final String JAVA_LANG_SUPPRESS_WARNINGS_UNCHECKED = "@java.lang.SuppressWarnings(\"unchecked\")";
+
     private final ProcessingEnvironment processingEnvironment;
 
     private final Map<String, Set<Element>> allElementsTypesToConvertByAnnotation;
 
     private final CodeGenerator customConstructorGenerator;
-//    private final CodeGenerator fieldsGenerator;
+
+    private final SupportedCollectionsFieldsGenerator collectionsGenerator;
+
 
     /**
      * // TODO chnge jdoc
@@ -65,29 +80,132 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
         this.processingEnvironment = processingEnvironment;
         this.allElementsTypesToConvertByAnnotation = allElementsTypesToConvertByAnnotation;
         this.customConstructorGenerator = new CustomConstructorGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, null);
-//        this.fieldsGenerator = new FieldsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, this.mergeWithListByAnnotatedElementAndByAnnotation);
+        this.collectionsGenerator = new CollectionsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation);
     }
 
     private void buildStaticFactoryMethods(StringBuilder recordClassContent, Element annotatedElement, List<Element> nonVoidMethodsElementsList) {
+
         var annotatedTypeElement = (TypeElement) processingEnvironment.getTypeUtils().asElement(annotatedElement.asType());
         var annotatedElementQualifiedName = annotatedTypeElement.getQualifiedName().toString();
         var annotatedElementFieldName = lowerCase1stChar(annotatedTypeElement.getSimpleName().toString());
-        recordClassContent.append(NEW_LINE + TAB);
-        // "public static <GeneratedRecordSimpleName><SPACE>"
-        recordClassContent.append(PUBLIC + SPACE + STATIC + SPACE + constructImmutableSimpleNameBasedOnElementType(annotatedTypeElement) + SPACE);
-        // "buildWith(<AnnotatedPojoOrRecordQualifiedName><SPACE><AnnotatedPojoOrRecordSimpleName>)"
-        recordClassContent.append(BUILD_WITH + OPENING_PARENTHESIS + annotatedElementQualifiedName + SPACE + annotatedElementFieldName + CLOSING_PARENTHESIS + SPACE + OPENING_BRACE + NEW_LINE + TAB + TAB);
-        // method body
-//        recordClassContent.append(RETURN + SPACE + NEW + SPACE + constructImmutableSimpleNameBasedOnElementType(annotatedTypeElement) + OPENING_PARENTHESIS + extract + OPENING_PARENTHESIS + SEMI_COLON + NEW_LINE);
-        recordClassContent.append(RETURN + SPACE + NULL + SEMI_COLON + NEW_LINE);
-        // closing
-        recordClassContent.append(TAB + CLOSING_BRACE + NEW_LINE);
+
         recordClassContent.append(NEW_LINE);
 
-        // "buildWith(<AnnotatedPojoOrRecordQualifiedName><SPACE><AnnotatedPojoOrRecordSimpleName>,<SPACE>java.util.Map<String, Object><SPACE>fieldsNameValuePairs)"
+        // static factory mthd with annotated elemnt instance as single param
+        buildMethodDeclarationAndBody(
+                recordClassContent,
+                constructImmutableSimpleNameBasedOnElementType(annotatedTypeElement),
+                annotatedElementQualifiedName + SPACE + annotatedElementFieldName,
+                extractParamsFromCanonicalConstructorCall(annotatedElement, nonVoidMethodsElementsList)
+        );
 
+        recordClassContent.append(NEW_LINE);
+
+        var nonVoidMethodsElementsReturnTypesMap = constructNonVoidMethodsElementsReturnTypesMapFromList(nonVoidMethodsElementsList);
+
+        // static factory mthd with Map as single param
+        recordClassContent.append(TAB + JAVA_LANG_SUPPRESS_WARNINGS_UNCHECKED + NEW_LINE);
+        buildMethodDeclarationAndBody(
+                recordClassContent,
+                constructImmutableSimpleNameBasedOnElementType(annotatedTypeElement),
+                FACTORY_METHODS_FIELDS_MAP_DECLARATION,
+                nonVoidMethodsElementsList.stream()
+                        .map(nonVoidMethodElement -> format(
+                                //"(<returnType>) fieldsNameValuePairs.getOrDefault("<fieldName>", <defaultValue>)"
+                                FACTORY_METHODS_FIELDS_MAP_USE_FORMAT,
+                                constructFieldNameTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap).get(constructFieldName(nonVoidMethodElement).get()),
+                                javaConstantNamingConvention(constructFieldName(nonVoidMethodElement).get()),
+                                defaultReturnValueForMethod(nonVoidMethodElement)
+                        ))
+                        .collect(Collectors.joining(COMMA_SEPARATOR + SPACE))
+        );
+
+        recordClassContent.append(NEW_LINE);
+
+        // static factory mthd with annotated elemnt instance + Map as params
+//        "(type) fieldsNameValuePairs.getOrDefault("lastname", annotatedElementFieldName.getterMthd)"
+        recordClassContent.append(TAB + JAVA_LANG_SUPPRESS_WARNINGS_UNCHECKED + NEW_LINE);
+        buildMethodDeclarationAndBody(
+                recordClassContent,
+                constructImmutableSimpleNameBasedOnElementType(annotatedTypeElement),
+                annotatedElementQualifiedName + SPACE + annotatedElementFieldName + COMMA_SEPARATOR + SPACE + FACTORY_METHODS_FIELDS_MAP_DECLARATION,
+                nonVoidMethodsElementsList.stream()
+                        .map(nonVoidMethodElement -> format(
+                                //"(<returnType>) fieldsNameValuePairs.getOrDefault("<fieldName>", <defaultValue>)"
+                                FACTORY_METHODS_FIELDS_MAP_USE_FORMAT,
+                                constructFieldNameTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap).get(constructFieldName(nonVoidMethodElement).get()),
+                                javaConstantNamingConvention(constructFieldName(nonVoidMethodElement).get()),
+                                annotatedElementFieldName + DOT + nonVoidMethodElement
+                        ))
+                        .collect(Collectors.joining(COMMA_SEPARATOR + SPACE))
+        );
+    }
+
+    /**
+     * // TODO cmplte...
+     *
+     * @param nonVoidMethodElement
+     * @param nonVoidMethodsElementsReturnTypesMap
+     * @return java.util.Map with key being the field name and the value being the type of the field after conversion
+     */
+    private Map<String, String> constructFieldNameTypePair(Element nonVoidMethodElement, Map<Element, String> nonVoidMethodsElementsReturnTypesMap) {
+        var nonVoidMethodReturnTypeAsString = nonVoidMethodsElementsReturnTypesMap.get(nonVoidMethodElement);
+        var nonVoidMethodReturnTypeElementOpt = Optional.ofNullable(
+                processingEnvironment.getTypeUtils().asElement(((ExecutableType) nonVoidMethodElement.asType()).getReturnType())
+        );
+        var fieldType = new StringBuilder();
+        // Consumer to run in case of non-primitives i.e nonVoidMethodReturnTypeElementOpt.isPresent()
+        Consumer<Element> consumer = nonVoidMethodReturnTypeElement ->
+                buildFieldType(fieldType, nonVoidMethodElement, nonVoidMethodReturnTypeAsString,
+                        isElementAnnotatedAsRecordOrImmutable(allElementsTypesToConvertByAnnotation).test(nonVoidMethodReturnTypeElement));
+        // Runnable to execute in case of primitives i.e nonVoidMethodReturnTypeElementOpt.isEmpty()
+        Runnable runnable = () -> buildFieldType(fieldType, nonVoidMethodElement, nonVoidMethodReturnTypeAsString, false);
+        nonVoidMethodReturnTypeElementOpt.ifPresentOrElse(consumer, runnable);
+        return Map.of(constructFieldName(nonVoidMethodElement).orElseThrow(), fieldType.toString());
+    }
+
+    private void buildFieldType(StringBuilder fieldType, Element nonVoidMethodElement, String nonVoidMethodReturnTypeAsString, boolean processAsImmutable) {
+        var fieldName = constructFieldName(nonVoidMethodElement).orElseThrow();
+        // if the type of the field being processed is a collection process it differently and return
+        if (collectionsGenerator.isCollectionWithGeneric(nonVoidMethodReturnTypeAsString)) {
+            var typeAndNameSpaceSeparated = new StringBuilder();
+            collectionsGenerator.replaceGenericWithRecordClassNameIfAny(typeAndNameSpaceSeparated, fieldName, nonVoidMethodReturnTypeAsString);
+            removeLastChars(typeAndNameSpaceSeparated, 2);
+            fieldType.append(typeAndNameSpaceSeparated.substring(0, typeAndNameSpaceSeparated.lastIndexOf(SPACE)));
+            return;
+        }
+        fieldType.append(
+                processAsImmutable
+                        ? constructImmutableQualifiedNameBasedOnElementType(constructElementInstanceValueFromTypeString(processingEnvironment, nonVoidMethodReturnTypeAsString))
+                        : nonVoidMethodReturnTypeAsString
+        );
+    }
+
+    private void buildMethodDeclarationAndBody(StringBuilder recordClassContent, String methodReturnType, String methodParams, String canonicalConstructorParams) {
+        // "public static <GeneratedRecordSimpleName><SPACE>"
+        recordClassContent.append(TAB + PUBLIC + SPACE + STATIC + SPACE + methodReturnType + SPACE);
         // "buildWith(<AnnotatedPojoOrRecordQualifiedName><SPACE><AnnotatedPojoOrRecordSimpleName>)"
+        // "buildWith(java.util.Map<String, Object><SPACE>fieldsNameValuePairs)"
+        // "buildWith(<AnnotatedPojoOrRecordQualifiedName><SPACE><AnnotatedPojoOrRecordSimpleName>,<SPACE>java.util.Map<String, Object><SPACE>fieldsNameValuePairs)"
+        recordClassContent.append(BUILD_WITH + OPENING_PARENTHESIS + methodParams + CLOSING_PARENTHESIS + SPACE + OPENING_BRACE + NEW_LINE + TAB + TAB);
+        // method body
+        recordClassContent.append(RETURN + SPACE + NEW + SPACE + methodReturnType + OPENING_PARENTHESIS + canonicalConstructorParams + CLOSING_PARENTHESIS + SEMI_COLON + NEW_LINE);
+        // closing
+        recordClassContent.append(TAB + CLOSING_BRACE + NEW_LINE);
+    }
 
+    private String extractParamsFromCanonicalConstructorCall(Element annotatedElement, List<Element> nonVoidMethodsElementsList) {
+        var customConstructorString = new StringBuilder();
+        customConstructorGenerator.generateCode(customConstructorString, Map.of(ANNOTATED_ELEMENT, annotatedElement, NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList));
+        var matcher = Pattern.compile(METHOD_BODY_CONTENT_REGEX, Pattern.DOTALL).matcher(customConstructorString);
+        if (matcher.find()) {
+            var canonicalConstructorCallString = matcher.group(1).strip();
+            var canonicalParamsMatcher = Pattern.compile(CANONICAL_CONSTRUCTOR_PARAMS_REGEX).matcher(canonicalConstructorCallString);
+            if (canonicalParamsMatcher.find()) {
+                return canonicalParamsMatcher.group(1).strip();
+            }
+        }
+        return EMPTY_STRING;
     }
 
     @Override

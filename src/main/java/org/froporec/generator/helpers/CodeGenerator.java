@@ -35,7 +35,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import static java.util.Arrays.asList;
+import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toMap;
 
 /**
@@ -78,9 +78,24 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
     String IS_SUPER_RECORD = "isSuperRecord";
 
     /**
-     * parameter name: "fieldsListSeparator", expected type: {@link String}, indicates the separator to use while listing the generated record fields as a String
+     * Array of methods to exclude while pulling the list of all methods of a Pojo or Record class
      */
-    String FIELDS_LIST_SEPARATOR = "fieldsListSeparator";
+    String[] METHODS_TO_EXCLUDE = {"getClass", "wait", "notifyAll", "hashCode", "equals", "notify", "toString", "clone", "finalize"};
+
+    /**
+     * Default value to use for boolean returned values
+     */
+    String DEFAULT_BOOLEAN_VALUE = FALSE;
+
+    /**
+     * Default value to use for numeric returned values (int, long, float, double,...)
+     */
+    String DEFAULT_NUMBER_VALUE = "0";
+
+    /**
+     * Default value to use for Object returned values
+     */
+    String DEFAULT_NULL_VALUE = "null";
 
     /**
      * Generates the requested code fragment, based on the parameters provided in the params object and appends it to the provided recordClassContent param
@@ -174,7 +189,7 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
                 .map(Element.class::cast)
                 .filter(element -> ElementKind.METHOD.equals(element.getKind()))
                 .filter(element -> (!TypeKind.VOID.equals(((ExecutableElement) element).getReturnType().getKind())))
-                .filter(element -> asList(METHODS_TO_EXCLUDE).stream().noneMatch(excludedMeth ->
+                .filter(element -> stream(METHODS_TO_EXCLUDE).noneMatch(excludedMeth ->
                         element.toString().contains(excludedMeth + OPENING_PARENTHESIS))) // exclude known Object methds
                 .filter(element -> ((ExecutableElement) element).getParameters().isEmpty()) // only methods with no params
                 .toList()
@@ -184,10 +199,25 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
                 .map(Element.class::cast)
                 .filter(element -> ElementKind.METHOD.equals(element.getKind()))
                 .filter(element -> element.getSimpleName().toString().startsWith(GET) || element.getSimpleName().toString().startsWith(IS))
-                .filter(element -> asList(METHODS_TO_EXCLUDE).stream().noneMatch(excludedMeth ->
+                .filter(element -> stream(METHODS_TO_EXCLUDE).noneMatch(excludedMeth ->
                         element.toString().contains(excludedMeth + OPENING_PARENTHESIS)))
                 .filter(element -> ((ExecutableElement) element).getParameters().isEmpty())
                 .toList();
+    }
+
+    /**
+     * Constructs a string containing the default value for the provided method's return type
+     *
+     * @param methodElement method {@link Element} instance
+     * @return a string containing the default value for the provided method's return type
+     */
+    default String defaultReturnValueForMethod(Element methodElement) {
+        return switch (((ExecutableType) methodElement.asType()).getReturnType().getKind()) {
+            case BOOLEAN -> DEFAULT_BOOLEAN_VALUE;
+            case VOID -> EMPTY_STRING;
+            case BYTE, SHORT, INT, LONG, FLOAT, DOUBLE, CHAR -> DEFAULT_NUMBER_VALUE;
+            default -> DEFAULT_NULL_VALUE;
+        };
     }
 }
 
