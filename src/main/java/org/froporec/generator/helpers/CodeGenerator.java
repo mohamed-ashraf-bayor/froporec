@@ -90,6 +90,21 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
     /**
      * Default value to use for numeric returned values (int, long, float, double,...)
      */
+    String DEFAULT_LONG_VALUE = "0L";
+
+    /**
+     * Default value to use for numeric returned values (int, long, float, double,...)
+     */
+    String DEFAULT_FLOAT_VALUE = "0F";
+
+    /**
+     * Default value to use for numeric returned values (int, long, float, double,...)
+     */
+    String DEFAULT_DOUBLE_VALUE = "0.0";
+
+    /**
+     * Default value to use for numeric returned values (int, long, float, double,...)
+     */
     String DEFAULT_NUMBER_VALUE = "0";
 
     /**
@@ -215,7 +230,10 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
         return switch (((ExecutableType) methodElement.asType()).getReturnType().getKind()) {
             case BOOLEAN -> DEFAULT_BOOLEAN_VALUE;
             case VOID -> EMPTY_STRING;
-            case BYTE, SHORT, INT, LONG, FLOAT, DOUBLE, CHAR -> DEFAULT_NUMBER_VALUE;
+            case LONG -> DEFAULT_LONG_VALUE;
+            case FLOAT -> DEFAULT_FLOAT_VALUE;
+            case DOUBLE -> DEFAULT_DOUBLE_VALUE;
+            case BYTE, SHORT, INT, CHAR -> DEFAULT_NUMBER_VALUE;
             default -> DEFAULT_NULL_VALUE;
         };
     }

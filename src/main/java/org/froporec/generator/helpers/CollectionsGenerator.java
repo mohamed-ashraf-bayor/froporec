@@ -45,7 +45,9 @@ public final class CollectionsGenerator implements SupportedCollectionsFieldsGen
             "%s.%s.stream().map(object -> %s(object)).collect(java.util.stream.Collectors.toUnmodifiableSet()), ";
 
     private static final String MAP_FIELD_MAPPING_LOGIC_STRING_FORMAT = "java.util.Optional.ofNullable(%s.%s).isEmpty() ? java.util.Map.of() : " +
-            "%s.%s.entrySet().stream().collect(java.util.stream.Collectors.toUnmodifiableMap(entry -> %s(entry.getKey()), entry -> %s(entry.getValue()))), ";
+            "%s.%s.entrySet().stream().collect(java.util.stream.Collectors.toUnmodifiableMap(" +
+            ENTRY + SPACE + LAMBDA_SIGN + SPACE + "%s(" + ENTRY + ".getKey()), " +
+            ENTRY + SPACE + LAMBDA_SIGN + SPACE + "%s(" + ENTRY + ".getValue()))), ";
 
     private final Map<String, Set<Element>> allElementsTypesToConvertByAnnotation;
 
@@ -75,7 +77,7 @@ public final class CollectionsGenerator implements SupportedCollectionsFieldsGen
             var collectionType = extractCollectionType(nonVoidMethodReturnTypeAsString);
             if (collectionType.contains(SupportedCollectionTypes.MAP.getType())) {
                 // only for maps
-                var keyValueArray = genericType.split(COMMA_SEPARATOR); // the key/value entries in a Map genericType
+                var keyValueArray = genericType.split(COMMA); // the key/value entries in a Map genericType
                 recordClassContent.append(format(
                         typeAndFieldNameDeclarationFormat,
                         buildReplacementStringForMapGeneric(collectionType, keyValueArray[0], keyValueArray[1]),
@@ -152,7 +154,7 @@ public final class CollectionsGenerator implements SupportedCollectionsFieldsGen
         }
         if (collectionType.contains(SupportedCollectionTypes.MAP.getType())) {
             // only for maps
-            var keyValueArray = genericType.split(COMMA_SEPARATOR); // the key/value entries in a Map genericType
+            var keyValueArray = genericType.split(COMMA); // the key/value entries in a Map genericType
             if (!isTypeAnnotatedAsRecordOrImmutable(processingEnvironment, allElementsTypesToConvertByAnnotation).test(keyValueArray[0])
                     && !isTypeAnnotatedAsRecordOrImmutable(processingEnvironment, allElementsTypesToConvertByAnnotation).test(keyValueArray[1])) {
                 // both key and value are annotated pojos

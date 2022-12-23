@@ -23,6 +23,7 @@ package org.froporec.generator.helpers;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ExecutableType;
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
+import static java.util.Arrays.stream;
 import static org.froporec.generator.helpers.StringGenerator.constructFieldName;
 import static org.froporec.generator.helpers.StringGenerator.constructImmutableQualifiedNameBasedOnElementType;
 import static org.froporec.generator.helpers.StringGenerator.constructImmutableSimpleNameBasedOnElementType;
@@ -117,27 +119,55 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
                                 javaConstantNamingConvention(constructFieldName(nonVoidMethodElement).get()),
                                 defaultReturnValueForMethod(nonVoidMethodElement)
                         ))
-                        .collect(Collectors.joining(COMMA_SEPARATOR + SPACE))
+                        .collect(Collectors.joining(COMMA + SPACE))
         );
 
         recordClassContent.append(NEW_LINE);
 
         // static factory mthd with annotated elemnt instance + Map as params
-//        "(type) fieldsNameValuePairs.getOrDefault("lastname", annotatedElementFieldName.getterMthd)"
+        // "(type) fieldsNameValuePairs.getOrDefault("<fieldName>", annotatedElementFieldName.getterMthd())"
         recordClassContent.append(TAB + JAVA_LANG_SUPPRESS_WARNINGS_UNCHECKED + NEW_LINE);
+        var paramsFromCanonicalConstructorCall = extractParamsFromCanonicalConstructorCall(annotatedElement, nonVoidMethodsElementsList)
+                .replaceAll(COMMA + SPACE + ENTRY + SPACE + LAMBDA_SIGN, AT_SIGN) // replacing occurrences of ", entry ->" with "@" to avoid issues while splitting
+                .split(COMMA + SPACE);
         buildMethodDeclarationAndBody(
                 recordClassContent,
                 constructImmutableSimpleNameBasedOnElementType(annotatedTypeElement),
-                annotatedElementQualifiedName + SPACE + annotatedElementFieldName + COMMA_SEPARATOR + SPACE + FACTORY_METHODS_FIELDS_MAP_DECLARATION,
+                annotatedElementQualifiedName + SPACE + annotatedElementFieldName + COMMA + SPACE + FACTORY_METHODS_FIELDS_MAP_DECLARATION,
                 nonVoidMethodsElementsList.stream()
                         .map(nonVoidMethodElement -> format(
                                 //"(<returnType>) fieldsNameValuePairs.getOrDefault("<fieldName>", <defaultValue>)"
                                 FACTORY_METHODS_FIELDS_MAP_USE_FORMAT,
                                 constructFieldNameTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap).get(constructFieldName(nonVoidMethodElement).get()),
                                 javaConstantNamingConvention(constructFieldName(nonVoidMethodElement).get()),
-                                annotatedElementFieldName + DOT + nonVoidMethodElement
+                                stream(paramsFromCanonicalConstructorCall)
+                                        .filter(param -> param.contains(annotatedElementFieldName + DOT + nonVoidMethodElement))
+                                        .findFirst()
+                                        .orElse(annotatedElementFieldName + DOT + nonVoidMethodElement)
+                                        .replaceAll(AT_SIGN, COMMA + SPACE + ENTRY + SPACE + LAMBDA_SIGN)
                         ))
-                        .collect(Collectors.joining(COMMA_SEPARATOR + SPACE))
+                        .collect(Collectors.joining(COMMA + SPACE))
+        );
+
+        recordClassContent.append(NEW_LINE);
+
+        // static factory mthd with generated record instance + Map as params
+        // "(type) fieldsNameValuePairs.getOrDefault("<fieldName>", generatedRecordFieldName.getterMthd())"
+        recordClassContent.append(TAB + JAVA_LANG_SUPPRESS_WARNINGS_UNCHECKED + NEW_LINE);
+        var method1stParamName = lowerCase1stChar(constructImmutableSimpleNameBasedOnElementType(annotatedTypeElement));
+        buildMethodDeclarationAndBody(
+                recordClassContent,
+                constructImmutableSimpleNameBasedOnElementType(annotatedTypeElement),
+                constructImmutableQualifiedNameBasedOnElementType(annotatedTypeElement) + SPACE + method1stParamName + COMMA + SPACE + FACTORY_METHODS_FIELDS_MAP_DECLARATION,
+                nonVoidMethodsElementsList.stream()
+                        .map(nonVoidMethodElement -> format(
+                                //"(<returnType>) fieldsNameValuePairs.getOrDefault("<fieldName>", <defaultValue>)"
+                                FACTORY_METHODS_FIELDS_MAP_USE_FORMAT,
+                                constructFieldNameTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap).get(constructFieldName(nonVoidMethodElement).get()),
+                                javaConstantNamingConvention(constructFieldName(nonVoidMethodElement).get()),
+                                method1stParamName + DOT + constructFieldName(nonVoidMethodElement, ElementKind.RECORD.equals(nonVoidMethodElement.getEnclosingElement().getKind())).get() + OPENING_PARENTHESIS + CLOSING_PARENTHESIS
+                        ))
+                        .collect(Collectors.joining(COMMA + SPACE))
         );
     }
 

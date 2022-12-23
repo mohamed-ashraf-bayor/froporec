@@ -37,7 +37,7 @@ import java.util.function.Predicate;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toSet;
 import static org.froporec.generator.helpers.StringGenerator.ALSO_CONVERT_ATTRIBUTE;
-import static org.froporec.generator.helpers.StringGenerator.COMMA_SEPARATOR;
+import static org.froporec.generator.helpers.StringGenerator.COMMA;
 import static org.froporec.generator.helpers.StringGenerator.DOT_CLASS;
 import static org.froporec.generator.helpers.StringGenerator.EMPTY_STRING;
 import static org.froporec.generator.helpers.StringGenerator.MERGE_WITH_ATTRIBUTE;
@@ -110,7 +110,7 @@ public interface AnnotationInfoExtractor {
                     // toString() sample values: executableElement: "alsoConvert()", "superInterfaces()" , annotationValue: "{org.froporec...School.class, org.froporec...Student.class}"
                     if (executableElement.toString().contains(attributeName)) {
                         extractedElementsList.addAll(
-                                asList(annotationValue.getValue().toString().split(COMMA_SEPARATOR)).stream() // maintain provided order
+                                asList(annotationValue.getValue().toString().split(COMMA)).stream() // maintain provided order
                                         .map(includedTypeDotClassString -> processingEnv.getTypeUtils().asElement(
                                                 processingEnv.getElementUtils().getTypeElement(
                                                         includedTypeDotClassString.strip().replace(DOT_CLASS, EMPTY_STRING)

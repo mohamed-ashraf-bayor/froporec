@@ -92,7 +92,7 @@ public final class CustomConstructorGenerator implements CodeGenerator {
                         ? constructSuperRecordSimpleNameBasedOnElementType(annotatedTypeElement)
                         : constructImmutableSimpleNameBasedOnElementType(annotatedTypeElement),
                 annotatedElementQualifiedName + SPACE + annotatedElementFieldName
-                        + (isSuperRecord ? COMMA_SEPARATOR + SPACE + buildConstructorArgsListForMergeWithElements(annotatedElement) : EMPTY_STRING)
+                        + (isSuperRecord ? COMMA + SPACE + buildConstructorArgsListForMergeWithElements(annotatedElement) : EMPTY_STRING)
         ));
         recordClassContent.append(TAB + TAB + THIS + OPENING_PARENTHESIS); // calling canonical constructor
         // building content for 'this('
@@ -147,7 +147,7 @@ public final class CustomConstructorGenerator implements CodeGenerator {
     private String buildConstructorArgsListForMergeWithElements(Element annotatedElement) {
         return mergeWithListByAnnotatedElementAndByAnnotation.get(ORG_FROPOREC_SUPER_RECORD).get(annotatedElement).stream()
                 .map(element -> element.toString() + SPACE + lowerCase1stChar(element.getSimpleName().toString()))
-                .collect(joining(COMMA_SEPARATOR + SPACE));
+                .collect(joining(COMMA + SPACE));
     }
 
     private void buildCanonicalConstructorCallSingleParameter(

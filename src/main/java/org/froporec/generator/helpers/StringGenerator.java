@@ -132,7 +132,7 @@ public interface StringGenerator {
     /**
      * ","
      */
-    String COMMA_SEPARATOR = ",";
+    String COMMA = ",";
 
     /**
      * ";"
@@ -285,6 +285,16 @@ public interface StringGenerator {
     String NEW = "new";
 
     /**
+     * "entry"
+     */
+    String ENTRY = "entry";
+
+    /**
+     * "->"
+     */
+    String LAMBDA_SIGN = "->";
+
+    /**
      * Regex expression to read a method body. should be used with Pattern.DOTALL mode
      */
     String METHOD_BODY_CONTENT_REGEX = "\\{(.*?)\\}";
@@ -368,7 +378,7 @@ public interface StringGenerator {
      * @return provided text with all commas removed
      */
     static String removeCommaSeparator(String text) {
-        return stream(text.split(COMMA_SEPARATOR)).collect(joining());
+        return stream(text.split(COMMA)).collect(joining());
     }
 
     /**
@@ -398,6 +408,17 @@ public interface StringGenerator {
      */
     static Optional<String> constructFieldName(Element nonVoidMethodElement) {
         var enclosingElementIsRecord = ElementKind.RECORD.equals(nonVoidMethodElement.getEnclosingElement().getKind());
+        return constructFieldName(nonVoidMethodElement, enclosingElementIsRecord);
+    }
+
+    /**
+     * // TODO ...
+     *
+     * @param nonVoidMethodElement
+     * @param enclosingElementIsRecord
+     * @return
+     */
+    static Optional<String> constructFieldName(Element nonVoidMethodElement, boolean enclosingElementIsRecord) {
         if (enclosingElementIsRecord) {
             // Record class, handle all non-void methods
             var nonVoidMethodElementAsString = nonVoidMethodElement.toString();
