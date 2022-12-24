@@ -255,6 +255,11 @@ public interface StringGenerator {
     String STRING = "String";
 
     /**
+     * "with"
+     */
+    String WITH = "with";
+
+    /**
      * "buildWith"
      */
     String BUILD_WITH = "buildWith";
