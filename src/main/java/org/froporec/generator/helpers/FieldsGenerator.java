@@ -104,7 +104,7 @@ public final class FieldsGenerator implements CodeGenerator {
             var nonVoidMethodReturnTypeAsString = nonVoidMethodsElementsReturnTypesMap.get(nonVoidMethodElement);
             var nonVoidMethodReturnTypeElementOpt = Optional.ofNullable(
                     processingEnvironment.getTypeUtils().asElement(((ExecutableType) nonVoidMethodElement.asType()).getReturnType())
-            ); // for collections, Element.toString() will NOT return the generic part
+            ); // for collections, Element.toString() will NOT return the generic part, hence the use of ....asType()).getReturnType()
             // Consumer to run in case of non-primitives i.e nonVoidMethodReturnTypeElementOpt.isPresent()
             Consumer<Element> consumer = nonVoidMethodReturnTypeElement ->
                     buildSingleField(recordClassContent, nonVoidMethodElement, nonVoidMethodReturnTypeAsString,

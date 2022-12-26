@@ -90,7 +90,7 @@ public final class FroporecRecordSourceFileGenerator implements RecordSourceFile
         this.fieldsGenerator = new FieldsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, this.mergeWithListByAnnotatedElementAndByAnnotation);
         this.superInterfacesGenerator = new SuperInterfacesGenerator(this.superInterfacesListByAnnotatedElementAndByAnnotation);
         this.customConstructorGenerator = new CustomConstructorGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, this.mergeWithListByAnnotatedElementAndByAnnotation);
-        this.fieldsNamesConstantsGenerator = new FieldsNamesConstantsGenerator();
+        this.fieldsNamesConstantsGenerator = new FieldsNamesConstantsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation);
         this.factoryMethodsGenerator = new FactoryMethodsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation);
     }
 

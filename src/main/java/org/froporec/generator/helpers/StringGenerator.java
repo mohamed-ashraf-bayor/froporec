@@ -50,16 +50,6 @@ public interface StringGenerator {
     String SPACE = " ";
 
     /**
-     * "="
-     */
-    String EQUALS_STRING = "=";
-
-    /**
-     * "\""
-     */
-    String DOUBLE_QUOTES = "\"";
-
-    /**
      * "@"
      */
     String AT_SIGN = "@";
@@ -248,11 +238,6 @@ public interface StringGenerator {
      * "static"
      */
     String STATIC = "static";
-
-    /**
-     * "String"
-     */
-    String STRING = "String";
 
     /**
      * "with"

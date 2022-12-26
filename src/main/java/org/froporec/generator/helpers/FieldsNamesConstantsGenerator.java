@@ -21,14 +21,16 @@
  */
 package org.froporec.generator.helpers;
 
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
+import static java.lang.String.format;
 import static org.froporec.generator.helpers.StringGenerator.javaConstantNamingConvention;
-import static org.froporec.generator.helpers.StringGenerator.constructFieldName;
 
 /**
  * // TODO chnge jdoc
@@ -42,19 +44,42 @@ import static org.froporec.generator.helpers.StringGenerator.constructFieldName;
  */
 public final class FieldsNamesConstantsGenerator implements CodeGenerator {
 
+    private static final String CONSTANT_DECLARATION_FORMAT = "public static final String %s = \"%s\"; // type: %s";
+
+    private final ProcessingEnvironment processingEnvironment;
+
+    private final Map<String, Set<Element>> allElementsTypesToConvertByAnnotation;
+
+    private final SupportedCollectionsFieldsGenerator collectionsGenerator;
+
+    /**
+     * TODO cmplt...
+     *
+     * @param processingEnvironment
+     * @param allElementsTypesToConvertByAnnotation
+     */
+    public FieldsNamesConstantsGenerator(ProcessingEnvironment processingEnvironment,
+                                         Map<String, Set<Element>> allElementsTypesToConvertByAnnotation) {
+        this.processingEnvironment = processingEnvironment;
+        this.allElementsTypesToConvertByAnnotation = allElementsTypesToConvertByAnnotation;
+        this.collectionsGenerator = new CollectionsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation);
+    }
+
     private void buildFieldsConstantsFromNonVoidMethodsList(StringBuilder recordClassContent, List<Element> nonVoidMethodsElementsList) {
         recordClassContent.append(NEW_LINE + TAB);
-        nonVoidMethodsElementsList.forEach(nonVoidMethodElement ->
-                constructFieldName(nonVoidMethodElement).ifPresent(fieldName ->
-                        recordClassContent.append(
-                                PUBLIC + SPACE + STATIC + SPACE + STRING + SPACE
-                                        + javaConstantNamingConvention(fieldName)
-                                        + SPACE + EQUALS_STRING + SPACE
-                                        + DOUBLE_QUOTES + fieldName + DOUBLE_QUOTES
-                                        + SEMI_COLON + NEW_LINE + TAB
-                        )
-                )
-        );
+        var nonVoidMethodsElementsReturnTypesMap = constructNonVoidMethodsElementsReturnTypesMapFromList(nonVoidMethodsElementsList);
+        nonVoidMethodsElementsList.forEach(nonVoidMethodElement -> {
+            var nameTypePairMapEntry = constructFieldNameTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap,
+                    allElementsTypesToConvertByAnnotation, processingEnvironment, collectionsGenerator)
+                    .entrySet().iterator().next();
+            recordClassContent.append(format(
+                    CONSTANT_DECLARATION_FORMAT,
+                    javaConstantNamingConvention(nameTypePairMapEntry.getKey()),
+                    nameTypePairMapEntry.getKey(),
+                    nameTypePairMapEntry.getValue()
+            ));
+            recordClassContent.append(NEW_LINE + TAB);
+        });
     }
 
     @Override
