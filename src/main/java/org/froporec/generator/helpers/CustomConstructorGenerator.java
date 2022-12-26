@@ -107,7 +107,7 @@ public final class CustomConstructorGenerator implements CodeGenerator {
                     });
         }
         //
-        removeLastChars(recordClassContent, 2); // initially meant to remove to the 2 last chars of the returned string
+        removeLastChars(recordClassContent, 2);
         // finished building content of canonical constructor call
         recordClassContent.append(CLOSING_PARENTHESIS + SEMI_COLON + NEW_LINE);
         recordClassContent.append(TAB + CLOSING_BRACE + NEW_LINE);

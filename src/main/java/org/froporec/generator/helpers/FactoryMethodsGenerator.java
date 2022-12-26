@@ -262,7 +262,7 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
         var nonVoidMethodsElementsList = new ArrayList<Element>((List<? extends Element>) params.get(CodeGenerator.NON_VOID_METHODS_ELEMENTS_LIST));
         var isSuperRecord = Optional.ofNullable((Boolean) params.get(CodeGenerator.IS_SUPER_RECORD)).orElse(false).booleanValue();
         if (isSuperRecord) {
-            return; // static factory mthds generation NOT YET supported for SuperRecord classes
+            return; // factory mthds generation NOT YET supported for SuperRecord classes
         }
         buildFactoryMethods(recordClassContent, annotatedElement, nonVoidMethodsElementsList);
     }
