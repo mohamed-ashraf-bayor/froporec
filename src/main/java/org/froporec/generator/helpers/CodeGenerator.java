@@ -32,15 +32,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toMap;
-import static org.froporec.generator.helpers.StringGenerator.constructFieldName;
-import static org.froporec.generator.helpers.StringGenerator.constructImmutableQualifiedNameBasedOnElementType;
-import static org.froporec.generator.helpers.StringGenerator.removeLastChars;
+import static org.froporec.generator.helpers.StringGenerator.fieldName;
+import static org.froporec.generator.helpers.StringGenerator.immutableQualifiedNameBasedOnElementType;
+import static org.froporec.generator.helpers.SupportedCollectionsGenerator.SupportedCollectionTypes;
+import static org.froporec.generator.helpers.SupportedCollectionsGenerator.SupportedCollectionTypes.LIST;
+import static org.froporec.generator.helpers.SupportedCollectionsGenerator.SupportedCollectionTypes.MAP;
+import static org.froporec.generator.helpers.SupportedCollectionsGenerator.SupportedCollectionTypes.SET;
 
 /**
  * Exposes contract for a CodeGenerator class to fulfill
@@ -137,7 +141,7 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
      * @param nonVoidMethodsElementsList {@link List} of {@link Element} objects representing non-void methods
      * @return {@link Map} containing non-void methods names as keys and their corresponding return types as String values
      */
-    default Map<Element, String> constructNonVoidMethodsElementsReturnTypesMapFromList(List<? extends Element> nonVoidMethodsElementsList) {
+    default Map<Element, String> nonVoidMethodsElementsReturnTypesMapFromList(List<? extends Element> nonVoidMethodsElementsList) {
         return nonVoidMethodsElementsList.stream().collect(
                 toMap(nonVoidMethodElement -> nonVoidMethodElement,
                         nonVoidMethodElement -> ((ExecutableType) nonVoidMethodElement.asType()).getReturnType().toString())
@@ -147,25 +151,25 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
     /**
      * creates an Optional-wrapped {@link Element} instance for the provided qualified name
      *
-     * @param processingEnvironment {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
-     * @param qualifiedName         qualified name of the provided type
+     * @param processingEnv {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @param qualifiedName qualified name of the provided type
      * @return an {@link Optional} object wrapping the corresponding {@link Element} instance if any
      */
-    default Optional<Element> constructElementInstanceFromTypeString(ProcessingEnvironment processingEnvironment, String qualifiedName) {
-        return Optional.ofNullable(processingEnvironment.getElementUtils().getTypeElement(qualifiedName)).isEmpty()
+    default Optional<Element> elementInstanceFromTypeString(ProcessingEnvironment processingEnv, String qualifiedName) {
+        return Optional.ofNullable(processingEnv.getElementUtils().getTypeElement(qualifiedName)).isEmpty()
                 ? Optional.empty()
-                : Optional.ofNullable(processingEnvironment.getTypeUtils().asElement(processingEnvironment.getElementUtils().getTypeElement(qualifiedName).asType()));
+                : Optional.ofNullable(processingEnv.getTypeUtils().asElement(processingEnv.getElementUtils().getTypeElement(qualifiedName).asType()));
     }
 
     /**
      * creates an {@link Element} instance for the provided qualified name
      *
-     * @param processingEnvironment {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
-     * @param qualifiedName         qualified name of the provided type
+     * @param processingEnv {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @param qualifiedName qualified name of the provided type
      * @return the corresponding {@link Element} instance if the provided type is valid, null if not
      */
-    default Element constructElementInstanceValueFromTypeString(ProcessingEnvironment processingEnvironment, String qualifiedName) {
-        return processingEnvironment.getTypeUtils().asElement(processingEnvironment.getElementUtils().getTypeElement(qualifiedName).asType());
+    default Element elementInstanceValueFromTypeString(ProcessingEnvironment processingEnv, String qualifiedName) {
+        return processingEnv.getTypeUtils().asElement(processingEnv.getElementUtils().getTypeElement(qualifiedName).asType());
     }
 
     /**
@@ -185,15 +189,16 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
      * Checks whether the provided type String is annotated with either &#64;{@link org.froporec.annotations.Record}
      * or &#64;{@link org.froporec.annotations.Immutable}
      *
-     * @param processingEnvironment                 {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @param processingEnv                         {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
      * @param allElementsTypesToConvertByAnnotation {@link Map} of annotated {@link Element} instances grouped by their
      *                                              respective annotation String representation
      * @return {@link java.util.function.Predicate} instance to apply on the type String to check
      */
-    default Predicate<String> isTypeAnnotatedAsRecordOrImmutable(ProcessingEnvironment processingEnvironment, Map<String, Set<Element>> allElementsTypesToConvertByAnnotation) {
-        Function<String, Element> convertToElement = typeString -> constructElementInstanceValueFromTypeString(processingEnvironment, typeString);
-        return typeString -> allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_RECORD).contains(convertToElement.apply(typeString))
-                || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_IMMUTABLE).contains(convertToElement.apply(typeString));
+    default Predicate<String> isTypeAnnotatedAsRecordOrImmutable(ProcessingEnvironment processingEnv, Map<String, Set<Element>> allElementsTypesToConvertByAnnotation) {
+        Function<String, Optional<Element>> convertToElement = typeString -> elementInstanceFromTypeString(processingEnv, typeString);
+        return typeString -> convertToElement.apply(typeString).isPresent()
+                && (allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_RECORD).contains(convertToElement.apply(typeString).get())
+                || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_IMMUTABLE).contains(convertToElement.apply(typeString).get()));
     }
 
     /**
@@ -254,11 +259,11 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
      * @param nonVoidMethodsElementsReturnTypesMap
      * @return java.util.Map with key being the field name and the value being the type of the field after conversion
      */
-    default Map<String, String> constructFieldNameTypePair(Element nonVoidMethodElement,
-                                                           Map<Element, String> nonVoidMethodsElementsReturnTypesMap,
-                                                           Map<String, Set<Element>> allElementsTypesToConvertByAnnotation,
-                                                           ProcessingEnvironment processingEnv,
-                                                           SupportedCollectionsFieldsGenerator collectionsGenerator) {
+    default Map<String, String> fieldNameAndTypePair(Element nonVoidMethodElement,
+                                                     Map<Element, String> nonVoidMethodsElementsReturnTypesMap,
+                                                     Map<String, Set<Element>> allElementsTypesToConvertByAnnotation,
+                                                     ProcessingEnvironment processingEnv,
+                                                     SupportedCollectionsFieldsGenerator collectionsGenerator) {
         var nonVoidMethodReturnTypeAsString = nonVoidMethodsElementsReturnTypesMap.get(nonVoidMethodElement);
         var nonVoidMethodReturnTypeElementOpt = Optional.ofNullable(
                 processingEnv.getTypeUtils().asElement(((ExecutableType) nonVoidMethodElement.asType()).getReturnType())
@@ -272,7 +277,7 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
         // Runnable to execute in case of primitives i.e nonVoidMethodReturnTypeElementOpt.isEmpty()
         Runnable runnable = () -> buildFieldType(fieldType, nonVoidMethodElement, nonVoidMethodReturnTypeAsString, false, processingEnv, collectionsGenerator);
         nonVoidMethodReturnTypeElementOpt.ifPresentOrElse(consumer, runnable);
-        return Map.of(constructFieldName(nonVoidMethodElement).orElseThrow(), fieldType.toString());
+        return Map.of(StringGenerator.fieldName(nonVoidMethodElement).orElseThrow(), fieldType.toString());
     }
 
     private void buildFieldType(StringBuilder fieldType,
@@ -281,20 +286,20 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
                                 boolean processAsImmutable,
                                 ProcessingEnvironment processingEnv,
                                 SupportedCollectionsFieldsGenerator collectionsGenerator) {
-        var fieldName = constructFieldName(nonVoidMethodElement).orElseThrow();
-        // if the type of the field being processed is a collection process it differently and return
-        if (collectionsGenerator.isCollectionWithGeneric(nonVoidMethodReturnTypeAsString)) {
-            var typeAndNameSpaceSeparated = new StringBuilder();
-            collectionsGenerator.replaceGenericWithRecordClassNameIfAny(typeAndNameSpaceSeparated, fieldName, nonVoidMethodReturnTypeAsString);
-            removeLastChars(typeAndNameSpaceSeparated, 2);
-            fieldType.append(typeAndNameSpaceSeparated.substring(0, typeAndNameSpaceSeparated.lastIndexOf(SPACE)));
-            return;
-        }
-        fieldType.append(
-                processAsImmutable
-                        ? constructImmutableQualifiedNameBasedOnElementType(constructElementInstanceValueFromTypeString(processingEnv, nonVoidMethodReturnTypeAsString))
-                        : nonVoidMethodReturnTypeAsString
-        );
+        StringGenerator.fieldName(nonVoidMethodElement).ifPresent(fieldName -> {
+            // if the type of the field being processed is a collection process it differently and return
+            if (collectionsGenerator.isCollection(nonVoidMethodReturnTypeAsString, processingEnv)) {
+                var typeAndNameSpaceSeparated = new StringBuilder();
+                collectionsGenerator.replaceGenericWithRecordClassNameIfAny(typeAndNameSpaceSeparated, fieldName, nonVoidMethodReturnTypeAsString);
+                fieldType.append(typeAndNameSpaceSeparated.substring(0, typeAndNameSpaceSeparated.lastIndexOf(SPACE)));
+                return;
+            }
+            fieldType.append(
+                    processAsImmutable
+                            ? immutableQualifiedNameBasedOnElementType(elementInstanceValueFromTypeString(processingEnv, nonVoidMethodReturnTypeAsString))
+                            : nonVoidMethodReturnTypeAsString
+            );
+        });
     }
 
     /**
@@ -306,8 +311,8 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
      * @param isStatic
      * @return
      */
-    default String buildFactoryMethodDeclarationAndBody(String methodReturnType, String methodParams, String canonicalConstructorCallParams, boolean isStatic) {
-        return buildFactoryMethodDeclarationAndBody(methodReturnType, methodParams, canonicalConstructorCallParams, isStatic, false);
+    default String factoryMethodDeclarationAndBody(String methodReturnType, String methodParams, String canonicalConstructorCallParams, boolean isStatic) {
+        return factoryMethodDeclarationAndBody(methodReturnType, methodParams, canonicalConstructorCallParams, isStatic, false);
     }
 
     /**
@@ -320,7 +325,7 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
      * @param hasGeneric
      * @return
      */
-    default String buildFactoryMethodDeclarationAndBody(String methodReturnType, String methodParams, String canonicalConstructorCallParams, boolean isStatic, boolean hasGeneric) {
+    default String factoryMethodDeclarationAndBody(String methodReturnType, String methodParams, String canonicalConstructorCallParams, boolean isStatic, boolean hasGeneric) {
         var methodCode = new StringBuilder();
         // "public (static) (<T>) <methodReturnType><SPACE>"
         methodCode.append(TAB + PUBLIC + SPACE + (isStatic ? STATIC + SPACE : EMPTY_STRING) + (hasGeneric ? GENERIC_T_SYMB + SPACE : EMPTY_STRING) + methodReturnType + SPACE);
@@ -338,6 +343,63 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
         methodCode.append(TAB + CLOSING_BRACE + NEW_LINE);
         return methodCode.toString();
     }
+
+    /**
+     * TODO complt...
+     *
+     * @param processingEnv
+     * @param type1QualifiedName
+     * @param type2QualifiedName
+     * @return
+     */
+    default boolean isSubtype(ProcessingEnvironment processingEnv, String type1QualifiedName, String type2QualifiedName) {
+        var type1TypeElement = processingEnv.getElementUtils().getTypeElement(type1QualifiedName);
+        var type2TypeElement = processingEnv.getElementUtils().getTypeElement(type2QualifiedName);
+        if (type1TypeElement == null || type2TypeElement == null) {
+            return false;
+        }
+        var typeUtils = processingEnv.getTypeUtils();
+        return typeUtils.isSubtype(typeUtils.getDeclaredType(type1TypeElement), typeUtils.getDeclaredType(type2TypeElement));
+    }
+
+    /**
+     * todo cmpl...
+     *
+     * @param processingEnv
+     * @param collectionTypeQualifiedName ...with generic<...>
+     * @param collectionsGenerator
+     * @return
+     */
+    default String parentCollectionInterface(ProcessingEnvironment processingEnv, String collectionTypeQualifiedName, SupportedCollectionsGenerator collectionsGenerator) {
+        BiFunction<String, SupportedCollectionTypes, String> collectionTypeWithGenericIfAny = (collectionType, supportedCollectionType) ->
+                supportedCollectionType.qualifiedName() + (collectionsGenerator.hasGeneric(collectionType) ? INFERIOR_SIGN + collectionsGenerator.extractGenericType(collectionType).get() + SUPERIOR_SIGN : EMPTY_STRING);
+        if (isSubtype(processingEnv, collectionsGenerator.extractCollectionType(collectionTypeQualifiedName), LIST.qualifiedName())) {
+            return collectionTypeWithGenericIfAny.apply(collectionTypeQualifiedName, LIST);
+        }
+        if (isSubtype(processingEnv, collectionsGenerator.extractCollectionType(collectionTypeQualifiedName), SET.qualifiedName())) {
+            return collectionTypeWithGenericIfAny.apply(collectionTypeQualifiedName, SET);
+        }
+        if (isSubtype(processingEnv, collectionsGenerator.extractCollectionType(collectionTypeQualifiedName), MAP.qualifiedName())) {
+            return collectionTypeWithGenericIfAny.apply(collectionTypeQualifiedName, MAP);
+        }
+        return collectionTypeQualifiedName;
+    }
+
+    /**
+     * todo cmplt...
+     *
+     * @param processingEnv
+     * @param genericTypeOpt
+     * @return
+     */
+    default Optional<String> genericTypeImmutableQualifiedName(ProcessingEnvironment processingEnv, Optional<String> genericTypeOpt) {
+        if (genericTypeOpt.isPresent()) {
+            return elementInstanceFromTypeString(processingEnv, genericTypeOpt.get())
+                    .map(element -> Optional.of(immutableQualifiedNameBasedOnElementType(element)))
+                    .orElse(Optional.empty());
+        }
+        return Optional.empty();
+    }
 }
 
 /**
@@ -350,19 +412,29 @@ sealed interface SupportedCollectionsGenerator extends CodeGenerator {
      */
     enum SupportedCollectionTypes {
 
-        LIST("List"),
-        SET("Set"),
-        MAP("Map");
+        LIST(java.util.List.class),
+        SET(java.util.Set.class),
+        MAP(java.util.Map.class);
 
-        private final String type;
+        private final Class<?> type;
 
-        SupportedCollectionTypes(String type) {
+        SupportedCollectionTypes(Class<?> type) {
             this.type = type;
         }
 
-        public String getType() {
-            return type;
+        public String qualifiedName() {
+            return type.getName();
         }
+    }
+
+    /**
+     * todo cmplt...
+     *
+     * @param nonVoidMethodReturnTypeAsString
+     * @return
+     */
+    default boolean hasGeneric(String nonVoidMethodReturnTypeAsString) {
+        return nonVoidMethodReturnTypeAsString.indexOf(INFERIOR_SIGN) > -1 && nonVoidMethodReturnTypeAsString.indexOf(SUPERIOR_SIGN) > -1;
     }
 
     /**
@@ -373,15 +445,11 @@ sealed interface SupportedCollectionsGenerator extends CodeGenerator {
      * @param nonVoidMethodReturnTypeAsString - qualified name of the method's return type
      * @return true if the provided type is a collection with a generic, false otherwise
      */
-    default boolean isCollectionWithGeneric(String nonVoidMethodReturnTypeAsString) {
-        // TODO chnge the chck here +use sbclss is intceof
-        if (nonVoidMethodReturnTypeAsString.indexOf(INFERIOR_SIGN) == -1 && nonVoidMethodReturnTypeAsString.indexOf(SUPERIOR_SIGN) == -1) {
-            return false;
-        }
+    default boolean isCollection(String nonVoidMethodReturnTypeAsString, ProcessingEnvironment processingEnv) {
         var collectionType = extractCollectionType(nonVoidMethodReturnTypeAsString);
-        return collectionType.contains(SupportedCollectionTypes.LIST.type)
-                || collectionType.contains(SupportedCollectionTypes.SET.type)
-                || collectionType.contains(SupportedCollectionTypes.MAP.type);
+        return isSubtype(processingEnv, collectionType, LIST.qualifiedName())
+                || isSubtype(processingEnv, collectionType, SET.qualifiedName())
+                || isSubtype(processingEnv, collectionType, MAP.qualifiedName());
     }
 
     /**
@@ -390,10 +458,13 @@ sealed interface SupportedCollectionsGenerator extends CodeGenerator {
      * @param nonVoidMethodReturnTypeAsString qualified name of the method's return type
      * @return the generic type as a String
      */
-    default String extractGenericType(String nonVoidMethodReturnTypeAsString) {
+    default Optional<String> extractGenericType(String nonVoidMethodReturnTypeAsString) {
+        if (!hasGeneric(nonVoidMethodReturnTypeAsString)) {
+            return Optional.empty();
+        }
         int idxFirstSign = nonVoidMethodReturnTypeAsString.indexOf(INFERIOR_SIGN);
         int idxLastSign = nonVoidMethodReturnTypeAsString.indexOf(SUPERIOR_SIGN);
-        return nonVoidMethodReturnTypeAsString.substring(0, idxLastSign).substring(idxFirstSign + 1);
+        return Optional.of(nonVoidMethodReturnTypeAsString.substring(0, idxLastSign).substring(idxFirstSign + 1));
     }
 
     /**
@@ -403,8 +474,11 @@ sealed interface SupportedCollectionsGenerator extends CodeGenerator {
      * @return the collection type
      */
     default String extractCollectionType(String nonVoidMethodReturnTypeAsString) {
-        int idxFirstSign = nonVoidMethodReturnTypeAsString.indexOf(INFERIOR_SIGN);
-        return nonVoidMethodReturnTypeAsString.substring(0, idxFirstSign);
+        if (hasGeneric(nonVoidMethodReturnTypeAsString)) {
+            int idxFirstSign = nonVoidMethodReturnTypeAsString.indexOf(INFERIOR_SIGN);
+            return nonVoidMethodReturnTypeAsString.substring(0, idxFirstSign);
+        }
+        return nonVoidMethodReturnTypeAsString;
     }
 }
 
@@ -421,12 +495,11 @@ sealed interface SupportedCollectionsFieldsGenerator extends SupportedCollection
      * @param recordClassContent              content being built, containing the record source string
      * @param fieldName                       record field being processed
      * @param nonVoidMethodReturnTypeAsString qualified name of the method's return type
-     * @return the string replacing the POJO or Record with its generated record class name. In case it's not a generic no replacement is performed
      */
-    void replaceGenericWithRecordClassNameIfAny(final StringBuilder recordClassContent, final String fieldName, final String nonVoidMethodReturnTypeAsString);
+    void replaceGenericWithRecordClassNameIfAny(StringBuilder recordClassContent, String fieldName, String nonVoidMethodReturnTypeAsString);
 
     @Override
-    default void generateCode(final StringBuilder recordClassContent, final Map<String, Object> params) {
+    default void generateCode(StringBuilder recordClassContent, Map<String, Object> params) {
         var fieldName = (String) params.get(FIELD_NAME);
         var nonVoidMethodReturnTypeAsString = (String) params.get(NON_VOID_METHOD_RETURN_TYPE_AS_STRING);
         replaceGenericWithRecordClassNameIfAny(recordClassContent, fieldName, nonVoidMethodReturnTypeAsString);
@@ -449,15 +522,14 @@ sealed interface SupportedCollectionsMappingLogicGenerator extends SupportedColl
      * @param fieldName                       field name being processed
      * @param nonVoidMethodElementAsString    non-void method name
      * @param nonVoidMethodReturnTypeAsString qualified name of the method's return type, also the type of the field being processed
-     * @return return the mapping logic for the collection field being processed
      */
-    void generateCollectionFieldMappingIfGenericIsAnnotated(final StringBuilder recordClassContent,
-                                                            final String fieldName,
-                                                            final String nonVoidMethodElementAsString,
-                                                            final String nonVoidMethodReturnTypeAsString);
+    void generateCollectionFieldMappingIfGenericIsAnnotated(StringBuilder recordClassContent,
+                                                            String fieldName,
+                                                            String nonVoidMethodElementAsString,
+                                                            String nonVoidMethodReturnTypeAsString);
 
     @Override
-    default void generateCode(final StringBuilder recordClassContent, final Map<String, Object> params) {
+    default void generateCode(StringBuilder recordClassContent, Map<String, Object> params) {
         var fieldName = (String) params.get(FIELD_NAME);
         var nonVoidMethodElementAsString = (String) params.get(NON_VOID_METHOD_AS_STRING);
         var nonVoidMethodReturnTypeAsString = (String) params.get(NON_VOID_METHOD_RETURN_TYPE_AS_STRING);

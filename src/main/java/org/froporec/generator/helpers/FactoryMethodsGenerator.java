@@ -34,9 +34,9 @@ import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
-import static org.froporec.generator.helpers.StringGenerator.constructFieldName;
-import static org.froporec.generator.helpers.StringGenerator.constructImmutableQualifiedNameBasedOnElementType;
-import static org.froporec.generator.helpers.StringGenerator.constructImmutableSimpleNameBasedOnElementType;
+import static org.froporec.generator.helpers.StringGenerator.fieldName;
+import static org.froporec.generator.helpers.StringGenerator.immutableQualifiedNameBasedOnElementType;
+import static org.froporec.generator.helpers.StringGenerator.immutableSimpleNameBasedOnElementType;
 import static org.froporec.generator.helpers.StringGenerator.javaConstantNamingConvention;
 import static org.froporec.generator.helpers.StringGenerator.lowerCase1stChar;
 
@@ -95,8 +95,8 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
 
         // static factory mthd with annotated elemnt instance as single param
         recordClassContent.append(
-                buildFactoryMethodDeclarationAndBody(
-                        constructImmutableSimpleNameBasedOnElementType(annotatedTypeElement),
+                factoryMethodDeclarationAndBody(
+                        immutableSimpleNameBasedOnElementType(annotatedTypeElement),
                         annotatedElementQualifiedName + SPACE + annotatedElementFieldName,
                         extractParamsFromCanonicalConstructorCall(annotatedElement, nonVoidMethodsElementsList),
                         true
@@ -106,13 +106,13 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
         recordClassContent.append(NEW_LINE);
 
         // static factory mthd with generated record instance as single param
-        var methodParamName = lowerCase1stChar(constructImmutableSimpleNameBasedOnElementType(annotatedTypeElement));
+        var methodParamName = lowerCase1stChar(immutableSimpleNameBasedOnElementType(annotatedTypeElement));
         recordClassContent.append(
-                buildFactoryMethodDeclarationAndBody(
-                        constructImmutableSimpleNameBasedOnElementType(annotatedTypeElement),
-                        constructImmutableQualifiedNameBasedOnElementType(annotatedTypeElement) + SPACE + methodParamName,
+                factoryMethodDeclarationAndBody(
+                        immutableSimpleNameBasedOnElementType(annotatedTypeElement),
+                        immutableQualifiedNameBasedOnElementType(annotatedTypeElement) + SPACE + methodParamName,
                         nonVoidMethodsElementsList.stream()
-                                .map(element -> methodParamName + DOT + constructFieldName(element).get() + OPENING_PARENTHESIS + CLOSING_PARENTHESIS)
+                                .map(element -> methodParamName + DOT + StringGenerator.fieldName(element).get() + OPENING_PARENTHESIS + CLOSING_PARENTHESIS)
                                 .collect(Collectors.joining(COMMA + SPACE)),
                         true
                 )
@@ -120,21 +120,21 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
 
         recordClassContent.append(NEW_LINE);
 
-        var nonVoidMethodsElementsReturnTypesMap = constructNonVoidMethodsElementsReturnTypesMapFromList(nonVoidMethodsElementsList);
+        var nonVoidMethodsElementsReturnTypesMap = nonVoidMethodsElementsReturnTypesMapFromList(nonVoidMethodsElementsList);
 
         // static factory mthd with Map as single param
         recordClassContent.append(TAB + JAVA_LANG_SUPPRESS_WARNINGS_UNCHECKED + NEW_LINE);
         recordClassContent.append(
-                buildFactoryMethodDeclarationAndBody(
-                        constructImmutableSimpleNameBasedOnElementType(annotatedTypeElement),
+                factoryMethodDeclarationAndBody(
+                        immutableSimpleNameBasedOnElementType(annotatedTypeElement),
                         FACTORY_METHODS_FIELDS_MAP_DECLARATION,
                         nonVoidMethodsElementsList.stream()
                                 .map(nonVoidMethodElement -> format(
                                         //"(<returnType>) fieldsNameValuePairs.getOrDefault("<fieldName>", <defaultValue>)"
                                         FACTORY_METHODS_FIELDS_MAP_USE_FORMAT,
-                                        constructFieldNameTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap, allElementsTypesToConvertByAnnotation,
-                                                processingEnvironment, collectionsGenerator).get(constructFieldName(nonVoidMethodElement).get()),
-                                        javaConstantNamingConvention(constructFieldName(nonVoidMethodElement).get()),
+                                        fieldNameAndTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap, allElementsTypesToConvertByAnnotation,
+                                                processingEnvironment, collectionsGenerator).get(StringGenerator.fieldName(nonVoidMethodElement).get()),
+                                        javaConstantNamingConvention(StringGenerator.fieldName(nonVoidMethodElement).get()),
                                         defaultReturnValueForMethod(nonVoidMethodElement)
                                 ))
                                 .collect(Collectors.joining(COMMA + SPACE)),
@@ -148,24 +148,24 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
         // "(type) fieldsNameValuePairs.getOrDefault("<fieldName>", annotatedElementFieldName.getterMthd())"
         recordClassContent.append(TAB + JAVA_LANG_SUPPRESS_WARNINGS_UNCHECKED + NEW_LINE);
         var paramsFromCanonicalConstructorCall = extractParamsFromCanonicalConstructorCall(annotatedElement, nonVoidMethodsElementsList)
-                .replaceAll(COMMA + SPACE + ENTRY + SPACE + LAMBDA_SIGN, AT_SIGN) // replacing occurrences of ", entry ->" with "@" to avoid issues while splitting
+                .replaceAll(COMMA + SPACE + ENTRY + SPACE + LAMBDA_SYMB, AT_SIGN) // replacing occurrences of ", entry ->" with "@" to avoid issues while splitting
                 .split(COMMA + SPACE);
         recordClassContent.append(
-                buildFactoryMethodDeclarationAndBody(
-                        constructImmutableSimpleNameBasedOnElementType(annotatedTypeElement),
+                factoryMethodDeclarationAndBody(
+                        immutableSimpleNameBasedOnElementType(annotatedTypeElement),
                         annotatedElementQualifiedName + SPACE + annotatedElementFieldName + COMMA + SPACE + FACTORY_METHODS_FIELDS_MAP_DECLARATION,
                         nonVoidMethodsElementsList.stream()
                                 .map(nonVoidMethodElement -> format(
                                         //"(<returnType>) fieldsNameValuePairs.getOrDefault("<fieldName>", <defaultValue>)"
                                         FACTORY_METHODS_FIELDS_MAP_USE_FORMAT,
-                                        constructFieldNameTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap, allElementsTypesToConvertByAnnotation,
-                                                processingEnvironment, collectionsGenerator).get(constructFieldName(nonVoidMethodElement).get()),
-                                        javaConstantNamingConvention(constructFieldName(nonVoidMethodElement).get()),
+                                        fieldNameAndTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap, allElementsTypesToConvertByAnnotation,
+                                                processingEnvironment, collectionsGenerator).get(StringGenerator.fieldName(nonVoidMethodElement).get()),
+                                        javaConstantNamingConvention(StringGenerator.fieldName(nonVoidMethodElement).get()),
                                         stream(paramsFromCanonicalConstructorCall)
-                                                .filter(param -> param.contains(annotatedElementFieldName + DOT + nonVoidMethodElement)) // TODO revw that cndtion
+                                                .filter(param -> param.contains(annotatedElementFieldName + DOT + nonVoidMethodElement))
                                                 .findFirst()
                                                 .orElse(annotatedElementFieldName + DOT + nonVoidMethodElement)
-                                                .replaceAll(AT_SIGN, COMMA + SPACE + ENTRY + SPACE + LAMBDA_SIGN)
+                                                .replaceAll(AT_SIGN, COMMA + SPACE + ENTRY + SPACE + LAMBDA_SYMB)
                                 ))
                                 .collect(Collectors.joining(COMMA + SPACE)),
                         true
@@ -176,19 +176,19 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
         // static factory mthd with generated record instance + Map as params
         // "(type) fieldsNameValuePairs.getOrDefault("<fieldName>", generatedRecordFieldName.getterMthd())"
         recordClassContent.append(TAB + JAVA_LANG_SUPPRESS_WARNINGS_UNCHECKED + NEW_LINE);
-        var method1stParamName = lowerCase1stChar(constructImmutableSimpleNameBasedOnElementType(annotatedTypeElement));
+        var method1stParamName = lowerCase1stChar(immutableSimpleNameBasedOnElementType(annotatedTypeElement));
         recordClassContent.append(
-                buildFactoryMethodDeclarationAndBody(
-                        constructImmutableSimpleNameBasedOnElementType(annotatedTypeElement),
-                        constructImmutableQualifiedNameBasedOnElementType(annotatedTypeElement) + SPACE + method1stParamName + COMMA + SPACE + FACTORY_METHODS_FIELDS_MAP_DECLARATION,
+                factoryMethodDeclarationAndBody(
+                        immutableSimpleNameBasedOnElementType(annotatedTypeElement),
+                        immutableQualifiedNameBasedOnElementType(annotatedTypeElement) + SPACE + method1stParamName + COMMA + SPACE + FACTORY_METHODS_FIELDS_MAP_DECLARATION,
                         nonVoidMethodsElementsList.stream()
                                 .map(nonVoidMethodElement -> format(
                                         //"(<returnType>) fieldsNameValuePairs.getOrDefault("<fieldName>", <defaultValue>)"
                                         FACTORY_METHODS_FIELDS_MAP_USE_FORMAT,
-                                        constructFieldNameTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap, allElementsTypesToConvertByAnnotation,
-                                                processingEnvironment, collectionsGenerator).get(constructFieldName(nonVoidMethodElement).get()),
-                                        javaConstantNamingConvention(constructFieldName(nonVoidMethodElement).get()),
-                                        method1stParamName + DOT + constructFieldName(nonVoidMethodElement).get() + OPENING_PARENTHESIS + CLOSING_PARENTHESIS
+                                        fieldNameAndTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap, allElementsTypesToConvertByAnnotation,
+                                                processingEnvironment, collectionsGenerator).get(StringGenerator.fieldName(nonVoidMethodElement).get()),
+                                        javaConstantNamingConvention(StringGenerator.fieldName(nonVoidMethodElement).get()),
+                                        method1stParamName + DOT + StringGenerator.fieldName(nonVoidMethodElement).get() + OPENING_PARENTHESIS + CLOSING_PARENTHESIS
                                 ))
                                 .collect(Collectors.joining(COMMA + SPACE)),
                         true
@@ -200,17 +200,17 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
         // instance factory mthd with Map as single param
         recordClassContent.append(TAB + JAVA_LANG_SUPPRESS_WARNINGS_UNCHECKED + NEW_LINE);
         recordClassContent.append(
-                buildFactoryMethodDeclarationAndBody(
-                        constructImmutableSimpleNameBasedOnElementType(annotatedTypeElement),
+                factoryMethodDeclarationAndBody(
+                        immutableSimpleNameBasedOnElementType(annotatedTypeElement),
                         FACTORY_METHODS_FIELDS_MAP_DECLARATION,
                         nonVoidMethodsElementsList.stream()
                                 .map(nonVoidMethodElement -> format(
                                         //"(<returnType>) fieldsNameValuePairs.getOrDefault("<fieldName>", this.<fieldValueFromRecordAccesor>)"
                                         FACTORY_METHODS_FIELDS_MAP_USE_FORMAT,
-                                        constructFieldNameTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap, allElementsTypesToConvertByAnnotation,
-                                                processingEnvironment, collectionsGenerator).get(constructFieldName(nonVoidMethodElement).get()),
-                                        javaConstantNamingConvention(constructFieldName(nonVoidMethodElement).get()),
-                                        THIS + DOT + constructFieldName(nonVoidMethodElement).get() + OPENING_PARENTHESIS + CLOSING_PARENTHESIS
+                                        fieldNameAndTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap, allElementsTypesToConvertByAnnotation,
+                                                processingEnvironment, collectionsGenerator).get(StringGenerator.fieldName(nonVoidMethodElement).get()),
+                                        javaConstantNamingConvention(StringGenerator.fieldName(nonVoidMethodElement).get()),
+                                        THIS + DOT + StringGenerator.fieldName(nonVoidMethodElement).get() + OPENING_PARENTHESIS + CLOSING_PARENTHESIS
                                 ))
                                 .collect(Collectors.joining(COMMA + SPACE)),
                         false
@@ -222,17 +222,17 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
         // instance factory mthd with "fieldName" as 1st param and "fieldValue" as 2nd param with generic T as 2nd param's type
         recordClassContent.append(TAB + JAVA_LANG_SUPPRESS_WARNINGS_UNCHECKED + NEW_LINE);
         recordClassContent.append(
-                buildFactoryMethodDeclarationAndBody(
-                        constructImmutableSimpleNameBasedOnElementType(annotatedTypeElement),
+                factoryMethodDeclarationAndBody(
+                        immutableSimpleNameBasedOnElementType(annotatedTypeElement),
                         FACTORY_METHOD_FIELD_NAME_AND_VALUE_DECLARATION,
                         nonVoidMethodsElementsList.stream()
                                 .map(nonVoidMethodElement -> format(
                                         //"fieldName.equals(%s) ? (%s) fieldValue : this.%s()"
                                         FACTORY_METHOD_FIELD_NAME_AND_USE_FORMAT,
-                                        javaConstantNamingConvention(constructFieldName(nonVoidMethodElement).get()),
-                                        constructFieldNameTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap, allElementsTypesToConvertByAnnotation,
-                                                processingEnvironment, collectionsGenerator).get(constructFieldName(nonVoidMethodElement).get()),
-                                        constructFieldName(nonVoidMethodElement).get()
+                                        javaConstantNamingConvention(StringGenerator.fieldName(nonVoidMethodElement).get()),
+                                        fieldNameAndTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap, allElementsTypesToConvertByAnnotation,
+                                                processingEnvironment, collectionsGenerator).get(StringGenerator.fieldName(nonVoidMethodElement).get()),
+                                        StringGenerator.fieldName(nonVoidMethodElement).get()
                                 ))
                                 .collect(Collectors.joining(COMMA + SPACE)),
                         false,

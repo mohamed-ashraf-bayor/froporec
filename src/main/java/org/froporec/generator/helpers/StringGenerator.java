@@ -142,12 +142,12 @@ public interface StringGenerator {
     /**
      * '&lt;' sign used in java collection generic definition
      */
-    char INFERIOR_SIGN = '<';
+    String INFERIOR_SIGN = "<";
 
     /**
      * '&gt;' sign used in java collection generic definition
      */
-    char SUPERIOR_SIGN = '>';
+    String SUPERIOR_SIGN = ">";
 
     /**
      * "{"
@@ -282,7 +282,7 @@ public interface StringGenerator {
     /**
      * "->"
      */
-    String LAMBDA_SIGN = "->";
+    String LAMBDA_SYMB = "->";
 
     /**
      * Regex expression to read a method body. should be used with Pattern.DOTALL mode
@@ -300,7 +300,7 @@ public interface StringGenerator {
      * @param qualifiedClassName qualified name of the annotated class
      * @return the qualified name of the fully immutable record class being generated from an annotated Record class. ex: "Immutable"+RecordClassName
      */
-    static String constructImmutableRecordQualifiedName(String qualifiedClassName) {
+    static String immutableRecordQualifiedName(String qualifiedClassName) {
         return qualifiedClassName.contains(DOT)
                 ? qualifiedClassName.substring(0, qualifiedClassName.lastIndexOf(DOT)) + DOT + IMMUTABLE + qualifiedClassName.substring(qualifiedClassName.lastIndexOf(DOT) + 1)
                 : IMMUTABLE + qualifiedClassName;
@@ -313,9 +313,9 @@ public interface StringGenerator {
      * @return the qualified name of the fully immutable record class being generated from an annotated Pojo or Record class.<br>
      * ex: ..."Immutable" + RecordClassName or ...PojoClassName+"Record"
      */
-    static String constructImmutableQualifiedNameBasedOnElementType(Element element) {
+    static String immutableQualifiedNameBasedOnElementType(Element element) {
         return ElementKind.RECORD.equals(element.getKind())
-                ? constructImmutableRecordQualifiedName(element.toString())
+                ? immutableRecordQualifiedName(element.toString())
                 : element + RECORD;
     }
 
@@ -326,8 +326,8 @@ public interface StringGenerator {
      * @return the simple name of the fully immutable record class being generated from an annotated Pojo or Record class.<br>
      * ex: "Immutable" + RecordClassName or PojoClassName+"Record"
      */
-    static String constructImmutableSimpleNameBasedOnElementType(Element element) {
-        var immutableQualifiedName = constructImmutableQualifiedNameBasedOnElementType(element);
+    static String immutableSimpleNameBasedOnElementType(Element element) {
+        var immutableQualifiedName = immutableQualifiedNameBasedOnElementType(element);
         return immutableQualifiedName.substring(immutableQualifiedName.lastIndexOf(DOT) + 1);
     }
 
@@ -339,7 +339,7 @@ public interface StringGenerator {
      * @return the qualified name of the fully immutable super record class being generated from an annotated Pojo or Record class.<br>
      * ex: ...RecordClassName+"SuperRecord" or ...PojoClassName+"SuperRecord"
      */
-    static String constructSuperRecordQualifiedNameBasedOnElementType(Element element) {
+    static String superRecordQualifiedNameBasedOnElementType(Element element) {
         var qualifiedName = element.toString();
         return qualifiedName.endsWith(RECORD)
                 ? qualifiedName.substring(0, qualifiedName.lastIndexOf(RECORD)) + SUPER_RECORD
@@ -354,7 +354,7 @@ public interface StringGenerator {
      * @return the qualified name of the fully immutable super record class being generated from an annotated Pojo or Record class.<br>
      * ex: ...RecordClassName+"SuperRecord" or ...PojoClassName+"SuperRecord"
      */
-    static String constructSuperRecordSimpleNameBasedOnElementType(Element element) {
+    static String superRecordSimpleNameBasedOnElementType(Element element) {
         var simpleName = element.getSimpleName().toString();
         return simpleName.endsWith(RECORD)
                 ? simpleName.substring(0, simpleName.lastIndexOf(RECORD)) + SUPER_RECORD
@@ -396,9 +396,9 @@ public interface StringGenerator {
      * @param nonVoidMethodElement
      * @return
      */
-    static Optional<String> constructFieldName(Element nonVoidMethodElement) {
+    static Optional<String> fieldName(Element nonVoidMethodElement) {
         var enclosingElementIsRecord = ElementKind.RECORD.equals(nonVoidMethodElement.getEnclosingElement().getKind());
-        return constructFieldName(nonVoidMethodElement, enclosingElementIsRecord);
+        return fieldName(nonVoidMethodElement, enclosingElementIsRecord);
     }
 
     /**
@@ -408,7 +408,7 @@ public interface StringGenerator {
      * @param enclosingElementIsRecord
      * @return
      */
-    static Optional<String> constructFieldName(Element nonVoidMethodElement, boolean enclosingElementIsRecord) {
+    static Optional<String> fieldName(Element nonVoidMethodElement, boolean enclosingElementIsRecord) {
         if (enclosingElementIsRecord) {
             // Record class, handle all non-void methods
             var nonVoidMethodElementAsString = nonVoidMethodElement.toString();
@@ -425,6 +425,11 @@ public interface StringGenerator {
         return Optional.empty();
     }
 
+    /**
+     * todo cmplt...
+     * @param text
+     * @param amountOfChars
+     */
     static void removeLastChars(StringBuilder text, int amountOfChars) {
         if (amountOfChars > 0) {
             text.deleteCharAt(text.length() - 1);

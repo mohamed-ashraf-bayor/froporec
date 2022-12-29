@@ -35,8 +35,8 @@ import java.util.List;
 import java.util.Map;
 
 import static org.froporec.generator.helpers.CodeGenerator.buildNonVoidMethodsElementsList;
-import static org.froporec.generator.helpers.StringGenerator.constructImmutableQualifiedNameBasedOnElementType;
-import static org.froporec.generator.helpers.StringGenerator.constructSuperRecordQualifiedNameBasedOnElementType;
+import static org.froporec.generator.helpers.StringGenerator.immutableQualifiedNameBasedOnElementType;
+import static org.froporec.generator.helpers.StringGenerator.superRecordQualifiedNameBasedOnElementType;
 
 /**
  * Exposes:<br>
@@ -123,8 +123,8 @@ public sealed interface RecordSourceFileGenerator extends StringGenerator permit
         var generationReport = new HashMap<String, String>();
         var annotatedTypeElement = (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType());
         var generatedQualifiedClassName = isSuperRecord
-                ? constructSuperRecordQualifiedNameBasedOnElementType(annotatedTypeElement)
-                : constructImmutableQualifiedNameBasedOnElementType(annotatedTypeElement);
+                ? superRecordQualifiedNameBasedOnElementType(annotatedTypeElement)
+                : immutableQualifiedNameBasedOnElementType(annotatedTypeElement);
         try {
             writeRecordSourceFile(annotatedElement, generatedQualifiedClassName, nonVoidMethodsElementsList, processingEnv, isSuperRecord);
             generationReport.put(SUCCESS, generatedQualifiedClassName);

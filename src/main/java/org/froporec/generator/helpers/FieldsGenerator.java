@@ -79,14 +79,14 @@ public final class FieldsGenerator implements CodeGenerator {
                                                          boolean isSuperRecord) {
         var annotatedTypeElement = (TypeElement) processingEnvironment.getTypeUtils().asElement(annotatedElement.asType());
         // 1st, build fields list of the annotated elmnt
-        buildFieldsList(recordClassContent, nonVoidMethodsElementsList, constructNonVoidMethodsElementsReturnTypesMapFromList(nonVoidMethodsElementsList),
+        buildFieldsList(recordClassContent, nonVoidMethodsElementsList, nonVoidMethodsElementsReturnTypesMapFromList(nonVoidMethodsElementsList),
                 isSuperRecord ? annotatedTypeElement.getSimpleName().toString() : EMPTY_STRING); // if isSuperRecord each field is suffixed with the annotated type simple name
         // 2nd, add fields list of provided mergeWith elmnts if isSuperRecord
         if (isSuperRecord) {
             mergeWithListByAnnotatedElementAndByAnnotation.get(ORG_FROPOREC_SUPER_RECORD).get(annotatedElement).forEach(element -> {
                 var typeElement = (TypeElement) processingEnvironment.getTypeUtils().asElement(element.asType());
                 var nonVoidMthdsElmntsList = new ArrayList<>(buildNonVoidMethodsElementsList(element, processingEnvironment));
-                var nonVoidMethodsElementsReturnTypesMap = constructNonVoidMethodsElementsReturnTypesMapFromList(nonVoidMthdsElmntsList);
+                var nonVoidMethodsElementsReturnTypesMap = nonVoidMethodsElementsReturnTypesMapFromList(nonVoidMthdsElmntsList);
                 buildFieldsList(recordClassContent, nonVoidMthdsElmntsList, nonVoidMethodsElementsReturnTypesMap, typeElement.getSimpleName().toString());
             });
         }
@@ -98,7 +98,7 @@ public final class FieldsGenerator implements CodeGenerator {
                                  Map<Element, String> nonVoidMethodsElementsReturnTypesMap,
                                  String fieldSuffix) {
         nonVoidMethodsElementsList.forEach(nonVoidMethodElement -> {
-            var nameTypePairMapEntry = constructFieldNameTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap,
+            var nameTypePairMapEntry = fieldNameAndTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap,
                     allElementsTypesToConvertByAnnotation, processingEnvironment, collectionsGenerator)
                     .entrySet().iterator().next();
             recordClassContent.append(format(

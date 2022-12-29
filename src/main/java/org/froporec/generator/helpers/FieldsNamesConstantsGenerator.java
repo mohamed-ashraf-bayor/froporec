@@ -67,9 +67,9 @@ public final class FieldsNamesConstantsGenerator implements CodeGenerator {
 
     private void buildFieldsConstantsFromNonVoidMethodsList(StringBuilder recordClassContent, List<Element> nonVoidMethodsElementsList) {
         recordClassContent.append(NEW_LINE + TAB);
-        var nonVoidMethodsElementsReturnTypesMap = constructNonVoidMethodsElementsReturnTypesMapFromList(nonVoidMethodsElementsList);
+        var nonVoidMethodsElementsReturnTypesMap = nonVoidMethodsElementsReturnTypesMapFromList(nonVoidMethodsElementsList);
         nonVoidMethodsElementsList.forEach(nonVoidMethodElement -> {
-            var nameTypePairMapEntry = constructFieldNameTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap,
+            var nameTypePairMapEntry = fieldNameAndTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap,
                     allElementsTypesToConvertByAnnotation, processingEnvironment, collectionsGenerator)
                     .entrySet().iterator().next();
             recordClassContent.append(format(
