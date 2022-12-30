@@ -168,4 +168,4 @@ Contribute to the project's growth by reporting issues or making improvement sug
 <br>
 <br>
 
-###### &#169; 2021-2022, [Froporec](https://github.com/mohamed-ashraf-bayor/froporec) is an open source project, currently distributed under the [MIT License](https://github.com/mohamed-ashraf-bayor/froporec/blob/master/LICENSE)
+###### &#169; 2021-2023, [Froporec](https://github.com/mohamed-ashraf-bayor/froporec) is an open source project, currently distributed under the [MIT License](https://github.com/mohamed-ashraf-bayor/froporec/blob/master/LICENSE)
