@@ -34,9 +34,9 @@ import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
-import static org.froporec.generator.helpers.StringGenerator.fieldName;
-import static org.froporec.generator.helpers.StringGenerator.immutableQualifiedNameBasedOnElementType;
-import static org.froporec.generator.helpers.StringGenerator.immutableSimpleNameBasedOnElementType;
+import static org.froporec.generator.helpers.CodeGenerator.fieldName;
+import static org.froporec.generator.helpers.CodeGenerator.immutableQualifiedNameBasedOnElementType;
+import static org.froporec.generator.helpers.CodeGenerator.immutableSimpleNameBasedOnElementType;
 import static org.froporec.generator.helpers.StringGenerator.javaConstantNamingConvention;
 import static org.froporec.generator.helpers.StringGenerator.lowerCase1stChar;
 

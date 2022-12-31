@@ -24,10 +24,7 @@ package org.froporec.generator.helpers;
 import org.froporec.annotations.Immutable;
 import org.froporec.annotations.Record;
 
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import java.util.List;
-import java.util.Optional;
 
 import static java.lang.Character.isUpperCase;
 import static java.lang.Character.toUpperCase;
@@ -35,7 +32,7 @@ import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 
 /**
- * A bunch of String literals and commonly used string handling functions
+ * A bunch of String literals and commonly used string handling utils functions
  */
 public interface StringGenerator {
 
@@ -245,73 +242,6 @@ public interface StringGenerator {
     String LAMBDA_SYMB = "->";
 
     /**
-     * Constructs the qualified name of the fully immutable record class being generated from an annotated Record class
-     *
-     * @param qualifiedClassName qualified name of the annotated class
-     * @return the qualified name of the fully immutable record class being generated from an annotated Record class. ex: "Immutable"+RecordClassName
-     */
-    static String immutableRecordQualifiedName(String qualifiedClassName) {
-        return qualifiedClassName.contains(DOT)
-                ? qualifiedClassName.substring(0, qualifiedClassName.lastIndexOf(DOT)) + DOT + IMMUTABLE + qualifiedClassName.substring(qualifiedClassName.lastIndexOf(DOT) + 1)
-                : IMMUTABLE + qualifiedClassName;
-    }
-
-    /**
-     * Constructs the qualified name of the generated record class. Handles both cases of the class being processed as either a Pojo or a Record
-     *
-     * @param element {@link Element} instance of the annotated class
-     * @return the qualified name of the fully immutable record class being generated from an annotated Pojo or Record class.<br>
-     * ex: ..."Immutable" + RecordClassName or ...PojoClassName+"Record"
-     */
-    static String immutableQualifiedNameBasedOnElementType(Element element) {
-        return ElementKind.RECORD.equals(element.getKind())
-                ? immutableRecordQualifiedName(element.toString())
-                : element + RECORD;
-    }
-
-    /**
-     * Constructs the simple name of the generated record class. Handles both cases of the class being processed as either a Pojo or a Record
-     *
-     * @param element {@link Element} instance of the annotated class
-     * @return the simple name of the fully immutable record class being generated from an annotated Pojo or Record class.<br>
-     * ex: "Immutable" + RecordClassName or PojoClassName+"Record"
-     */
-    static String immutableSimpleNameBasedOnElementType(Element element) {
-        var immutableQualifiedName = immutableQualifiedNameBasedOnElementType(element);
-        return immutableQualifiedName.substring(immutableQualifiedName.lastIndexOf(DOT) + 1);
-    }
-
-    /**
-     * Constructs the qualified name of the generated super record class.
-     * Based on whether or not the qualified name of the passed in element ends with 'Record'
-     *
-     * @param element {@link Element} instance of the annotated class
-     * @return the qualified name of the fully immutable super record class being generated from an annotated Pojo or Record class.<br>
-     * ex: ...RecordClassName+"SuperRecord" or ...PojoClassName+"SuperRecord"
-     */
-    static String superRecordQualifiedNameBasedOnElementType(Element element) {
-        var qualifiedName = element.toString();
-        return qualifiedName.endsWith(RECORD)
-                ? qualifiedName.substring(0, qualifiedName.lastIndexOf(RECORD)) + SUPER_RECORD
-                : qualifiedName + SUPER_RECORD;
-    }
-
-    /**
-     * Constructs the simple name of the generated super record class.
-     * Based on whether or not the simple name of the passed in element ends with 'Record'
-     *
-     * @param element {@link Element} instance of the annotated class
-     * @return the qualified name of the fully immutable super record class being generated from an annotated Pojo or Record class.<br>
-     * ex: ...RecordClassName+"SuperRecord" or ...PojoClassName+"SuperRecord"
-     */
-    static String superRecordSimpleNameBasedOnElementType(Element element) {
-        var simpleName = element.getSimpleName().toString();
-        return simpleName.endsWith(RECORD)
-                ? simpleName.substring(0, simpleName.lastIndexOf(RECORD)) + SUPER_RECORD
-                : simpleName + SUPER_RECORD;
-    }
-
-    /**
      * Removes all commas from the provided string
      *
      * @param text contains commas as a string separator
@@ -331,6 +261,12 @@ public interface StringGenerator {
         return text.substring(0, 1).toLowerCase() + text.substring(1);
     }
 
+    /**
+     * Applies the Java constants naming convention to the provided field name
+     *
+     * @param fieldName provided field name to process. ex: firstName
+     * @return the transformed field name after applying the java constant naming convention. ex: FIRST_NAME
+     */
     static String javaConstantNamingConvention(String fieldName) {
         var allChars = fieldName.toCharArray();
         var constantNameChars = new StringBuilder().append(toUpperCase(allChars[0]));
@@ -341,45 +277,10 @@ public interface StringGenerator {
     }
 
     /**
-     * // TODO ...
+     * Modifies the provided {@link StringBuilder} instance by removing the last (amountOfChars) characters
      *
-     * @param nonVoidMethodElement
-     * @return
-     */
-    static Optional<String> fieldName(Element nonVoidMethodElement) {
-        var enclosingElementIsRecord = ElementKind.RECORD.equals(nonVoidMethodElement.getEnclosingElement().getKind());
-        return fieldName(nonVoidMethodElement, enclosingElementIsRecord);
-    }
-
-    /**
-     * // TODO ...
-     *
-     * @param nonVoidMethodElement
-     * @param enclosingElementIsRecord
-     * @return
-     */
-    static Optional<String> fieldName(Element nonVoidMethodElement, boolean enclosingElementIsRecord) {
-        if (enclosingElementIsRecord) {
-            // Record class, handle all non-void methods
-            var nonVoidMethodElementAsString = nonVoidMethodElement.toString();
-            return Optional.of(nonVoidMethodElementAsString.substring(0, nonVoidMethodElementAsString.indexOf(OPENING_PARENTHESIS)));
-        } else {
-            // POJO class, handle only getters (only methods starting with get or is)
-            var getterAsString = nonVoidMethodElement.toString();
-            if (getterAsString.startsWith(GET)) {
-                return Optional.of(getterAsString.substring(3, 4).toLowerCase() + getterAsString.substring(4, getterAsString.indexOf(OPENING_PARENTHESIS)));
-            } else if (getterAsString.startsWith(IS)) {
-                return Optional.of(getterAsString.substring(2, 3).toLowerCase() + getterAsString.substring(3, getterAsString.indexOf(OPENING_PARENTHESIS)));
-            }
-        }
-        return Optional.empty();
-    }
-
-    /**
-     * todo cmplt...
-     *
-     * @param text
-     * @param amountOfChars
+     * @param text          instance of StringBuilder to process
+     * @param amountOfChars amount of characters to remove by the end of the provided StringBuilder instance
      */
     static void removeLastChars(StringBuilder text, int amountOfChars) {
         if (amountOfChars > 0) {

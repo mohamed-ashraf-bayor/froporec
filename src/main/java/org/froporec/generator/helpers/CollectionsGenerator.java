@@ -28,7 +28,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static java.lang.String.format;
-import static org.froporec.generator.helpers.StringGenerator.immutableQualifiedNameBasedOnElementType;
+import static org.froporec.generator.helpers.CodeGenerator.immutableQualifiedNameBasedOnElementType;
 import static org.froporec.generator.helpers.StringGenerator.removeLastChars;
 import static org.froporec.generator.helpers.SupportedCollectionsGenerator.SupportedCollectionTypes.LIST;
 import static org.froporec.generator.helpers.SupportedCollectionsGenerator.SupportedCollectionTypes.MAP;

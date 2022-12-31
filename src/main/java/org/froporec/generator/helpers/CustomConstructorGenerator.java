@@ -35,9 +35,9 @@ import java.util.function.Consumer;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static org.froporec.generator.helpers.CodeGenerator.nonVoidMethodsElementsList;
-import static org.froporec.generator.helpers.StringGenerator.immutableQualifiedNameBasedOnElementType;
-import static org.froporec.generator.helpers.StringGenerator.immutableSimpleNameBasedOnElementType;
-import static org.froporec.generator.helpers.StringGenerator.superRecordSimpleNameBasedOnElementType;
+import static org.froporec.generator.helpers.CodeGenerator.immutableQualifiedNameBasedOnElementType;
+import static org.froporec.generator.helpers.CodeGenerator.immutableSimpleNameBasedOnElementType;
+import static org.froporec.generator.helpers.CodeGenerator.superRecordSimpleNameBasedOnElementType;
 import static org.froporec.generator.helpers.StringGenerator.lowerCase1stChar;
 import static org.froporec.generator.helpers.StringGenerator.removeLastChars;
 

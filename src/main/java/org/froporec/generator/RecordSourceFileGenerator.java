@@ -34,9 +34,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.froporec.generator.helpers.CodeGenerator.immutableQualifiedNameBasedOnElementType;
 import static org.froporec.generator.helpers.CodeGenerator.nonVoidMethodsElementsList;
-import static org.froporec.generator.helpers.StringGenerator.immutableQualifiedNameBasedOnElementType;
-import static org.froporec.generator.helpers.StringGenerator.superRecordQualifiedNameBasedOnElementType;
+import static org.froporec.generator.helpers.CodeGenerator.superRecordQualifiedNameBasedOnElementType;
 
 /**
  * Exposes:<br>

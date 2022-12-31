@@ -39,8 +39,6 @@ import java.util.function.Predicate;
 
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toMap;
-import static org.froporec.generator.helpers.StringGenerator.fieldName;
-import static org.froporec.generator.helpers.StringGenerator.immutableQualifiedNameBasedOnElementType;
 import static org.froporec.generator.helpers.SupportedCollectionsGenerator.SupportedCollectionTypes;
 import static org.froporec.generator.helpers.SupportedCollectionsGenerator.SupportedCollectionTypes.LIST;
 import static org.froporec.generator.helpers.SupportedCollectionsGenerator.SupportedCollectionTypes.MAP;
@@ -85,6 +83,9 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
      */
     String IS_SUPER_RECORD = "isSuperRecord";
 
+
+    // Other constants:
+
     /**
      * Default value to use for boolean returned values
      */
@@ -128,6 +129,143 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
      *                           the expected parameters names are defined as constants in the CodeGenerator interface.
      */
     void generateCode(StringBuilder recordClassContent, Map<String, Object> params);
+
+    /**
+     * Returns a {@link java.util.List} of {@link Element} instances representing each non-void non-args methods of the
+     * provided annotated {@link Element} instance
+     *
+     * @param annotatedElement {@link Element} instance of the annotated Pojo or Record class
+     * @param processingEnv    {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @return {@link java.util.List} of {@link Element} instances representing each non-void non-args methods of the
+     * provided annotated {@link Element} instance
+     */
+    static List<Element> nonVoidMethodsElementsList(Element annotatedElement, ProcessingEnvironment processingEnv) {
+        // Array of methods to exclude while pulling the list of all methods of a Pojo or Record class
+        String[] methodsToExclude = {"getClass", "wait", "notifyAll", "hashCode", "equals", "notify", "toString", "clone", "finalize"};
+        return ElementKind.RECORD.equals((processingEnv.getTypeUtils().asElement(annotatedElement.asType())).getKind())
+                ? processingEnv.getElementUtils().getAllMembers(
+                        (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())
+                ).stream()
+                .map(Element.class::cast)
+                .filter(element -> ElementKind.METHOD.equals(element.getKind()))
+                .filter(element -> (!TypeKind.VOID.equals(((ExecutableElement) element).getReturnType().getKind())))
+                .filter(element -> stream(methodsToExclude).noneMatch(excludedMeth ->
+                        element.toString().contains(excludedMeth + OPENING_PARENTHESIS))) // exclude known Object methds
+                .filter(element -> ((ExecutableElement) element).getParameters().isEmpty()) // only methods with no params
+                .toList()
+                : processingEnv.getElementUtils().getAllMembers(
+                        (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())
+                ).stream()
+                .map(Element.class::cast)
+                .filter(element -> ElementKind.METHOD.equals(element.getKind()))
+                .filter(element -> element.getSimpleName().toString().startsWith(GET) || element.getSimpleName().toString().startsWith(IS))
+                .filter(element -> stream(methodsToExclude).noneMatch(excludedMeth ->
+                        element.toString().contains(excludedMeth + OPENING_PARENTHESIS)))
+                .filter(element -> ((ExecutableElement) element).getParameters().isEmpty())
+                .toList();
+    }
+
+    /**
+     * Constructs the qualified name of the fully immutable record class being generated from an annotated Record class
+     *
+     * @param qualifiedClassName qualified name of the annotated class
+     * @return the qualified name of the fully immutable record class being generated from an annotated Record class. ex: "Immutable"+RecordClassName
+     */
+    static String immutableRecordQualifiedName(String qualifiedClassName) {
+        return qualifiedClassName.contains(DOT)
+                ? qualifiedClassName.substring(0, qualifiedClassName.lastIndexOf(DOT)) + DOT + IMMUTABLE + qualifiedClassName.substring(qualifiedClassName.lastIndexOf(DOT) + 1)
+                : IMMUTABLE + qualifiedClassName;
+    }
+
+    /**
+     * Constructs the qualified name of the generated record class. Handles both cases of the class being processed as either a Pojo or a Record
+     *
+     * @param element {@link Element} instance of the annotated class
+     * @return the qualified name of the fully immutable record class being generated from an annotated Pojo or Record class.<br>
+     * ex: ..."Immutable" + RecordClassName or ...PojoClassName+"Record"
+     */
+    static String immutableQualifiedNameBasedOnElementType(Element element) {
+        return ElementKind.RECORD.equals(element.getKind())
+                ? immutableRecordQualifiedName(element.toString())
+                : element + RECORD;
+    }
+
+    /**
+     * Constructs the simple name of the generated record class. Handles both cases of the class being processed as either a Pojo or a Record
+     *
+     * @param element {@link Element} instance of the annotated class
+     * @return the simple name of the fully immutable record class being generated from an annotated Pojo or Record class.<br>
+     * ex: "Immutable" + RecordClassName or PojoClassName+"Record"
+     */
+    static String immutableSimpleNameBasedOnElementType(Element element) {
+        var immutableQualifiedName = immutableQualifiedNameBasedOnElementType(element);
+        return immutableQualifiedName.substring(immutableQualifiedName.lastIndexOf(DOT) + 1);
+    }
+
+    /**
+     * Constructs the qualified name of the generated super record class.
+     * Based on whether or not the qualified name of the passed in element ends with 'Record'
+     *
+     * @param element {@link Element} instance of the annotated class
+     * @return the qualified name of the fully immutable super record class being generated from an annotated Pojo or Record class.<br>
+     * ex: ...RecordClassName+"SuperRecord" or ...PojoClassName+"SuperRecord"
+     */
+    static String superRecordQualifiedNameBasedOnElementType(Element element) {
+        var qualifiedName = element.toString();
+        return qualifiedName.endsWith(RECORD)
+                ? qualifiedName.substring(0, qualifiedName.lastIndexOf(RECORD)) + SUPER_RECORD
+                : qualifiedName + SUPER_RECORD;
+    }
+
+    /**
+     * Constructs the simple name of the generated super record class.
+     * Based on whether or not the simple name of the passed in element ends with 'Record'
+     *
+     * @param element {@link Element} instance of the annotated class
+     * @return the qualified name of the fully immutable super record class being generated from an annotated Pojo or Record class.<br>
+     * ex: ...RecordClassName+"SuperRecord" or ...PojoClassName+"SuperRecord"
+     */
+    static String superRecordSimpleNameBasedOnElementType(Element element) {
+        var simpleName = element.getSimpleName().toString();
+        return simpleName.endsWith(RECORD)
+                ? simpleName.substring(0, simpleName.lastIndexOf(RECORD)) + SUPER_RECORD
+                : simpleName + SUPER_RECORD;
+    }
+
+    /**
+     * // TODO ...
+     *
+     * @param nonVoidMethodElement
+     * @return
+     */
+    static Optional<String> fieldName(Element nonVoidMethodElement) {
+        var enclosingElementIsRecord = ElementKind.RECORD.equals(nonVoidMethodElement.getEnclosingElement().getKind());
+        return fieldName(nonVoidMethodElement, enclosingElementIsRecord);
+    }
+
+    /**
+     * // TODO ...
+     *
+     * @param nonVoidMethodElement
+     * @param enclosingElementIsRecord
+     * @return
+     */
+    static Optional<String> fieldName(Element nonVoidMethodElement, boolean enclosingElementIsRecord) {
+        if (enclosingElementIsRecord) {
+            // Record class, handle all non-void methods
+            var nonVoidMethodElementAsString = nonVoidMethodElement.toString();
+            return Optional.of(nonVoidMethodElementAsString.substring(0, nonVoidMethodElementAsString.indexOf(OPENING_PARENTHESIS)));
+        } else {
+            // POJO class, handle only getters (only methods starting with get or is)
+            var getterAsString = nonVoidMethodElement.toString();
+            if (getterAsString.startsWith(GET)) {
+                return Optional.of(getterAsString.substring(3, 4).toLowerCase() + getterAsString.substring(4, getterAsString.indexOf(OPENING_PARENTHESIS)));
+            } else if (getterAsString.startsWith(IS)) {
+                return Optional.of(getterAsString.substring(2, 3).toLowerCase() + getterAsString.substring(3, getterAsString.indexOf(OPENING_PARENTHESIS)));
+            }
+        }
+        return Optional.empty();
+    }
 
     /**
      * constructs a {@link Map} containing non-void methods names as keys and their corresponding return types as String values.<br>
@@ -194,41 +332,6 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
         return typeString -> convertToElement.apply(typeString).isPresent()
                 && (allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_RECORD).contains(convertToElement.apply(typeString).get())
                 || allElementsTypesToConvertByAnnotation.get(ORG_FROPOREC_IMMUTABLE).contains(convertToElement.apply(typeString).get()));
-    }
-
-    /**
-     * Returns a {@link java.util.List} of {@link Element} instances representing each non-void non-args methods of the
-     * provided annotated {@link Element} instance
-     *
-     * @param annotatedElement {@link Element} instance of the annotated Pojo or Record class
-     * @param processingEnv    {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
-     * @return {@link java.util.List} of {@link Element} instances representing each non-void non-args methods of the
-     * provided annotated {@link Element} instance
-     */
-    static List<Element> nonVoidMethodsElementsList(Element annotatedElement, ProcessingEnvironment processingEnv) {
-        // Array of methods to exclude while pulling the list of all methods of a Pojo or Record class
-        String[] methodsToExclude = {"getClass", "wait", "notifyAll", "hashCode", "equals", "notify", "toString", "clone", "finalize"};
-        return ElementKind.RECORD.equals((processingEnv.getTypeUtils().asElement(annotatedElement.asType())).getKind())
-                ? processingEnv.getElementUtils().getAllMembers(
-                        (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())
-                ).stream()
-                .map(Element.class::cast)
-                .filter(element -> ElementKind.METHOD.equals(element.getKind()))
-                .filter(element -> (!TypeKind.VOID.equals(((ExecutableElement) element).getReturnType().getKind())))
-                .filter(element -> stream(methodsToExclude).noneMatch(excludedMeth ->
-                        element.toString().contains(excludedMeth + OPENING_PARENTHESIS))) // exclude known Object methds
-                .filter(element -> ((ExecutableElement) element).getParameters().isEmpty()) // only methods with no params
-                .toList()
-                : processingEnv.getElementUtils().getAllMembers(
-                        (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())
-                ).stream()
-                .map(Element.class::cast)
-                .filter(element -> ElementKind.METHOD.equals(element.getKind()))
-                .filter(element -> element.getSimpleName().toString().startsWith(GET) || element.getSimpleName().toString().startsWith(IS))
-                .filter(element -> stream(methodsToExclude).noneMatch(excludedMeth ->
-                        element.toString().contains(excludedMeth + OPENING_PARENTHESIS)))
-                .filter(element -> ((ExecutableElement) element).getParameters().isEmpty())
-                .toList();
     }
 
     /**
