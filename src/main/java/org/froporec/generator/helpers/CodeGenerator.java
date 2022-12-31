@@ -233,21 +233,21 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
     }
 
     /**
-     * // TODO ...
+     * Constructs the field name based on the {@link Element} instance representing the Pojo or Record's accessor method
      *
-     * @param nonVoidMethodElement
-     * @return
+     * @param nonVoidMethodElement {@link Element} instance representing the Pojo or Record's accessor method
+     * @return the field name as used in the Pojo or Record definition
      */
     static Optional<String> fieldName(Element nonVoidMethodElement) {
         return fieldName(nonVoidMethodElement, ElementKind.RECORD.equals(nonVoidMethodElement.getEnclosingElement().getKind()));
     }
 
     /**
-     * // TODO ...
+     * Constructs the field name based on the {@link Element} instance representing the Pojo or Record's accessor method
      *
-     * @param nonVoidMethodElement
-     * @param enclosingElementIsRecord
-     * @return
+     * @param nonVoidMethodElement     {@link Element} instance representing the Pojo or Record's accessor method
+     * @param enclosingElementIsRecord indicates whether the enclosing Element of the provided nonVoidMethodElement is a Record
+     * @return the field name as used in the Pojo or Record definition
      */
     static Optional<String> fieldName(Element nonVoidMethodElement, boolean enclosingElementIsRecord) {
         if (enclosingElementIsRecord) {
@@ -321,7 +321,8 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
      * Checks whether the provided type String is annotated with either &#64;{@link org.froporec.annotations.Record}
      * or &#64;{@link org.froporec.annotations.Immutable}
      *
-     * @param processingEnv                         {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @param processingEnv                         {@link ProcessingEnvironment} object, needed to access low-level information
+     *                                              regarding the used annotations
      * @param allElementsTypesToConvertByAnnotation {@link Map} of annotated {@link Element} instances grouped by their
      *                                              respective annotation String representation
      * @return {@link java.util.function.Predicate} instance to apply on the type String to check
@@ -352,11 +353,19 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
     }
 
     /**
-     * // TODO cmplte...
+     * Constructs a {@link Map} containing a field name as key and field type as value.<br>
+     * The field name is based on the provided {@link Element} instance representing the Pojo or Record's accessor method<br>
+     * The field type is constructed considering whether the type was also annotated with either Record or Immutable
      *
-     * @param nonVoidMethodElement
-     * @param nonVoidMethodsElementsReturnTypesMap
-     * @return java.util.Map with key being the field name and the value being the type of the field after conversion
+     * @param nonVoidMethodElement                  {@link Element} instance representing the Pojo or Record's accessor method
+     * @param nonVoidMethodsElementsReturnTypesMap  {@link Map} containing non-void methods names as keys and their corresponding
+     *                                              return types as String values
+     * @param allElementsTypesToConvertByAnnotation {@link Map} of annotated {@link Element} instances grouped by their
+     *                                              respective annotation String representation
+     * @param processingEnv                         {@link ProcessingEnvironment} object, needed to access low-level information
+     *                                              regarding the used annotations
+     * @param collectionsGenerator                  {@link SupportedCollectionsFieldsGenerator} instance needed to process collections
+     * @return {@link Map} with the key being the field name and the value being the type of the field after conversion
      */
     default Map<String, String> fieldNameAndTypePair(Element nonVoidMethodElement,
                                                      Map<Element, String> nonVoidMethodsElementsReturnTypesMap,
@@ -402,27 +411,35 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
     }
 
     /**
-     * TODO cplt...
+     * Constructs the complete definition of a factory method including the signature and body
      *
-     * @param methodReturnType
-     * @param methodParams
-     * @param canonicalConstructorCallParams
-     * @param isStatic
-     * @return
+     * @param methodReturnType               return type to be used in the generated method signature
+     * @param methodParams                   String containing the method parameters ('type name,...' comma-separated list)
+     *                                       just as seen in a typical java method signature
+     * @param canonicalConstructorCallParams String containing the comma-separated values to pass to the call to the canonical constructor. ex:<br>
+     *                                       return new ImmutableExamReport(examReport.candidateId(), examReport.fullName(), examReport.contactInfo());
+     *                                       // here the value of canonicalConstructorCallParams is:
+     *                                       'examReport.candidateId(), examReport.fullName(), examReport.contactInfo()'
+     * @param isStatic                       indicates whether the method being generated is static or not
+     * @return String containing the complete definition of a factory method including the signature and body
      */
     default String factoryMethodDeclarationAndBody(String methodReturnType, String methodParams, String canonicalConstructorCallParams, boolean isStatic) {
         return factoryMethodDeclarationAndBody(methodReturnType, methodParams, canonicalConstructorCallParams, isStatic, false);
     }
 
     /**
-     * TODO cplt...
+     * Constructs the complete definition of a factory method including the signature and body
      *
-     * @param methodReturnType
-     * @param methodParams
-     * @param canonicalConstructorCallParams
-     * @param isStatic
-     * @param hasGeneric
-     * @return
+     * @param methodReturnType               return type to be used in the generated method signature
+     * @param methodParams                   String containing the method parameters ('type name,...' comma-separated list)
+     *                                       just as seen in a typical java method signature
+     * @param canonicalConstructorCallParams String containing the comma-separated values to pass to the call to the canonical constructor. ex:<br>
+     *                                       return new ImmutableExamReport(examReport.candidateId(), examReport.fullName(), examReport.contactInfo());
+     *                                       // here the value of canonicalConstructorCallParams is:
+     *                                       'examReport.candidateId(), examReport.fullName(), examReport.contactInfo()'
+     * @param isStatic                       indicates whether the method being generated is static or not
+     * @param hasGeneric                     indicates whether the method being generated has a generic type
+     * @return String containing the complete definition of a factory method including the signature and body
      */
     default String factoryMethodDeclarationAndBody(String methodReturnType, String methodParams, String canonicalConstructorCallParams, boolean isStatic, boolean hasGeneric) {
         var methodCode = new StringBuilder();
@@ -444,12 +461,13 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
     }
 
     /**
-     * TODO complt...
+     * Checks whether the provided type1QualifiedName is a subtype of the provided type2QualifiedName
      *
-     * @param processingEnv
-     * @param type1QualifiedName
-     * @param type2QualifiedName
-     * @return
+     * @param processingEnv      {@link ProcessingEnvironment} object, needed to access low-level information
+     *                           regarding the used annotations
+     * @param type1QualifiedName qualified name of the provided type
+     * @param type2QualifiedName qualified name of the provided type
+     * @return true if the provided type1QualifiedName is a subtype of the provided type2QualifiedName
      */
     default boolean isSubtype(ProcessingEnvironment processingEnv, String type1QualifiedName, String type2QualifiedName) {
         var type1TypeElement = processingEnv.getElementUtils().getTypeElement(type1QualifiedName);
@@ -462,16 +480,21 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
     }
 
     /**
-     * todo cmpl...
+     * Constructs the qualified name of the parent interface of the provided {@link java.util.Collection} type name.<br>
+     * ex: providing '{@link java.util.HashSet}' would return {@link Set}, '{@link java.util.ArrayList}' would return '{@link List }'
      *
-     * @param processingEnv
-     * @param collectionTypeQualifiedName ...with generic<...>
-     * @param collectionsGenerator
-     * @return
+     * @param processingEnv               {@link ProcessingEnvironment} object, needed to access low-level information
+     *                                    regarding the used annotations
+     * @param collectionTypeQualifiedName provided collection type name
+     * @param collectionsGenerator        {@link SupportedCollectionsFieldsGenerator} instance needed to process collections
+     * @return the qualified name of the parent interface of the provided Collection type name
      */
     default String parentCollectionInterface(ProcessingEnvironment processingEnv, String collectionTypeQualifiedName, SupportedCollectionsGenerator collectionsGenerator) {
         BiFunction<String, SupportedCollectionTypes, String> collectionTypeWithGenericIfAny = (collectionType, supportedCollectionType) ->
-                supportedCollectionType.qualifiedName() + (collectionsGenerator.hasGeneric(collectionType) ? INFERIOR_SIGN + collectionsGenerator.extractGenericType(collectionType).get() + SUPERIOR_SIGN : EMPTY_STRING);
+                supportedCollectionType.qualifiedName() +
+                        (collectionsGenerator.hasGeneric(collectionType)
+                                ? INFERIOR_SIGN + collectionsGenerator.extractGenericType(collectionType).get() + SUPERIOR_SIGN
+                                : EMPTY_STRING);
         if (isSubtype(processingEnv, collectionsGenerator.extractCollectionType(collectionTypeQualifiedName), LIST.qualifiedName())) {
             return collectionTypeWithGenericIfAny.apply(collectionTypeQualifiedName, LIST);
         }
@@ -485,11 +508,12 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
     }
 
     /**
-     * todo cmplt...
+     * Constructs the qualified name of the generated record class for the provided generic type if exists
      *
-     * @param processingEnv
-     * @param genericTypeOpt
-     * @return
+     * @param processingEnv  {@link ProcessingEnvironment} object, needed to access low-level information
+     *                       regarding the used annotations
+     * @param genericTypeOpt wraps a String containing the qualified name of a Collection generic type
+     * @return the qualified name of the generated record class for the provided generic type if exists
      */
     default Optional<String> genericTypeImmutableQualifiedName(ProcessingEnvironment processingEnv, Optional<String> genericTypeOpt) {
         if (genericTypeOpt.isPresent()) {
@@ -521,16 +545,21 @@ sealed interface SupportedCollectionsGenerator extends CodeGenerator {
             this.type = type;
         }
 
+        /**
+         * Qualified name of the Collection type
+         *
+         * @return the qualified name of the Collection type
+         */
         public String qualifiedName() {
             return type.getName();
         }
     }
 
     /**
-     * todo cmplt...
+     * Checks whether the provided type's qualified name includes a generic type
      *
-     * @param nonVoidMethodReturnTypeAsString
-     * @return
+     * @param nonVoidMethodReturnTypeAsString qualified name of the method's return type
+     * @return true if the provided type's qualified name includes a generic type
      */
     default boolean hasGeneric(String nonVoidMethodReturnTypeAsString) {
         return nonVoidMethodReturnTypeAsString.indexOf(INFERIOR_SIGN) > -1 && nonVoidMethodReturnTypeAsString.indexOf(SUPERIOR_SIGN) > -1;
@@ -542,6 +571,8 @@ sealed interface SupportedCollectionsGenerator extends CodeGenerator {
      * First checked is the presence of &lt;&gt; and then whether the qualified name has the String literals "List", "Set" or "Map" in its name
      *
      * @param nonVoidMethodReturnTypeAsString - qualified name of the method's return type
+     * @param processingEnv                   {@link ProcessingEnvironment} object, needed to access low-level information
+     *                                        regarding the used annotations
      * @return true if the provided type is a collection with a generic, false otherwise
      */
     default boolean isCollection(String nonVoidMethodReturnTypeAsString, ProcessingEnvironment processingEnv) {

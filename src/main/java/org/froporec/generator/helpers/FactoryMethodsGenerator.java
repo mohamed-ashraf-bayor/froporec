@@ -47,7 +47,7 @@ import static org.froporec.generator.helpers.StringGenerator.lowerCase1stChar;
  * return new ImmutableExamReport(examReport.candidateId(), examReport.fullName(), examReport.contactInfo(), ...);<br>
  * }<br>
  * <br>
- * public ImmutableExamReport with(java.util.Map<String, Object> fieldsNameValuePairs) {<br>
+ * public ImmutableExamReport with(java.util.Map&lt;String, Object&gt; fieldsNameValuePairs) {<br>
  * return new ImmutableExamReport((int) fieldsNameValuePairs.getOrDefault(CANDIDATE_ID, this.candidateId()), ...);<br>
  * }<br><br>
  * <p>

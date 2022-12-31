@@ -75,7 +75,7 @@ public final class FroporecRecordSourceFileGenerator implements RecordSourceFile
      * {@link CustomConstructorGenerator} and {@link JavaxGeneratedGenerator}
      *
      * @param processingEnvironment            {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
-     * @param allAnnotatedElementsByAnnotation @{@link Map} of all annotated elements. The Map content (key/value) structure is organized as:<br>
+     * @param allAnnotatedElementsByAnnotation {@link Map} of all annotated elements. The Map content (key/value) structure is organized as:<br>
      *                                         String = annotation toString representation,<br>
      *                                         Element = the annotated class or record,<br>
      *                                         String = the attribute name,<br>
