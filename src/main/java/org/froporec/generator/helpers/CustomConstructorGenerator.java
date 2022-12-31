@@ -34,7 +34,7 @@ import java.util.function.Consumer;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
-import static org.froporec.generator.helpers.CodeGenerator.buildNonVoidMethodsElementsList;
+import static org.froporec.generator.helpers.CodeGenerator.nonVoidMethodsElementsList;
 import static org.froporec.generator.helpers.StringGenerator.immutableQualifiedNameBasedOnElementType;
 import static org.froporec.generator.helpers.StringGenerator.immutableSimpleNameBasedOnElementType;
 import static org.froporec.generator.helpers.StringGenerator.superRecordSimpleNameBasedOnElementType;
@@ -102,7 +102,7 @@ public final class CustomConstructorGenerator implements CodeGenerator {
             mergeWithListByAnnotatedElementAndByAnnotation.get(ORG_FROPOREC_SUPER_RECORD).get(annotatedElement)
                     .forEach(element -> {
                         var typeElement = (TypeElement) processingEnv.getTypeUtils().asElement(element.asType());
-                        var nonVoidMthdsElementsList = buildNonVoidMethodsElementsList(element, processingEnv);
+                        var nonVoidMthdsElementsList = nonVoidMethodsElementsList(element, processingEnv);
                         buildCanonicalConstructorArgsList(recordClassContent, nonVoidMthdsElementsList, lowerCase1stChar(typeElement.getSimpleName().toString()));
                     });
         }

@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static java.lang.String.format;
-import static org.froporec.generator.helpers.CodeGenerator.buildNonVoidMethodsElementsList;
+import static org.froporec.generator.helpers.CodeGenerator.nonVoidMethodsElementsList;
 import static org.froporec.generator.helpers.StringGenerator.removeLastChars;
 
 /**
@@ -85,7 +85,7 @@ public final class FieldsGenerator implements CodeGenerator {
         if (isSuperRecord) {
             mergeWithListByAnnotatedElementAndByAnnotation.get(ORG_FROPOREC_SUPER_RECORD).get(annotatedElement).forEach(element -> {
                 var typeElement = (TypeElement) processingEnvironment.getTypeUtils().asElement(element.asType());
-                var nonVoidMthdsElmntsList = new ArrayList<>(buildNonVoidMethodsElementsList(element, processingEnvironment));
+                var nonVoidMthdsElmntsList = new ArrayList<>(nonVoidMethodsElementsList(element, processingEnvironment));
                 var nonVoidMethodsElementsReturnTypesMap = nonVoidMethodsElementsReturnTypesMapFromList(nonVoidMthdsElmntsList);
                 buildFieldsList(recordClassContent, nonVoidMthdsElmntsList, nonVoidMethodsElementsReturnTypesMap, typeElement.getSimpleName().toString());
             });

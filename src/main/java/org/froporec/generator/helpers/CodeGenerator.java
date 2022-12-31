@@ -210,7 +210,7 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
      * @return {@link java.util.List} of {@link Element} instances representing each non-void non-args methods of the
      * provided annotated {@link Element} instance
      */
-    static List<Element> buildNonVoidMethodsElementsList(Element annotatedElement, ProcessingEnvironment processingEnv) {
+    static List<Element> nonVoidMethodsElementsList(Element annotatedElement, ProcessingEnvironment processingEnv) {
         return ElementKind.RECORD.equals((processingEnv.getTypeUtils().asElement(annotatedElement.asType())).getKind())
                 ? processingEnv.getElementUtils().getAllMembers(
                         (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())
