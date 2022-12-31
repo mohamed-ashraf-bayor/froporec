@@ -41,15 +41,24 @@ import static org.froporec.generator.helpers.StringGenerator.javaConstantNamingC
 import static org.froporec.generator.helpers.StringGenerator.lowerCase1stChar;
 
 /**
- * // TODO chnge jdoc
- * Builds the list of fields of the record class being generated. ex: int a, String s, Person p.<br>
- * Considerations will be made for fields whose types have also been annotated or added as a .class value within the
- * "alsoConvert" attribute of {@link org.froporec.annotations.Record} or {@link org.froporec.annotations.Immutable}).<br>
+ * Generates the bodies of all static and non-static factory methods for the Record class being generated.<br><br>
+ * ex:<br>
+ * public static ImmutableExamReport buildWith(com.bayor.froporec.samples.ExamReport examReport) {<br>
+ * return new ImmutableExamReport(examReport.candidateId(), examReport.fullName(), examReport.contactInfo(), ...);<br>
+ * }<br>
+ * <br>
+ * public ImmutableExamReport with(java.util.Map<String, Object> fieldsNameValuePairs) {<br>
+ * return new ImmutableExamReport((int) fieldsNameValuePairs.getOrDefault(CANDIDATE_ID, this.candidateId()), ...);<br>
+ * }<br><br>
+ * <p>
  * The params {@link Map} parameter of the provided implementation of the generateCode() method (from {@link CodeGenerator}) MUST contain
  * the following parameters names:<br>
  * - {@link CodeGenerator#ANNOTATED_ELEMENT}<br>
  * - {@link CodeGenerator#NON_VOID_METHODS_ELEMENTS_LIST}<br>
- * - {@link CodeGenerator#IS_SUPER_RECORD}<br>
+ * <br>
+ * <p>
+ * This functionality is NOT YET support for SuperRecord generation. If {@link CodeGenerator#IS_SUPER_RECORD} is part of the parameters,
+ * its value must be FALSE
  */
 public final class FactoryMethodsGenerator implements CodeGenerator {
 
@@ -81,8 +90,7 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
 
 
     /**
-     * // TODO chnge jdoc
-     * FieldsGenerationHelper constructor. Instantiates needed instance of {@link CollectionsGenerator}
+     * FactoryMethodsGenerator constructor. Instantiates needed instance of {@link CustomConstructorGenerator} and {@link CollectionsGenerator}
      *
      * @param processingEnvironment                 {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
      * @param allElementsTypesToConvertByAnnotation {@link Set} of {@link Element} instances grouped by the annotation String representation
@@ -155,7 +163,6 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
         recordClassContent.append(NEW_LINE);
 
         // static factory mthd with annotated elemnt instance + Map as params
-        // "(type) fieldsNameValuePairs.getOrDefault("<fieldName>", annotatedElementFieldName.getterMthd())"
         recordClassContent.append(TAB + JAVA_LANG_SUPPRESS_WARNINGS_UNCHECKED + NEW_LINE);
         var paramsFromCanonicalConstructorCall = extractParamsFromCanonicalConstructorCall(annotatedElement, nonVoidMethodsElementsList)
                 .replaceAll(COMMA + SPACE + ENTRY + SPACE + LAMBDA_SYMB, AT_SIGN) // replacing occurrences of ", entry ->" with "@" to avoid issues while splitting
@@ -166,7 +173,7 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
                         annotatedElementQualifiedName + SPACE + annotatedElementFieldName + COMMA + SPACE + FACTORY_METHODS_FIELDS_MAP_DECLARATION,
                         nonVoidMethodsElementsList.stream()
                                 .map(nonVoidMethodElement -> format(
-                                        //"(<returnType>) fieldsNameValuePairs.getOrDefault("<fieldName>", <defaultValue>)"
+                                        // "(returnType) fieldsNameValuePairs.getOrDefault("<fieldName>", <annotatedElementFieldName.getterMthd>())"
                                         FACTORY_METHODS_FIELDS_MAP_USE_FORMAT,
                                         fieldNameAndTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap, allElementsTypesToConvertByAnnotation,
                                                 processingEnvironment, collectionsGenerator).get(fieldName(nonVoidMethodElement).get()),
@@ -184,7 +191,6 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
         recordClassContent.append(NEW_LINE);
 
         // static factory mthd with generated record instance + Map as params
-        // "(type) fieldsNameValuePairs.getOrDefault("<fieldName>", generatedRecordFieldName.getterMthd())"
         recordClassContent.append(TAB + JAVA_LANG_SUPPRESS_WARNINGS_UNCHECKED + NEW_LINE);
         var method1stParamName = lowerCase1stChar(immutableSimpleNameBasedOnElementType(annotatedTypeElement));
         recordClassContent.append(
@@ -193,7 +199,7 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
                         immutableQualifiedNameBasedOnElementType(annotatedTypeElement) + SPACE + method1stParamName + COMMA + SPACE + FACTORY_METHODS_FIELDS_MAP_DECLARATION,
                         nonVoidMethodsElementsList.stream()
                                 .map(nonVoidMethodElement -> format(
-                                        //"(<returnType>) fieldsNameValuePairs.getOrDefault("<fieldName>", <defaultValue>)"
+                                        // "(<returnType>) fieldsNameValuePairs.getOrDefault("<fieldName>", <generatedRecordFieldName.accessorMthd>())"
                                         FACTORY_METHODS_FIELDS_MAP_USE_FORMAT,
                                         fieldNameAndTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap, allElementsTypesToConvertByAnnotation,
                                                 processingEnvironment, collectionsGenerator).get(fieldName(nonVoidMethodElement).get()),
@@ -215,7 +221,7 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
                         FACTORY_METHODS_FIELDS_MAP_DECLARATION,
                         nonVoidMethodsElementsList.stream()
                                 .map(nonVoidMethodElement -> format(
-                                        //"(<returnType>) fieldsNameValuePairs.getOrDefault("<fieldName>", this.<fieldValueFromRecordAccesor>)"
+                                        //"(<returnType>) fieldsNameValuePairs.getOrDefault("<fieldName>", this.<fieldValueFromRecordAccesorMthd()>)"
                                         FACTORY_METHODS_FIELDS_MAP_USE_FORMAT,
                                         fieldNameAndTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap, allElementsTypesToConvertByAnnotation,
                                                 processingEnvironment, collectionsGenerator).get(fieldName(nonVoidMethodElement).get()),
@@ -237,7 +243,7 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
                         FACTORY_METHOD_FIELD_NAME_AND_VALUE_DECLARATION,
                         nonVoidMethodsElementsList.stream()
                                 .map(nonVoidMethodElement -> format(
-                                        //"fieldName.equals(%s) ? (%s) fieldValue : this.%s()"
+                                        // "<fieldName>.equals(%s) ? (%s) <fieldValue> : this.%s()"
                                         FACTORY_METHOD_FIELD_NAME_AND_USE_FORMAT,
                                         javaConstantNamingConvention(fieldName(nonVoidMethodElement).get()),
                                         fieldNameAndTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap, allElementsTypesToConvertByAnnotation,

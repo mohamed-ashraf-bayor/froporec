@@ -33,14 +33,19 @@ import static java.lang.String.format;
 import static org.froporec.generator.helpers.StringGenerator.javaConstantNamingConvention;
 
 /**
- * // TODO chnge jdoc
- * Builds the list of fields of the record class being generated. ex: int a, String s, Person p.<br>
- * Considerations will be made for fields whose types have also been annotated or added as a .class value within the
- * "alsoConvert" attribute of {@link org.froporec.annotations.Record} or {@link org.froporec.annotations.Immutable}).<br>
+ * Builds the list of constants declarations, each representing one of the fields of the record class being generated.<br>
+ * ex:<br>
+ * public static final String CANDIDATE_ID = "candidateId"; // type: int<br>
+ * public static final String FULL_NAME = "fullName"; // type: java.lang.String<br>
+ * public static final String CONTACT_INFO = "contactInfo"; // type: org.froporec.samples.ContactInfo<br>
+ * <br>
  * The params {@link Map} parameter of the provided implementation of the generateCode() method (from {@link CodeGenerator}) MUST contain
  * the following parameters names:<br>
  * - {@link CodeGenerator#NON_VOID_METHODS_ELEMENTS_LIST}<br>
- * - {@link CodeGenerator#IS_SUPER_RECORD}<br>
+ * <br>
+ * <p>
+ * This functionality is NOT YET support for SuperRecord generation. If {@link CodeGenerator#IS_SUPER_RECORD} is part of the parameters,
+ * its value must be FALSE
  */
 public final class FieldsNamesConstantsGenerator implements CodeGenerator {
 
@@ -53,10 +58,10 @@ public final class FieldsNamesConstantsGenerator implements CodeGenerator {
     private final SupportedCollectionsFieldsGenerator collectionsGenerator;
 
     /**
-     * TODO cmplt...
+     * FieldsNamesConstantsGenerator constructor. Instantiates needed instance of {@link CollectionsGenerator}
      *
-     * @param processingEnvironment
-     * @param allElementsTypesToConvertByAnnotation
+     * @param processingEnvironment                 {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @param allElementsTypesToConvertByAnnotation {@link Set} of {@link Element} instances grouped by the annotation String representation
      */
     public FieldsNamesConstantsGenerator(ProcessingEnvironment processingEnvironment,
                                          Map<String, Set<Element>> allElementsTypesToConvertByAnnotation) {

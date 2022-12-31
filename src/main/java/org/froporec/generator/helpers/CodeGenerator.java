@@ -239,8 +239,7 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
      * @return
      */
     static Optional<String> fieldName(Element nonVoidMethodElement) {
-        var enclosingElementIsRecord = ElementKind.RECORD.equals(nonVoidMethodElement.getEnclosingElement().getKind());
-        return fieldName(nonVoidMethodElement, enclosingElementIsRecord);
+        return fieldName(nonVoidMethodElement, ElementKind.RECORD.equals(nonVoidMethodElement.getEnclosingElement().getKind()));
     }
 
     /**
