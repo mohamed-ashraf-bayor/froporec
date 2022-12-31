@@ -8,7 +8,7 @@
     <packaging>jar</packaging>
 
     <name>Froporec</name>
-    <description>Achieve Full Immutability of Java data objects with Froporec annotation processor</description>
+    <description>Easy migration from POJOs to Records with Froporec annotation processor</description>
     <url>https://froporec.org</url>
 
     <licenses>

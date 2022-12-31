@@ -61,6 +61,16 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
 
     private static final String JAVA_LANG_SUPPRESS_WARNINGS_UNCHECKED = "@java.lang.SuppressWarnings(\"unchecked\")";
 
+    /**
+     * Regex expression to read a method body. should be used with Pattern.DOTALL mode
+     */
+    private static final String METHOD_BODY_CONTENT_REGEX = "\\{(.*?)\\}";
+
+    /**
+     * Regex expression to read the string content (params) within the call to a record canonical constructor: "this(...);"
+     */
+    private static final String CANONICAL_CONSTRUCTOR_PARAMS_REGEX = "this\\((.*?)\\);";
+
     private final ProcessingEnvironment processingEnvironment;
 
     private final Map<String, Set<Element>> allElementsTypesToConvertByAnnotation;
@@ -112,7 +122,7 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
                         immutableSimpleNameBasedOnElementType(annotatedTypeElement),
                         immutableQualifiedNameBasedOnElementType(annotatedTypeElement) + SPACE + methodParamName,
                         nonVoidMethodsElementsList.stream()
-                                .map(element -> methodParamName + DOT + StringGenerator.fieldName(element).get() + OPENING_PARENTHESIS + CLOSING_PARENTHESIS)
+                                .map(element -> methodParamName + DOT + fieldName(element).get() + OPENING_PARENTHESIS + CLOSING_PARENTHESIS)
                                 .collect(Collectors.joining(COMMA + SPACE)),
                         true
                 )
@@ -133,8 +143,8 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
                                         //"(<returnType>) fieldsNameValuePairs.getOrDefault("<fieldName>", <defaultValue>)"
                                         FACTORY_METHODS_FIELDS_MAP_USE_FORMAT,
                                         fieldNameAndTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap, allElementsTypesToConvertByAnnotation,
-                                                processingEnvironment, collectionsGenerator).get(StringGenerator.fieldName(nonVoidMethodElement).get()),
-                                        javaConstantNamingConvention(StringGenerator.fieldName(nonVoidMethodElement).get()),
+                                                processingEnvironment, collectionsGenerator).get(fieldName(nonVoidMethodElement).get()),
+                                        javaConstantNamingConvention(fieldName(nonVoidMethodElement).get()),
                                         defaultReturnValueForMethod(nonVoidMethodElement)
                                 ))
                                 .collect(Collectors.joining(COMMA + SPACE)),
@@ -159,8 +169,8 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
                                         //"(<returnType>) fieldsNameValuePairs.getOrDefault("<fieldName>", <defaultValue>)"
                                         FACTORY_METHODS_FIELDS_MAP_USE_FORMAT,
                                         fieldNameAndTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap, allElementsTypesToConvertByAnnotation,
-                                                processingEnvironment, collectionsGenerator).get(StringGenerator.fieldName(nonVoidMethodElement).get()),
-                                        javaConstantNamingConvention(StringGenerator.fieldName(nonVoidMethodElement).get()),
+                                                processingEnvironment, collectionsGenerator).get(fieldName(nonVoidMethodElement).get()),
+                                        javaConstantNamingConvention(fieldName(nonVoidMethodElement).get()),
                                         stream(paramsFromCanonicalConstructorCall)
                                                 .filter(param -> param.contains(annotatedElementFieldName + DOT + nonVoidMethodElement))
                                                 .findFirst()
@@ -186,9 +196,9 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
                                         //"(<returnType>) fieldsNameValuePairs.getOrDefault("<fieldName>", <defaultValue>)"
                                         FACTORY_METHODS_FIELDS_MAP_USE_FORMAT,
                                         fieldNameAndTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap, allElementsTypesToConvertByAnnotation,
-                                                processingEnvironment, collectionsGenerator).get(StringGenerator.fieldName(nonVoidMethodElement).get()),
-                                        javaConstantNamingConvention(StringGenerator.fieldName(nonVoidMethodElement).get()),
-                                        method1stParamName + DOT + StringGenerator.fieldName(nonVoidMethodElement).get() + OPENING_PARENTHESIS + CLOSING_PARENTHESIS
+                                                processingEnvironment, collectionsGenerator).get(fieldName(nonVoidMethodElement).get()),
+                                        javaConstantNamingConvention(fieldName(nonVoidMethodElement).get()),
+                                        method1stParamName + DOT + fieldName(nonVoidMethodElement).get() + OPENING_PARENTHESIS + CLOSING_PARENTHESIS
                                 ))
                                 .collect(Collectors.joining(COMMA + SPACE)),
                         true
@@ -208,9 +218,9 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
                                         //"(<returnType>) fieldsNameValuePairs.getOrDefault("<fieldName>", this.<fieldValueFromRecordAccesor>)"
                                         FACTORY_METHODS_FIELDS_MAP_USE_FORMAT,
                                         fieldNameAndTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap, allElementsTypesToConvertByAnnotation,
-                                                processingEnvironment, collectionsGenerator).get(StringGenerator.fieldName(nonVoidMethodElement).get()),
-                                        javaConstantNamingConvention(StringGenerator.fieldName(nonVoidMethodElement).get()),
-                                        THIS + DOT + StringGenerator.fieldName(nonVoidMethodElement).get() + OPENING_PARENTHESIS + CLOSING_PARENTHESIS
+                                                processingEnvironment, collectionsGenerator).get(fieldName(nonVoidMethodElement).get()),
+                                        javaConstantNamingConvention(fieldName(nonVoidMethodElement).get()),
+                                        THIS + DOT + fieldName(nonVoidMethodElement).get() + OPENING_PARENTHESIS + CLOSING_PARENTHESIS
                                 ))
                                 .collect(Collectors.joining(COMMA + SPACE)),
                         false
@@ -229,10 +239,10 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
                                 .map(nonVoidMethodElement -> format(
                                         //"fieldName.equals(%s) ? (%s) fieldValue : this.%s()"
                                         FACTORY_METHOD_FIELD_NAME_AND_USE_FORMAT,
-                                        javaConstantNamingConvention(StringGenerator.fieldName(nonVoidMethodElement).get()),
+                                        javaConstantNamingConvention(fieldName(nonVoidMethodElement).get()),
                                         fieldNameAndTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap, allElementsTypesToConvertByAnnotation,
-                                                processingEnvironment, collectionsGenerator).get(StringGenerator.fieldName(nonVoidMethodElement).get()),
-                                        StringGenerator.fieldName(nonVoidMethodElement).get()
+                                                processingEnvironment, collectionsGenerator).get(fieldName(nonVoidMethodElement).get()),
+                                        fieldName(nonVoidMethodElement).get()
                                 ))
                                 .collect(Collectors.joining(COMMA + SPACE)),
                         false,

@@ -1,5 +1,5 @@
 # FROPOREC - From POJOs to Records
-Achieve Full Immutability of Java data objects with Froporec annotation processor (min. Java 17 required)
+Easy migration from POJOs to Records with Froporec annotation processor (min. Java 17 required)
 
 <br>
 

@@ -210,31 +210,6 @@ public interface StringGenerator {
     String FAILURE = "Failure";
 
     /**
-     * Message displayed during code compilation, along with the name of a successfully generated Record source file
-     */
-    String GENERATION_SUCCESS_MSG = "\t> Successfully generated";
-
-    /**
-     * Generation report info message format
-     */
-    String GENERATION_REPORT_MSG_FORMAT = "%s for %s:\n\t\t%s";
-
-    /**
-     * Separator used while displaying each one of the generated or skipped filenames
-     */
-    String GENERATION_REPORT_ELEMENTS_SEPARATOR = "\n\t\t";
-
-    /**
-     * Warning message displayed during code compilation, indicating annotated elements skipped during generation process
-     */
-    String SKIPPED_ELEMENTS_WARNING_MSG_FORMAT = "\t> Skipped %s annotated elements (must be %s classes):%n\t\t%s";
-
-    /**
-     * Message displayed during code compilation, in case an error occurred during a Record source file generation process
-     */
-    String GENERATION_FAILURE_MSG = "\t> Error generating";
-
-    /**
      * "static"
      */
     String STATIC = "static";
@@ -255,22 +230,7 @@ public interface StringGenerator {
     String RETURN = "return";
 
     /**
-     * "true"
-     */
-    String TRUE = "true";
-
-    /**
-     * "false"
-     */
-    String FALSE = "false";
-
-    /**
-     * "null"
-     */
-    String NULL = "null";
-
-    /**
-     * "null"
+     * "new"
      */
     String NEW = "new";
 
@@ -283,16 +243,6 @@ public interface StringGenerator {
      * "->"
      */
     String LAMBDA_SYMB = "->";
-
-    /**
-     * Regex expression to read a method body. should be used with Pattern.DOTALL mode
-     */
-    String METHOD_BODY_CONTENT_REGEX = "\\{(.*?)\\}";
-
-    /**
-     * Regex expression to read the string content (params) within the call to a record canonical constructor: "this(...);"
-     */
-    String CANONICAL_CONSTRUCTOR_PARAMS_REGEX = "this\\((.*?)\\);";
 
     /**
      * Constructs the qualified name of the fully immutable record class being generated from an annotated Record class
@@ -427,6 +377,7 @@ public interface StringGenerator {
 
     /**
      * todo cmplt...
+     *
      * @param text
      * @param amountOfChars
      */

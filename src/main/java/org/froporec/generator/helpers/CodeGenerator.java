@@ -86,14 +86,9 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
     String IS_SUPER_RECORD = "isSuperRecord";
 
     /**
-     * Array of methods to exclude while pulling the list of all methods of a Pojo or Record class
-     */
-    String[] METHODS_TO_EXCLUDE = {"getClass", "wait", "notifyAll", "hashCode", "equals", "notify", "toString", "clone", "finalize"};
-
-    /**
      * Default value to use for boolean returned values
      */
-    String DEFAULT_BOOLEAN_VALUE = FALSE;
+    String DEFAULT_BOOLEAN_VALUE = "false";
 
     /**
      * Default value to use for numeric returned values (int, long, float, double,...)
@@ -211,6 +206,8 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
      * provided annotated {@link Element} instance
      */
     static List<Element> nonVoidMethodsElementsList(Element annotatedElement, ProcessingEnvironment processingEnv) {
+        // Array of methods to exclude while pulling the list of all methods of a Pojo or Record class
+        String[] methodsToExclude = {"getClass", "wait", "notifyAll", "hashCode", "equals", "notify", "toString", "clone", "finalize"};
         return ElementKind.RECORD.equals((processingEnv.getTypeUtils().asElement(annotatedElement.asType())).getKind())
                 ? processingEnv.getElementUtils().getAllMembers(
                         (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType())
@@ -218,7 +215,7 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
                 .map(Element.class::cast)
                 .filter(element -> ElementKind.METHOD.equals(element.getKind()))
                 .filter(element -> (!TypeKind.VOID.equals(((ExecutableElement) element).getReturnType().getKind())))
-                .filter(element -> stream(METHODS_TO_EXCLUDE).noneMatch(excludedMeth ->
+                .filter(element -> stream(methodsToExclude).noneMatch(excludedMeth ->
                         element.toString().contains(excludedMeth + OPENING_PARENTHESIS))) // exclude known Object methds
                 .filter(element -> ((ExecutableElement) element).getParameters().isEmpty()) // only methods with no params
                 .toList()
@@ -228,7 +225,7 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
                 .map(Element.class::cast)
                 .filter(element -> ElementKind.METHOD.equals(element.getKind()))
                 .filter(element -> element.getSimpleName().toString().startsWith(GET) || element.getSimpleName().toString().startsWith(IS))
-                .filter(element -> stream(METHODS_TO_EXCLUDE).noneMatch(excludedMeth ->
+                .filter(element -> stream(methodsToExclude).noneMatch(excludedMeth ->
                         element.toString().contains(excludedMeth + OPENING_PARENTHESIS)))
                 .filter(element -> ((ExecutableElement) element).getParameters().isEmpty())
                 .toList();
@@ -277,7 +274,7 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
         // Runnable to execute in case of primitives i.e nonVoidMethodReturnTypeElementOpt.isEmpty()
         Runnable runnable = () -> buildFieldType(fieldType, nonVoidMethodElement, nonVoidMethodReturnTypeAsString, false, processingEnv, collectionsGenerator);
         nonVoidMethodReturnTypeElementOpt.ifPresentOrElse(consumer, runnable);
-        return Map.of(StringGenerator.fieldName(nonVoidMethodElement).orElseThrow(), fieldType.toString());
+        return Map.of(fieldName(nonVoidMethodElement).orElseThrow(), fieldType.toString());
     }
 
     private void buildFieldType(StringBuilder fieldType,
@@ -286,7 +283,7 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
                                 boolean processAsImmutable,
                                 ProcessingEnvironment processingEnv,
                                 SupportedCollectionsFieldsGenerator collectionsGenerator) {
-        StringGenerator.fieldName(nonVoidMethodElement).ifPresent(fieldName -> {
+        fieldName(nonVoidMethodElement).ifPresent(fieldName -> {
             // if the type of the field being processed is a collection process it differently and return
             if (collectionsGenerator.isCollection(nonVoidMethodReturnTypeAsString, processingEnv)) {
                 var typeAndNameSpaceSeparated = new StringBuilder();
