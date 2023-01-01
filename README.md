@@ -16,9 +16,11 @@ Easy migration from POJOs to Records with Froporec annotation processor (min. Ja
 
 ## Videos
 
+v1.4 - Factory Methods: [Coming Soon](https://www.youtube.com/channel/UCLhc2NBAbsw-WDJBlsxFCEg)
+
 Code Migration to Java 17 using FROPOREC and JISEL: [https://youtu.be/iML8EjMIDLc](https://youtu.be/iML8EjMIDLc)
 
-Froporec and Beyond: [https://youtu.be/Gzv65UmWmzw](https://youtu.be/Gzv65UmWmzw)
+v1.3: [https://youtu.be/Gzv65UmWmzw](https://youtu.be/Gzv65UmWmzw)
 
 v1.2 Quick Intro: [https://youtu.be/Yu3bR8ZkpYE](https://youtu.be/Yu3bR8ZkpYE)
 

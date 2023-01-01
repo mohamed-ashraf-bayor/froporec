@@ -83,44 +83,6 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
      */
     String IS_SUPER_RECORD = "isSuperRecord";
 
-
-    // Other constants:
-
-    /**
-     * Default value to use for boolean returned values
-     */
-    String DEFAULT_BOOLEAN_VALUE = "false";
-
-    /**
-     * Default value to use for numeric returned values (int, long, float, double,...)
-     */
-    String DEFAULT_LONG_VALUE = "0L";
-
-    /**
-     * Default value to use for numeric returned values (int, long, float, double,...)
-     */
-    String DEFAULT_FLOAT_VALUE = "0F";
-
-    /**
-     * Default value to use for numeric returned values (int, long, float, double,...)
-     */
-    String DEFAULT_DOUBLE_VALUE = "0.0";
-
-    /**
-     * Default value to use for numeric returned values (int, long, float, double,...)
-     */
-    String DEFAULT_NUMBER_VALUE = "0";
-
-    /**
-     * Default value to use for Object returned values
-     */
-    String DEFAULT_NULL_VALUE = "null";
-
-    /**
-     * "&lt;T&gt;"
-     */
-    String GENERIC_T_SYMB = "<T>";
-
     /**
      * Generates the requested code fragment, based on the parameters provided in the params object and appends it to the provided recordClassContent param
      *
