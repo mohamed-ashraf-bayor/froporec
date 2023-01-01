@@ -5,9 +5,9 @@ Easy migration from POJOs to Records with Froporec annotation processor (min. Ja
 
 > ### Froporec 1.4 released:
 > - Added **5 Static Factory Methods** and **2 Instance Factory Methods** to all generated Record classes (except for SuperRecord classes).
->   - The generated static factory methods are convenient for creating new instances of the generated Record class, with data from either instances of the POJO or Record class being converted, or instances of the Record class being generated, with the possibility of 'overriding' the instances fields values by combining with the use of a Map of custom values for each field.
+>   - The generated static factory methods are convenient for creating new instances of the generated Record class, with data from either instances of the POJO (or Record) class being converted, or instances of the Record class being generated, with the possibility of 'overriding' the instances fields values by combining with the use of a Map of custom values for each field.
 >   - The generated instance factory methods are convenient for creating new instances of the generated Record class, with data from the current instance, and with the possibility of 'overriding' any field value by providing custom values for the desired fields. 
-> - Added **Constants Declarations** for fields names, in all generated Record classes (except for SuperRecord classes). Each constant is a String literal with the value of each field of the generated Record class. They are used by the generated factory methods, and can also be accessed from anywhere in your project.
+> - Added **Constants Declarations** for fields names, in all generated Record classes (except for SuperRecord classes). Each constant is a String literal with its value being the name of one of the fields of the generated Record class. They are used by the generated factory methods, and can also be accessed from anywhere in your project.
 > - Major improvement of collections handling.
 > - Minor bug fixes.
 
@@ -169,20 +169,26 @@ Important Note: the annotation should be used ONLY on POJO or Record classes cre
 
 For all generated Record classes (except for SuperRecord), constants declarations are added within the Record class body.<br>
 <br>
-Each constant is a String literal with the value of each field of the generated Record class. They are used by the generated factory methods, and can also be accessed from anywhere in your project.<br>
+Each constant is a String literal with its value being the name of one of the fields of the generated Record class. They are used by the generated factory methods, and can also be accessed from anywhere in your project.<br>
 <br>
 Below sample code shows the constants declarations added to the generated ImmutableExamReport Record class:
 <br>
 
 ```java
-public static final String CANDIDATE_ID = "candidateId"; // type: int
-public static final String FULL_NAME = "fullName"; // type: java.lang.String
-public static final String CONTACT_INFO = "contactInfo"; // type: com.bayor.froporec.annotation.client.factorymthdsdemo.factorymthds.ContactInfo
-public static final String EXAM_ID = "examId"; // type: java.lang.Integer
-public static final String SUBMITTED_EXAM_CONTENT = "submittedExamContent"; // type: java.lang.String
-public static final String EXAM_DATE = "examDate"; // type: java.time.LocalDate
-public static final String SCORE = "score"; // type: java.lang.Double
-public static final String PASSED = "passed"; // type: java.lang.Boolean
+public record ImmutableExamReport(int candidateId, java.lang.String fullName, com.bayor.froporec.annotation.client.factorymthdsdemo.factorymthds.ContactInfo contactInfo, java.lang.Integer examId, java.lang.String submittedExamContent, java.time.LocalDate examDate, java.lang.Double score, java.lang.Boolean passed) {
+
+    public static final String CANDIDATE_ID = "candidateId"; // type: int
+    public static final String FULL_NAME = "fullName"; // type: java.lang.String
+    public static final String CONTACT_INFO = "contactInfo"; // type: com.bayor.froporec.annotation.client.factorymthdsdemo.factorymthds.ContactInfo
+    public static final String EXAM_ID = "examId"; // type: java.lang.Integer
+    public static final String SUBMITTED_EXAM_CONTENT = "submittedExamContent"; // type: java.lang.String
+    public static final String EXAM_DATE = "examDate"; // type: java.time.LocalDate
+    public static final String SCORE = "score"; // type: java.lang.Double
+    public static final String PASSED = "passed"; // type: java.lang.Boolean
+    
+    // custom constructor and factory methods follow...
+    // ...
+}
 ```
 
 <br>
@@ -191,7 +197,7 @@ public static final String PASSED = "passed"; // type: java.lang.Boolean
 
 For all generated Record classes (except for SuperRecord), factory methods are added within the body of the classes.
 
-The generated static factory methods are convenient for creating new instances of the generated Record class, with data from either instances of the POJO or Record class being converted, or instances of the Record class being generated, with the possibility of 'overriding' the instances fields values by combining with the use of a Map of custom values for each field.<br>
+The generated static factory methods are convenient for creating new instances of the generated Record class, with data from either instances of the POJO (or Record) class being converted, or instances of the Record class being generated, with the possibility of 'overriding' the instances fields values by combining with the use of a Map of custom values for each field.<br>
 <br>
 Below sample code shows the 5 static factory methods added to the generated ImmutableExamReport Record class: 
 
@@ -247,5 +253,6 @@ public &lt;T&gt; ImmutableExamReport with(String fieldName, T fieldValue) {
 ## Issues, Bugs, Suggestions
 Contribute to the project's growth by reporting issues or making improvement suggestions [here](https://github.com/mohamed-ashraf-bayor/froporec/issues/new/choose)
 
+<br>
 <br>
 <br>
