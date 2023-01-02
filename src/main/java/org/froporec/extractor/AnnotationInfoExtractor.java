@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021-2022 Mohamed Ashraf Bayor
+ * Copyright (c) 2021-2023 Mohamed Ashraf Bayor
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,13 +37,10 @@ import java.util.function.Predicate;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toSet;
 import static org.froporec.generator.helpers.StringGenerator.ALSO_CONVERT_ATTRIBUTE;
-import static org.froporec.generator.helpers.StringGenerator.COMMA_SEPARATOR;
+import static org.froporec.generator.helpers.StringGenerator.COMMA;
 import static org.froporec.generator.helpers.StringGenerator.DOT_CLASS;
 import static org.froporec.generator.helpers.StringGenerator.EMPTY_STRING;
-import static org.froporec.generator.helpers.StringGenerator.INCLUDE_TYPES_ATTRIBUTE;
 import static org.froporec.generator.helpers.StringGenerator.MERGE_WITH_ATTRIBUTE;
-import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_GENERATE_IMMUTABLE;
-import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_GENERATE_RECORD;
 import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_IMMUTABLE;
 import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_RECORD;
 import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_SUPER_RECORD;
@@ -113,7 +110,7 @@ public interface AnnotationInfoExtractor {
                     // toString() sample values: executableElement: "alsoConvert()", "superInterfaces()" , annotationValue: "{org.froporec...School.class, org.froporec...Student.class}"
                     if (executableElement.toString().contains(attributeName)) {
                         extractedElementsList.addAll(
-                                asList(annotationValue.getValue().toString().split(COMMA_SEPARATOR)).stream() // maintain provided order
+                                asList(annotationValue.getValue().toString().split(COMMA)).stream() // maintain provided order
                                         .map(includedTypeDotClassString -> processingEnv.getTypeUtils().asElement(
                                                 processingEnv.getElementUtils().getTypeElement(
                                                         includedTypeDotClassString.strip().replace(DOT_CLASS, EMPTY_STRING)
@@ -127,7 +124,7 @@ public interface AnnotationInfoExtractor {
     /**
      * Extracts a {@link Set} of annotated {@link Element} instances grouped by annotation String representations
      *
-     * @param processingEnvironment            {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @param processingEnv                    {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
      * @param allAnnotatedElementsByAnnotation map organized according to the structure: Map&#60;String, Map&#60;Element, Map&#60;String, List&#60;Element&#62;&#62;&#62;&#62;, detailed below:<br>
      *                                         - String : toString representation of the annotation being processed (org.froporec.annotations.Record, org.froporec.annotations.Immutable, ...)<br>
      *                                         - Element : the annotated element (either a class, a field or parameter,...)<br>
@@ -135,18 +132,16 @@ public interface AnnotationInfoExtractor {
      *                                         - List&#60;Element&#62; : list of Element instances converted from the .class String values listed in the attributes names mentioned above
      * @return {@link Set} of annotated {@link Element} instances grouped by annotation String representations
      */
-    static Map<String, Set<Element>> extractAllElementsTypesToConvert(ProcessingEnvironment processingEnvironment,
+    static Map<String, Set<Element>> extractAllElementsTypesToConvert(ProcessingEnvironment processingEnv,
                                                                       Map<String, Map<Element, Map<String, List<Element>>>> allAnnotatedElementsByAnnotation) {
         var allElementsTypesToConvert = new HashMap<String, Set<Element>>(); // String = annotation toString value , Element = Element instance of the annotated element type
         allAnnotatedElementsByAnnotation.forEach((annotationString, annotatedElementsMap) -> {
             var annotatedElementsWithAlsoConvertAndIncludeTypes = new HashSet<Element>();
             annotatedElementsMap.forEach((annotatedElement, attributesMap) -> {
-                if (isAnnotatedAsExpected(processingEnvironment, annotationString, annotatedElement)) {
-                    annotatedElementsWithAlsoConvertAndIncludeTypes.add(processingEnvironment.getTypeUtils().asElement(annotatedElement.asType()));
+                if (isAnnotatedAsExpected(processingEnv, annotationString, annotatedElement)) {
+                    annotatedElementsWithAlsoConvertAndIncludeTypes.add(processingEnv.getTypeUtils().asElement(annotatedElement.asType()));
                     annotatedElementsWithAlsoConvertAndIncludeTypes.addAll(attributesMap.get(ALSO_CONVERT_ATTRIBUTE).stream()
-                            .map(element -> processingEnvironment.getTypeUtils().asElement(element.asType())).collect(toSet()));
-                    annotatedElementsWithAlsoConvertAndIncludeTypes.addAll(attributesMap.get(INCLUDE_TYPES_ATTRIBUTE).stream()
-                            .map(element -> processingEnvironment.getTypeUtils().asElement(element.asType())).collect(toSet()));
+                            .map(element -> processingEnv.getTypeUtils().asElement(element.asType())).collect(toSet()));
                 }
             });
             allElementsTypesToConvert.put(annotationString, annotatedElementsWithAlsoConvertAndIncludeTypes);
@@ -154,13 +149,11 @@ public interface AnnotationInfoExtractor {
         return allElementsTypesToConvert;
     }
 
-    private static boolean isAnnotatedAsExpected(ProcessingEnvironment processingEnvironment, String annotationString, Element annotatedElement) {
-        boolean isAClass = ElementKind.CLASS.equals(processingEnvironment.getTypeUtils().asElement(annotatedElement.asType()).getKind());
-        boolean isARecord = ElementKind.RECORD.equals(processingEnvironment.getTypeUtils().asElement(annotatedElement.asType()).getKind());
+    private static boolean isAnnotatedAsExpected(ProcessingEnvironment processingEnv, String annotationString, Element annotatedElement) {
+        boolean isAClass = ElementKind.CLASS.equals(processingEnv.getTypeUtils().asElement(annotatedElement.asType()).getKind());
+        boolean isARecord = ElementKind.RECORD.equals(processingEnv.getTypeUtils().asElement(annotatedElement.asType()).getKind());
         return (ORG_FROPOREC_RECORD.equals(annotationString) && isAClass)
-                || (ORG_FROPOREC_GENERATE_RECORD.equals(annotationString) && isAClass)
                 || (ORG_FROPOREC_IMMUTABLE.equals(annotationString) && isARecord)
-                || (ORG_FROPOREC_GENERATE_IMMUTABLE.equals(annotationString) && isARecord)
                 || (ORG_FROPOREC_SUPER_RECORD.equals(annotationString) && (isAClass || isARecord));
     }
 
@@ -168,7 +161,7 @@ public interface AnnotationInfoExtractor {
      * Extracts a {@link List} of annotated {@link Element} instances representing the provided superInterfaces and grouped by
      * the corresponding annotated {@link Element} instance and the annotation String representation
      *
-     * @param processingEnvironment                 {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @param processingEnv                         {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
      * @param allElementsTypesToConvertByAnnotation {@link Set} of {@link Element} instances grouped by the annotation String representation
      * @param allAnnotatedElementsByAnnotation      map organized according to the structure: Map&#60;String, Map&#60;Element, Map&#60;String, List&#60;Element&#62;&#62;&#62;&#62;, detailed below:<br>
      *                                              - String : toString representation of the annotation being processed (org.froporec.annotations.Record, org.froporec.annotations.Immutable, ...)<br>
@@ -178,7 +171,7 @@ public interface AnnotationInfoExtractor {
      * @return {@link List} of annotated {@link Element} instances representing the provided superInterfaces and grouped by
      * the corresponding annotated {@link Element} instance and the annotation String representation
      */
-    static Map<String, Map<Element, List<Element>>> extractSuperInterfacesListByAnnotatedElement(ProcessingEnvironment processingEnvironment,
+    static Map<String, Map<Element, List<Element>>> extractSuperInterfacesListByAnnotatedElement(ProcessingEnvironment processingEnv,
                                                                                                  Map<String, Set<Element>> allElementsTypesToConvertByAnnotation,
                                                                                                  Map<String, Map<Element, Map<String, List<Element>>>> allAnnotatedElementsByAnnotation) {
         var superInterfacesListByAnnotatedElementAndByAnnotation = new HashMap<String, Map<Element, List<Element>>>();
@@ -188,7 +181,7 @@ public interface AnnotationInfoExtractor {
             annotatedElementsMap.forEach((annotatedElement, attributesMap) -> {
                 if (allElementsTypesToConvertByAnnotation.get(annotationString).contains(annotatedElement)) {
                     annotatedElementsWithSuperInterfacesMap.put(annotatedElement, attributesMap.get(SUPER_INTERFACES_ATTRIBUTE).stream()
-                            .map(element -> processingEnvironment.getTypeUtils().asElement(element.asType())).toList());
+                            .map(element -> processingEnv.getTypeUtils().asElement(element.asType())).toList());
                 }
             });
             superInterfacesListByAnnotatedElementAndByAnnotation.put(annotationString, annotatedElementsWithSuperInterfacesMap);
@@ -200,7 +193,7 @@ public interface AnnotationInfoExtractor {
      * Extracts a {@link List} of annotated {@link Element} instances representing the provided 'mergeWith' array and grouped by
      * the corresponding annotated {@link Element} instance and the annotation String representation
      *
-     * @param processingEnvironment                 {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @param processingEnv                         {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
      * @param allElementsTypesToConvertByAnnotation {@link Set} of {@link Element} instances grouped by the annotation String representation
      * @param allAnnotatedElementsByAnnotation      map organized according to the structure: Map&#60;String, Map&#60;Element, Map&#60;String, List&#60;Element&#62;&#62;&#62;&#62;, detailed below:<br>
      *                                              - String : toString representation of the annotation being processed (org.froporec.annotations.Record, org.froporec.annotations.Immutable, ...)<br>
@@ -210,7 +203,7 @@ public interface AnnotationInfoExtractor {
      * @return {@link List} of annotated {@link Element} instances representing the provided 'mergeWith' array elements and grouped by
      * the corresponding annotated {@link Element} instance and the annotation String representation
      */
-    static Map<String, Map<Element, List<Element>>> extractMergeWithElementsListByAnnotatedElement(ProcessingEnvironment processingEnvironment,
+    static Map<String, Map<Element, List<Element>>> extractMergeWithElementsListByAnnotatedElement(ProcessingEnvironment processingEnv,
                                                                                                    Map<String, Set<Element>> allElementsTypesToConvertByAnnotation,
                                                                                                    Map<String, Map<Element, Map<String, List<Element>>>> allAnnotatedElementsByAnnotation) {
         var mergeWithListByAnnotatedElementAndByAnnotation = new HashMap<String, Map<Element, List<Element>>>();
@@ -220,7 +213,7 @@ public interface AnnotationInfoExtractor {
             annotatedElementsMap.forEach((annotatedElement, attributesMap) -> {
                 if (allElementsTypesToConvertByAnnotation.get(annotationString).contains(annotatedElement)) {
                     annotatedElementsWithMergeWithElementsMap.put(annotatedElement, attributesMap.get(MERGE_WITH_ATTRIBUTE).stream()
-                            .map(element -> processingEnvironment.getTypeUtils().asElement(element.asType())).toList());
+                            .map(element -> processingEnv.getTypeUtils().asElement(element.asType())).toList());
                 }
             });
             mergeWithListByAnnotatedElementAndByAnnotation.put(annotationString, annotatedElementsWithMergeWithElementsMap);

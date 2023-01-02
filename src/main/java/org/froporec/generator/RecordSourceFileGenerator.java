@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021-2022 Mohamed Ashraf Bayor
+ * Copyright (c) 2021-2023 Mohamed Ashraf Bayor
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,9 +34,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.froporec.generator.helpers.CodeGenerator.buildNonVoidMethodsElementsList;
-import static org.froporec.generator.helpers.StringGenerator.constructImmutableQualifiedNameBasedOnElementType;
-import static org.froporec.generator.helpers.StringGenerator.constructSuperRecordQualifiedNameBasedOnElementType;
+import static org.froporec.generator.helpers.CodeGenerator.immutableQualifiedNameBasedOnElementType;
+import static org.froporec.generator.helpers.CodeGenerator.nonVoidMethodsElementsList;
+import static org.froporec.generator.helpers.CodeGenerator.superRecordQualifiedNameBasedOnElementType;
 
 /**
  * Exposes:<br>
@@ -74,7 +74,7 @@ public sealed interface RecordSourceFileGenerator extends StringGenerator permit
         elementsListToProcess.forEach(annotatedElement -> {
             var individualReport = performRecordSourceFileGeneration(
                     annotatedElement,
-                    buildNonVoidMethodsElementsList(annotatedElement, processingEnv),
+                    nonVoidMethodsElementsList(annotatedElement, processingEnv),
                     processingEnv,
                     false);
             mergeIndividualReportInMainReport(individualReport, generationReport);
@@ -108,7 +108,7 @@ public sealed interface RecordSourceFileGenerator extends StringGenerator permit
                                                                               ProcessingEnvironment processingEnv) {
         Map<String, List<String>> generationReport = Map.of(SUCCESS, new ArrayList<>(), FAILURE, new ArrayList<>());
         annotatedElementsWithMergeWithInfo.forEach((annotatedElement, mergeWithElementsList) -> {
-            var nonVoidMethodsElements = new ArrayList<Element>(buildNonVoidMethodsElementsList(annotatedElement, processingEnv));
+            var nonVoidMethodsElements = nonVoidMethodsElementsList(annotatedElement, processingEnv);
             // ...skipped processing mergeWithElementsList here, left it to FieldsGenerator and CustomConstructorGenerator
             var individualReport = performRecordSourceFileGeneration(annotatedElement, nonVoidMethodsElements, processingEnv, true);
             mergeIndividualReportInMainReport(individualReport, generationReport);
@@ -123,8 +123,8 @@ public sealed interface RecordSourceFileGenerator extends StringGenerator permit
         var generationReport = new HashMap<String, String>();
         var annotatedTypeElement = (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType());
         var generatedQualifiedClassName = isSuperRecord
-                ? constructSuperRecordQualifiedNameBasedOnElementType(annotatedTypeElement)
-                : constructImmutableQualifiedNameBasedOnElementType(annotatedTypeElement);
+                ? superRecordQualifiedNameBasedOnElementType(annotatedTypeElement)
+                : immutableQualifiedNameBasedOnElementType(annotatedTypeElement);
         try {
             writeRecordSourceFile(annotatedElement, generatedQualifiedClassName, nonVoidMethodsElementsList, processingEnv, isSuperRecord);
             generationReport.put(SUCCESS, generatedQualifiedClassName);
@@ -143,7 +143,7 @@ public sealed interface RecordSourceFileGenerator extends StringGenerator permit
                                        boolean isSuperRecord) throws IOException {
         var recordClassFile = processingEnv.getFiler().createSourceFile(generatedQualifiedClassName); // if file already exists, this line throws a FilerException
         try (var out = new PrintWriter(recordClassFile.openWriter())) {
-            out.println(generateRecordClassContent(annotatedElement, generatedQualifiedClassName, nonVoidMethodsElementsList, isSuperRecord));
+            out.print(generateRecordClassContent(annotatedElement, generatedQualifiedClassName, nonVoidMethodsElementsList, isSuperRecord));
         }
     }
 

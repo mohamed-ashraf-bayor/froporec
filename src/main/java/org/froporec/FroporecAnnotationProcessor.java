@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021-2022 Mohamed Ashraf Bayor
+ * Copyright (c) 2021-2023 Mohamed Ashraf Bayor
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -51,15 +51,7 @@ import static java.util.stream.Stream.concat;
 import static org.froporec.generator.helpers.StringGenerator.ALL_ANNOTATIONS_QUALIFIED_NAMES;
 import static org.froporec.generator.helpers.StringGenerator.AT_SIGN;
 import static org.froporec.generator.helpers.StringGenerator.FAILURE;
-import static org.froporec.generator.helpers.StringGenerator.GENERATE_IMMUTABLE;
-import static org.froporec.generator.helpers.StringGenerator.GENERATE_RECORD;
-import static org.froporec.generator.helpers.StringGenerator.GENERATION_FAILURE_MSG;
-import static org.froporec.generator.helpers.StringGenerator.GENERATION_REPORT_ELEMENTS_SEPARATOR;
-import static org.froporec.generator.helpers.StringGenerator.GENERATION_REPORT_MSG_FORMAT;
-import static org.froporec.generator.helpers.StringGenerator.GENERATION_SUCCESS_MSG;
 import static org.froporec.generator.helpers.StringGenerator.IMMUTABLE;
-import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_GENERATE_IMMUTABLE;
-import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_GENERATE_RECORD;
 import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_IMMUTABLE;
 import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_RECORD;
 import static org.froporec.generator.helpers.StringGenerator.ORG_FROPOREC_SUPER_RECORD;
@@ -73,8 +65,7 @@ import static org.froporec.generator.helpers.StringGenerator.SUPER_RECORD;
  * For each annotated element a fully immutable Record class is generated. If the generated class already exists (in case the
  * corresponding pojo or record has been annotated more than once), the generation process will be skipped
  */
-@SupportedAnnotationTypes({ORG_FROPOREC_RECORD, ORG_FROPOREC_SUPER_RECORD, ORG_FROPOREC_IMMUTABLE, ORG_FROPOREC_GENERATE_RECORD,
-        ORG_FROPOREC_GENERATE_IMMUTABLE})
+@SupportedAnnotationTypes({ORG_FROPOREC_RECORD, ORG_FROPOREC_SUPER_RECORD, ORG_FROPOREC_IMMUTABLE})
 @SupportedSourceVersion(SourceVersion.RELEASE_17)
 @AutoService(Processor.class)
 public final class FroporecAnnotationProcessor extends AbstractProcessor implements AnnotationProcessor {
@@ -107,16 +98,8 @@ public final class FroporecAnnotationProcessor extends AbstractProcessor impleme
                     processRecordAnnotatedElements(allAnnotatedElementsToProcessByAnnotation.get(ORG_FROPOREC_RECORD), recordSourceFileGenerator, processingEnv)
             );
             displayReport(
-                    AT_SIGN + GENERATE_RECORD,
-                    processRecordAnnotatedElements(allAnnotatedElementsToProcessByAnnotation.get(ORG_FROPOREC_GENERATE_RECORD), recordSourceFileGenerator, processingEnv)
-            );
-            displayReport(
                     AT_SIGN + IMMUTABLE,
                     processImmutableAnnotatedElements(allAnnotatedElementsToProcessByAnnotation.get(ORG_FROPOREC_IMMUTABLE), recordSourceFileGenerator, processingEnv)
-            );
-            displayReport(
-                    AT_SIGN + GENERATE_IMMUTABLE,
-                    processImmutableAnnotatedElements(allAnnotatedElementsToProcessByAnnotation.get(ORG_FROPOREC_GENERATE_IMMUTABLE), recordSourceFileGenerator, processingEnv)
             );
             displayReport(
                     AT_SIGN + SUPER_RECORD,
@@ -132,15 +115,15 @@ public final class FroporecAnnotationProcessor extends AbstractProcessor impleme
                     GENERATION_REPORT_MSG_FORMAT,
                     GENERATION_SUCCESS_MSG,
                     processedAnnotation,
-                    generatedClassesMap.get(SUCCESS).stream().collect(joining(format(GENERATION_REPORT_ELEMENTS_SEPARATOR)))
+                    generatedClassesMap.get(SUCCESS).stream().collect(joining(GENERATION_REPORT_ELEMENTS_SEPARATOR))
             ));
         }
         if (!generatedClassesMap.get(FAILURE).isEmpty()) {
-            log.log(Level.SEVERE, format(
+            log.log(Level.SEVERE, () -> format(
                     GENERATION_REPORT_MSG_FORMAT,
                     GENERATION_FAILURE_MSG,
                     processedAnnotation,
-                    generatedClassesMap.get(FAILURE).stream().collect(joining(format(GENERATION_REPORT_ELEMENTS_SEPARATOR)))
+                    generatedClassesMap.get(FAILURE).stream().collect(joining(GENERATION_REPORT_ELEMENTS_SEPARATOR))
             ));
         }
     }

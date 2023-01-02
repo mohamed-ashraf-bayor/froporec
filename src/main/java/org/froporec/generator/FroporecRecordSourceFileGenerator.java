@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021-2022 Mohamed Ashraf Bayor
+ * Copyright (c) 2021-2023 Mohamed Ashraf Bayor
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,9 @@ package org.froporec.generator;
 
 import org.froporec.generator.helpers.CodeGenerator;
 import org.froporec.generator.helpers.CustomConstructorGenerator;
+import org.froporec.generator.helpers.FactoryMethodsGenerator;
 import org.froporec.generator.helpers.FieldsGenerator;
+import org.froporec.generator.helpers.FieldsNamesConstantsGenerator;
 import org.froporec.generator.helpers.JavaxGeneratedGenerator;
 import org.froporec.generator.helpers.SuperInterfacesGenerator;
 
@@ -48,7 +50,7 @@ import static org.froporec.generator.helpers.CodeGenerator.NON_VOID_METHODS_ELEM
  */
 public final class FroporecRecordSourceFileGenerator implements RecordSourceFileGenerator {
 
-    private final ProcessingEnvironment processingEnvironment;
+    private final ProcessingEnvironment processingEnv;
 
     private final Map<String, Set<Element>> allElementsTypesToConvertByAnnotation;
 
@@ -64,26 +66,32 @@ public final class FroporecRecordSourceFileGenerator implements RecordSourceFile
 
     private final CodeGenerator customConstructorGenerator;
 
+    private final CodeGenerator fieldsNamesConstantsGenerator;
+
+    private final CodeGenerator factoryMethodsGenerator;
+
     /**
      * RecordSourceFileGenerator constructor. Instantiates needed instances of {@link FieldsGenerator}, {@link SuperInterfacesGenerator},
      * {@link CustomConstructorGenerator} and {@link JavaxGeneratedGenerator}
      *
-     * @param processingEnvironment            {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
-     * @param allAnnotatedElementsByAnnotation @{@link Map} of all annotated elements. The Map content (key/value) structure is organized as:<br>
+     * @param processingEnv                    {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @param allAnnotatedElementsByAnnotation {@link Map} of all annotated elements. The Map content (key/value) structure is organized as:<br>
      *                                         String = annotation toString representation,<br>
      *                                         Element = the annotated class or record,<br>
      *                                         String = the attribute name,<br>
      *                                         List&#60;Element&#62; = list of all elements specified as values of: alsoConvert, superInterfaces,...
      */
-    public FroporecRecordSourceFileGenerator(ProcessingEnvironment processingEnvironment, Map<String, Map<Element, Map<String, List<Element>>>> allAnnotatedElementsByAnnotation) {
-        this.processingEnvironment = processingEnvironment;
-        this.allElementsTypesToConvertByAnnotation = extractAllElementsTypesToConvert(this.processingEnvironment, allAnnotatedElementsByAnnotation);
-        this.superInterfacesListByAnnotatedElementAndByAnnotation = extractSuperInterfacesListByAnnotatedElement(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, allAnnotatedElementsByAnnotation);
-        this.mergeWithListByAnnotatedElementAndByAnnotation = extractMergeWithElementsListByAnnotatedElement(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, allAnnotatedElementsByAnnotation);
-        this.fieldsGenerator = new FieldsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, this.mergeWithListByAnnotatedElementAndByAnnotation);
-        this.superInterfacesGenerator = new SuperInterfacesGenerator(this.superInterfacesListByAnnotatedElementAndByAnnotation);
-        this.customConstructorGenerator = new CustomConstructorGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, this.mergeWithListByAnnotatedElementAndByAnnotation);
+    public FroporecRecordSourceFileGenerator(ProcessingEnvironment processingEnv, Map<String, Map<Element, Map<String, List<Element>>>> allAnnotatedElementsByAnnotation) {
+        this.processingEnv = processingEnv;
+        this.allElementsTypesToConvertByAnnotation = extractAllElementsTypesToConvert(this.processingEnv, allAnnotatedElementsByAnnotation);
+        this.superInterfacesListByAnnotatedElementAndByAnnotation = extractSuperInterfacesListByAnnotatedElement(this.processingEnv, this.allElementsTypesToConvertByAnnotation, allAnnotatedElementsByAnnotation);
+        this.mergeWithListByAnnotatedElementAndByAnnotation = extractMergeWithElementsListByAnnotatedElement(this.processingEnv, this.allElementsTypesToConvertByAnnotation, allAnnotatedElementsByAnnotation);
         this.javaxGeneratedGenerator = new JavaxGeneratedGenerator();
+        this.fieldsGenerator = new FieldsGenerator(this.processingEnv, this.allElementsTypesToConvertByAnnotation, this.mergeWithListByAnnotatedElementAndByAnnotation);
+        this.superInterfacesGenerator = new SuperInterfacesGenerator(this.superInterfacesListByAnnotatedElementAndByAnnotation);
+        this.customConstructorGenerator = new CustomConstructorGenerator(this.processingEnv, this.allElementsTypesToConvertByAnnotation, this.mergeWithListByAnnotatedElementAndByAnnotation);
+        this.fieldsNamesConstantsGenerator = new FieldsNamesConstantsGenerator(this.processingEnv, this.allElementsTypesToConvertByAnnotation);
+        this.factoryMethodsGenerator = new FactoryMethodsGenerator(this.processingEnv, this.allElementsTypesToConvertByAnnotation);
     }
 
     @Override
@@ -92,27 +100,31 @@ public final class FroporecRecordSourceFileGenerator implements RecordSourceFile
                                              List<? extends Element> nonVoidMethodsElementsList,
                                              boolean isSuperRecord) {
         var recordClassContent = new StringBuilder();
-        var annotatedTypeElement = (TypeElement) processingEnvironment.getTypeUtils().asElement(annotatedElement.asType());
+        var annotatedTypeElement = (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType());
         var qualifiedClassName = annotatedTypeElement.getQualifiedName().toString();
         int lastDot = qualifiedClassName.lastIndexOf(DOT);
         var recordSimpleClassName = generatedQualifiedClassName.substring(lastDot + 1);
         // package statement
         var packageName = lastDot > 0 ? qualifiedClassName.substring(0, lastDot) : null;
-        Optional.ofNullable(packageName).ifPresent(name -> recordClassContent.append(format("package %s;%n%n", name)));
+        Optional.ofNullable(packageName).ifPresent(name -> recordClassContent.append(format("%s %s;%n%n", PACKAGE, name)));
         // javax.annotation.processing.Generated section
         javaxGeneratedGenerator.generateCode(recordClassContent, Map.of());
         // record definition statement: public record ... with all attributes listed
-        recordClassContent.append(format("public %s ", RECORD.toLowerCase()));
+        recordClassContent.append(format("%s %s ", PUBLIC, RECORD.toLowerCase()));
         recordClassContent.append(recordSimpleClassName);
         // list all attributes next to the record name
         recordClassContent.append(OPENING_PARENTHESIS);
         fieldsGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement, NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList, IS_SUPER_RECORD, isSuperRecord));
         recordClassContent.append(CLOSING_PARENTHESIS + SPACE);
         // list all provided superinterfaces
-        superInterfacesGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement));
+        superInterfacesGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement, IS_SUPER_RECORD, isSuperRecord));
         recordClassContent.append(SPACE + OPENING_BRACE + NEW_LINE);
-        // Custom 1 arg constructor statement
+        // fields names constants declarations
+        fieldsNamesConstantsGenerator.generateCode(recordClassContent, Map.of(NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList, IS_SUPER_RECORD, isSuperRecord));
+        // custom 1-arg constructor statement
         customConstructorGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement, NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList, IS_SUPER_RECORD, isSuperRecord));
+        // static & instance factory methods
+        factoryMethodsGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement, NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList, IS_SUPER_RECORD, isSuperRecord));
         // no additional content: close the body of the class
         recordClassContent.append(CLOSING_BRACE);
         return recordClassContent.toString();

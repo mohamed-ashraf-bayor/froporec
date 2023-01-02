@@ -4,11 +4,11 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.froporec</groupId>
     <artifactId>froporec</artifactId>
-    <version>1.3-SNAPSHOT</version>
+    <version>1.4-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Froporec</name>
-    <description>Achieve Full Immutability of Java data objects with Froporec annotation processor</description>
+    <description>Easy migration from POJOs to Records with Froporec annotation processor</description>
     <url>https://froporec.org</url>
 
     <licenses>

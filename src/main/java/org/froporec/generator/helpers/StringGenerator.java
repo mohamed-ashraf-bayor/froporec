@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021-2022 Mohamed Ashraf Bayor
+ * Copyright (c) 2021-2023 Mohamed Ashraf Bayor
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,81 +21,65 @@
  */
 package org.froporec.generator.helpers;
 
-import org.froporec.annotations.GenerateImmutable;
-import org.froporec.annotations.GenerateRecord;
 import org.froporec.annotations.Immutable;
 import org.froporec.annotations.Record;
 
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import java.util.List;
 
-import static java.util.Arrays.asList;
+import static java.lang.Character.isUpperCase;
+import static java.lang.Character.toUpperCase;
+import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 
 /**
- * A bunch of String literals and commonly used string handling functions
+ * A bunch of String literals and commonly used string handling utils functions
  */
 public interface StringGenerator {
 
     /**
-     * Empty string literal
+     * Empty string
      */
     String EMPTY_STRING = "";
 
     /**
-     * " " String literal
+     * " "
      */
     String SPACE = " ";
 
     /**
-     * @ string literal
+     * "&#64;"
      */
     String AT_SIGN = "@";
 
     /**
-     * "Pojo" string literal
+     * "_"
+     */
+    String UNDERSCORE = "_";
+
+    /**
+     * "Pojo"
      */
     String POJO = "Pojo";
 
     /**
-     * "Record" string literal
+     * "Record"
      */
     String RECORD = "Record";
 
     /**
-     * "GenerateRecord" string literal
+     * "or"
      */
-    @Deprecated(forRemoval = true, since = "1.3")
-    String GENERATE_RECORD = "GenerateRecord";
+    String OR = "or";
 
     /**
-     * "Immutable" String literal
+     * "Immutable"
      */
     String IMMUTABLE = "Immutable";
 
     /**
-     * "GenerateImmutable" String literal
-     */
-    @Deprecated(forRemoval = true, since = "1.3")
-    String GENERATE_IMMUTABLE = "GenerateImmutable";
-
-    /**
-     * "SuperRecord" string literal
+     * "SuperRecord"
      */
     String SUPER_RECORD = "SuperRecord";
-
-    /**
-     * {@link GenerateRecord} qualified name
-     */
-    @Deprecated(forRemoval = true, since = "1.3")
-    String ORG_FROPOREC_GENERATE_RECORD = "org.froporec.annotations.GenerateRecord";
-
-    /**
-     * {@link GenerateImmutable} qualified name
-     */
-    @Deprecated(forRemoval = true, since = "1.3")
-    String ORG_FROPOREC_GENERATE_IMMUTABLE = "org.froporec.annotations.GenerateImmutable";
 
     /**
      * {@link Record} qualified name
@@ -115,49 +99,35 @@ public interface StringGenerator {
     /**
      * all Froporec annotations qualified names
      */
-    List<String> ALL_ANNOTATIONS_QUALIFIED_NAMES = List.of(ORG_FROPOREC_GENERATE_RECORD, ORG_FROPOREC_GENERATE_IMMUTABLE,
-            ORG_FROPOREC_RECORD, ORG_FROPOREC_IMMUTABLE, ORG_FROPOREC_SUPER_RECORD);
+    List<String> ALL_ANNOTATIONS_QUALIFIED_NAMES = List.of(ORG_FROPOREC_RECORD, ORG_FROPOREC_IMMUTABLE, ORG_FROPOREC_SUPER_RECORD);
 
     /**
-     * "includeTypes" attribute String literal
-     *
-     * @deprecated use 'alsoConvert' instead
-     */
-    @Deprecated(forRemoval = true, since = "1.3")
-    String INCLUDE_TYPES_ATTRIBUTE = "includeTypes";
-
-    /**
-     * "alsoConvert" attribute String literal
+     * "alsoConvert"
      */
     String ALSO_CONVERT_ATTRIBUTE = "alsoConvert";
 
     /**
-     * "mergeWith" attribute String literal
+     * "mergeWith"
      */
     String MERGE_WITH_ATTRIBUTE = "mergeWith";
 
     /**
-     * "superInterfaces" attribute String literal
+     * "superInterfaces"
      */
     String SUPER_INTERFACES_ATTRIBUTE = "superInterfaces";
 
     /**
-     * "implements" String literal
+     * "implements"
      */
     String IMPLEMENTS = "implements";
 
     /**
-     * " " whitespace
+     * ","
      */
-    String WHITESPACE = " ";
+    String COMMA = ",";
 
     /**
-     * "," String literal
-     */
-    String COMMA_SEPARATOR = ",";
-
-    /**
-     * ";" Semi-colon
+     * ";"
      */
     String SEMI_COLON = ";";
 
@@ -172,32 +142,32 @@ public interface StringGenerator {
     String CLOSING_PARENTHESIS = ")";
 
     /**
-     * '<' sign used in java collection generic definition
+     * '&lt;' sign used in java collection generic definition
      */
-    char INFERIOR_SIGN = '<';
+    String INFERIOR_SIGN = "<";
 
     /**
-     * '>' sign used in java collection generic definition
+     * '&gt;' sign used in java collection generic definition
      */
-    char SUPERIOR_SIGN = '>';
+    String SUPERIOR_SIGN = ">";
 
     /**
-     * "{" String literal
+     * "{"
      */
     String OPENING_BRACE = "{";
 
     /**
-     * "}" String literal
+     * "}"
      */
     String CLOSING_BRACE = "}";
 
     /**
-     * ".class" String literal
+     * ".class"
      */
     String DOT_CLASS = ".class";
 
     /**
-     * "." String literal
+     * "."
      */
     String DOT = ".";
 
@@ -212,131 +182,109 @@ public interface StringGenerator {
     String TAB = "\t";
 
     /**
-     * "this" String literal
+     * "this"
      */
     String THIS = "this";
 
     /**
-     * "public" String literal
+     * "public"
      */
     String PUBLIC = "public";
 
     /**
-     * "get" String literal. Starting string of Pojos non-boolean getters
+     * "package"
+     */
+    String PACKAGE = "package";
+
+    /**
+     * "get" - Starting string of Pojos non-boolean getters
      */
     String GET = "get";
 
     /**
-     * "is" String literal. Starting string of Pojos boolean getters
+     * "is" - Starting string of Pojos boolean getters
      */
     String IS = "is";
 
     /**
-     * "Success" String literal
+     * "Success"
      */
     String SUCCESS = "Success";
 
     /**
-     * "Failure" String literal
+     * "Failure"
      */
     String FAILURE = "Failure";
 
     /**
-     * Message displayed during code compilation, along with the name of a successfully generated Record source file
+     * "static"
      */
-    String GENERATION_SUCCESS_MSG = "\t> Successfully generated";
+    String STATIC = "static";
 
     /**
-     * Generation report info message format
+     * "with"
      */
-    String GENERATION_REPORT_MSG_FORMAT = "%s for %s:\n\t\t%s";
+    String WITH = "with";
 
     /**
-     * Separator used while displaying each one of the generated or skipped filenames
+     * "buildWith"
      */
-    String GENERATION_REPORT_ELEMENTS_SEPARATOR = "\n\t\t";
+    String BUILD_WITH = "buildWith";
 
     /**
-     * Warning message displayed during code compilation, indicating annotated elements skipped during generation process
+     * "return"
      */
-    String SKIPPED_ELEMENTS_WARNING_MSG_FORMAT = "\t> Skipped %s annotated elements (must be %s classes):%n\t\t%s";
+    String RETURN = "return";
 
     /**
-     * Message displayed during code compilation, in case an error occurred during a Record source file generation process
+     * "new"
      */
-    String GENERATION_FAILURE_MSG = "\t> Error generating";
+    String NEW = "new";
 
     /**
-     * Array of methods to exclude while pulling the list of all methods of a Pojo or Record class
+     * "entry"
      */
-    String[] METHODS_TO_EXCLUDE = {"getClass", "wait", "notifyAll", "hashCode", "equals", "notify", "toString", "clone", "finalize"};
+    String ENTRY = "entry";
 
     /**
-     * Constructs the qualified name of the fully immutable record class being generated from an annotated Record class
-     *
-     * @param qualifiedClassName qualified name of the annotated class
-     * @return the qualified name of the fully immutable record class being generated from an annotated Record class. ex: "Immutable"+RecordClassName
+     * "-&gt;"
      */
-    static String constructImmutableRecordQualifiedName(String qualifiedClassName) {
-        return qualifiedClassName.contains(DOT)
-                ? qualifiedClassName.substring(0, qualifiedClassName.lastIndexOf(DOT)) + DOT + IMMUTABLE + qualifiedClassName.substring(qualifiedClassName.lastIndexOf(DOT) + 1)
-                : IMMUTABLE + qualifiedClassName;
-    }
+    String LAMBDA_SYMB = "->";
 
     /**
-     * Constructs the qualified name of the generated record class. Handles both cases of the class being processed as either a Pojo or a Record
-     *
-     * @param element {@link Element} instance of the annotated class
-     * @return the qualified name of the fully immutable record class being generated from an annotated Pojo or Record class.<br>
-     * ex: ..."Immutable" + RecordClassName or ...PojoClassName+"Record"
+     * Default value to use for boolean returned values
      */
-    static String constructImmutableQualifiedNameBasedOnElementType(Element element) {
-        return ElementKind.RECORD.equals(element.getKind())
-                ? constructImmutableRecordQualifiedName(element.toString())
-                : element + RECORD;
-    }
+    String DEFAULT_BOOLEAN_VALUE = "false";
 
     /**
-     * Constructs the simple name of the generated record class. Handles both cases of the class being processed as either a Pojo or a Record
-     *
-     * @param element {@link Element} instance of the annotated class
-     * @return the simple name of the fully immutable record class being generated from an annotated Pojo or Record class.<br>
-     * ex: "Immutable" + RecordClassName or PojoClassName+"Record"
+     * Default value to use for numeric returned values (int, long, float, double,...)
      */
-    static String constructImmutableSimpleNameBasedOnElementType(Element element) {
-        var immutableQualifiedName = constructImmutableQualifiedNameBasedOnElementType(element);
-        return immutableQualifiedName.substring(immutableQualifiedName.lastIndexOf(DOT) + 1);
-    }
+    String DEFAULT_LONG_VALUE = "0L";
 
     /**
-     * Constructs the qualified name of the generated super record class.
-     * Based on whether or not the qualified name of the passed in element ends with 'Record'
-     *
-     * @param element {@link Element} instance of the annotated class
-     * @return the qualified name of the fully immutable super record class being generated from an annotated Pojo or Record class.<br>
-     * ex: ...RecordClassName+"SuperRecord" or ...PojoClassName+"SuperRecord"
+     * Default value to use for numeric returned values (int, long, float, double,...)
      */
-    static String constructSuperRecordQualifiedNameBasedOnElementType(Element element) {
-        var qualifiedName = element.toString();
-        return qualifiedName.endsWith(RECORD)
-                ? qualifiedName.substring(0, qualifiedName.lastIndexOf(RECORD)) + SUPER_RECORD
-                : qualifiedName + SUPER_RECORD;
-    }
+    String DEFAULT_FLOAT_VALUE = "0F";
 
     /**
-     * Constructs the simple name of the generated super record class.
-     * Based on whether or not the simple name of the passed in element ends with 'Record'
-     *
-     * @param element {@link Element} instance of the annotated class
-     * @return the qualified name of the fully immutable super record class being generated from an annotated Pojo or Record class.<br>
-     * ex: ...RecordClassName+"SuperRecord" or ...PojoClassName+"SuperRecord"
+     * Default value to use for numeric returned values (int, long, float, double,...)
      */
-    static String constructSuperRecordSimpleNameBasedOnElementType(Element element) {
-        var simpleName = element.getSimpleName().toString();
-        return simpleName.endsWith(RECORD)
-                ? simpleName.substring(0, simpleName.lastIndexOf(RECORD)) + SUPER_RECORD
-                : simpleName + SUPER_RECORD;
-    }
+    String DEFAULT_DOUBLE_VALUE = "0.0";
+
+    /**
+     * Default value to use for numeric returned values (int, long, float, double,...)
+     */
+    String DEFAULT_NUMBER_VALUE = "0";
+
+    /**
+     * Default value to use for Object returned values
+     */
+    String DEFAULT_NULL_VALUE = "null";
+
+    /**
+     * "&lt;T&gt;"
+     */
+    String GENERIC_T_SYMB = "<T>";
 
     /**
      * Removes all commas from the provided string
@@ -345,7 +293,7 @@ public interface StringGenerator {
      * @return provided text with all commas removed
      */
     static String removeCommaSeparator(String text) {
-        return asList(text.split(COMMA_SEPARATOR)).stream().collect(joining());
+        return stream(text.split(COMMA)).collect(joining());
     }
 
     /**
@@ -356,5 +304,33 @@ public interface StringGenerator {
      */
     static String lowerCase1stChar(String text) {
         return text.substring(0, 1).toLowerCase() + text.substring(1);
+    }
+
+    /**
+     * Applies the Java constants naming convention to the provided field name
+     *
+     * @param fieldName provided field name to process. ex: firstName
+     * @return the transformed field name after applying the java constant naming convention. ex: FIRST_NAME
+     */
+    static String javaConstantNamingConvention(String fieldName) {
+        var allChars = fieldName.toCharArray();
+        var constantNameChars = new StringBuilder().append(toUpperCase(allChars[0]));
+        for (int i = 1; i < allChars.length; i++) {
+            constantNameChars.append(isUpperCase(allChars[i]) ? UNDERSCORE + allChars[i] : toUpperCase(allChars[i]));
+        }
+        return constantNameChars.toString();
+    }
+
+    /**
+     * Modifies the provided {@link StringBuilder} instance by removing the last (amountOfChars) characters
+     *
+     * @param text          instance of StringBuilder to process
+     * @param amountOfChars amount of characters to remove by the end of the provided StringBuilder instance
+     */
+    static void removeLastChars(StringBuilder text, int amountOfChars) {
+        if (amountOfChars > 0) {
+            text.deleteCharAt(text.length() - 1);
+            removeLastChars(text, amountOfChars - 1);
+        }
     }
 }
