@@ -1,17 +1,21 @@
-> ### Froporec 1.3 released:
-> - Deprecated existing annotations: ~~@GenerateRecord~~, ~~@GenerateImmutable~~. Replaced with: **@Record** and **@Immutable**, which also provide the new **alsoConvert** attribute as a replacement of the ~~includeTypes~~ attribute.
-> - Added new annotation **@SuperRecord** allowing to bypass the known limitation of Java Records not able to extend any other class. The mandatory **mergeWith** attribute allows to specify a list of existing POJO and/or Record classes to extend from. The annotation can also be applied on existing POJO classes.
-> - Added new attribute **superInterfaces** to all annotations. Allows to provide a list of interfaces to be implemented by the generated Record class.
-> - Bug fixes and improvements
+> ### Froporec 1.4 released:
+> - Added **5 Static Factory Methods** and **2 Instance Factory Methods** to all generated Record classes (except for SuperRecord classes).
+>   - The generated static factory methods are convenient for creating new instances of the generated Record class, with data from either instances of the POJO (or Record) class being converted, or instances of the Record class being generated, with the possibility of 'overriding' the instances fields values by combining with the use of a Map of custom values for each field.
+>   - The generated instance factory methods are convenient for creating new instances of the generated Record class, with data from the current instance, and with the possibility of 'overriding' any field value by providing custom values for the desired fields. 
+> - Added **Constants Declarations** for fields names, in all generated Record classes (except for SuperRecord classes). Each constant is a String literal with its value being the name of one of the fields of the generated Record class. They are used by the generated factory methods, and can also be accessed from anywhere in your project.
+> - Major improvement of collections handling.
+> - Minor bug fixes.
 
 
 <br>
 
 ## Videos
 
+v1.4 - Factory Methods: [Coming Soon](https://www.youtube.com/channel/UCLhc2NBAbsw-WDJBlsxFCEg)
+
 Code Migration to Java 17 using FROPOREC and JISEL: [https://youtu.be/iML8EjMIDLc](https://youtu.be/iML8EjMIDLc)
 
-Froporec and Beyond: [https://youtu.be/Gzv65UmWmzw](https://youtu.be/Gzv65UmWmzw)
+v1.3: [https://youtu.be/Gzv65UmWmzw](https://youtu.be/Gzv65UmWmzw)
 
 v1.2 Quick Intro: [https://youtu.be/Yu3bR8ZkpYE](https://youtu.be/Yu3bR8ZkpYE)
 
@@ -26,7 +30,7 @@ If you are running a Maven project, add the latest release dependency to your po
 <dependency>
     <groupId>org.froporec</groupId>
     <artifactId>froporec</artifactId>
-    <version>1.3</version>
+    <version>1.4</version>
 </dependency>
 ``` 
 You will also need to include the same dependency as an additional annotation processor in the Maven Compiler plugin of your project
@@ -44,7 +48,7 @@ You will also need to include the same dependency as an additional annotation pr
                         <path>
                             <groupId>org.froporec</groupId>
                             <artifactId>froporec</artifactId>
-                            <version>1.3</version>
+                            <version>1.4</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
@@ -53,7 +57,7 @@ You will also need to include the same dependency as an additional annotation pr
     </build>
 ```
 
-For other build tools, please check: [Maven Central](https://search.maven.org/artifact/org.froporec/froporec/1.3/jar).
+For other build tools, please check: [Maven Central](https://search.maven.org/artifact/org.froporec/froporec/1.4/jar).
 
 <br>
 
@@ -157,6 +161,90 @@ Important Note: the annotation should be used ONLY on POJO or Record classes cre
 > The **superInterfaces** attribute available for all annotations, allows specifying a list of interfaces to be implemented by the generated Record class.<br>
 
 <br><br>
+
+
+
+## Constants Declarations for Fields Names
+
+For all generated Record classes (except for SuperRecord), constants declarations are added within the Record class body.<br>
+<br>
+Each constant is a String literal with its value being the name of one of the fields of the generated Record class. They are used by the generated factory methods, and can also be accessed from anywhere in your project.<br>
+<br>
+Below sample code shows the constants declarations added to the generated ImmutableExamReport Record class:
+<br>
+
+```java
+public record ImmutableExamReport(int candidateId, java.lang.String fullName, com.bayor.froporec.annotation.client.factorymthdsdemo.factorymthds.ContactInfo contactInfo, java.lang.Integer examId, java.lang.String submittedExamContent, java.time.LocalDate examDate, java.lang.Double score, java.lang.Boolean passed) {
+
+    public static final String CANDIDATE_ID = "candidateId"; // type: int
+    public static final String FULL_NAME = "fullName"; // type: java.lang.String
+    public static final String CONTACT_INFO = "contactInfo"; // type: com.bayor.froporec.annotation.client.factorymthdsdemo.factorymthds.ContactInfo
+    public static final String EXAM_ID = "examId"; // type: java.lang.Integer
+    public static final String SUBMITTED_EXAM_CONTENT = "submittedExamContent"; // type: java.lang.String
+    public static final String EXAM_DATE = "examDate"; // type: java.time.LocalDate
+    public static final String SCORE = "score"; // type: java.lang.Double
+    public static final String PASSED = "passed"; // type: java.lang.Boolean
+    
+    // custom constructor and factory methods follow...
+    // ...
+}
+```
+
+<br><br>
+
+## Factory Methods
+
+For all generated Record classes (except for SuperRecord), factory methods are added within the body of the classes.
+
+The generated static factory methods are convenient for creating new instances of the generated Record class, with data from either instances of the POJO (or Record) class being converted, or instances of the Record class being generated, with the possibility of 'overriding' the instances fields values by combining with the use of a Map of custom values for each field.<br>
+<br>
+Below sample code shows the 5 static factory methods added to the generated ImmutableExamReport Record class: 
+
+```java
+public static ImmutableExamReport buildWith(com.bayor.froporec.annotation.client.factorymthdsdemo.factorymthds.ExamReport examReport) {
+    return new ImmutableExamReport(examReport.candidateId(), examReport.fullName(), examReport.contactInfo(), examReport.examId(), examReport.submittedExamContent(), examReport.examDate(), examReport.score(), examReport.passed());
+}
+
+public static ImmutableExamReport buildWith(com.bayor.froporec.annotation.client.factorymthdsdemo.factorymthds.ImmutableExamReport immutableExamReport) {
+    return new ImmutableExamReport(immutableExamReport.candidateId(), immutableExamReport.fullName(), immutableExamReport.contactInfo(), immutableExamReport.examId(), immutableExamReport.submittedExamContent(), immutableExamReport.examDate(), immutableExamReport.score(), immutableExamReport.passed());
+}
+
+@java.lang.SuppressWarnings("unchecked")
+public static ImmutableExamReport buildWith(java.util.Map&lt;String, Object&gt; fieldsNameValuePairs) {
+    return new ImmutableExamReport((int) fieldsNameValuePairs.getOrDefault(CANDIDATE_ID, 0), (java.lang.String) fieldsNameValuePairs.getOrDefault(FULL_NAME, null), (com.bayor.froporec.annotation.client.factorymthdsdemo.factorymthds.ContactInfo) fieldsNameValuePairs.getOrDefault(CONTACT_INFO, null), (java.lang.Integer) fieldsNameValuePairs.getOrDefault(EXAM_ID, null), (java.lang.String) fieldsNameValuePairs.getOrDefault(SUBMITTED_EXAM_CONTENT, null), (java.time.LocalDate) fieldsNameValuePairs.getOrDefault(EXAM_DATE, null), (java.lang.Double) fieldsNameValuePairs.getOrDefault(SCORE, null), (java.lang.Boolean) fieldsNameValuePairs.getOrDefault(PASSED, null));
+}
+
+@java.lang.SuppressWarnings("unchecked")
+public static ImmutableExamReport buildWith(com.bayor.froporec.annotation.client.factorymthdsdemo.factorymthds.ExamReport examReport, java.util.Map&lt;String, Object&gt; fieldsNameValuePairs) {
+    return new ImmutableExamReport((int) fieldsNameValuePairs.getOrDefault(CANDIDATE_ID, examReport.candidateId()), (java.lang.String) fieldsNameValuePairs.getOrDefault(FULL_NAME, examReport.fullName()), (com.bayor.froporec.annotation.client.factorymthdsdemo.factorymthds.ContactInfo) fieldsNameValuePairs.getOrDefault(CONTACT_INFO, examReport.contactInfo()), (java.lang.Integer) fieldsNameValuePairs.getOrDefault(EXAM_ID, examReport.examId()), (java.lang.String) fieldsNameValuePairs.getOrDefault(SUBMITTED_EXAM_CONTENT, examReport.submittedExamContent()), (java.time.LocalDate) fieldsNameValuePairs.getOrDefault(EXAM_DATE, examReport.examDate()), (java.lang.Double) fieldsNameValuePairs.getOrDefault(SCORE, examReport.score()), (java.lang.Boolean) fieldsNameValuePairs.getOrDefault(PASSED, examReport.passed()));
+}
+
+@java.lang.SuppressWarnings("unchecked")
+public static ImmutableExamReport buildWith(com.bayor.froporec.annotation.client.factorymthdsdemo.factorymthds.ImmutableExamReport immutableExamReport, java.util.Map&lt;String, Object&gt; fieldsNameValuePairs) {
+    return new ImmutableExamReport((int) fieldsNameValuePairs.getOrDefault(CANDIDATE_ID, immutableExamReport.candidateId()), (java.lang.String) fieldsNameValuePairs.getOrDefault(FULL_NAME, immutableExamReport.fullName()), (com.bayor.froporec.annotation.client.factorymthdsdemo.factorymthds.ContactInfo) fieldsNameValuePairs.getOrDefault(CONTACT_INFO, immutableExamReport.contactInfo()), (java.lang.Integer) fieldsNameValuePairs.getOrDefault(EXAM_ID, immutableExamReport.examId()), (java.lang.String) fieldsNameValuePairs.getOrDefault(SUBMITTED_EXAM_CONTENT, immutableExamReport.submittedExamContent()), (java.time.LocalDate) fieldsNameValuePairs.getOrDefault(EXAM_DATE, immutableExamReport.examDate()), (java.lang.Double) fieldsNameValuePairs.getOrDefault(SCORE, immutableExamReport.score()), (java.lang.Boolean) fieldsNameValuePairs.getOrDefault(PASSED, immutableExamReport.passed()));
+}
+```
+<p>
+The generated instance factory methods are convenient for creating new instances of the generated Record class, with data from the current instance, and with the possibility of 'overriding' any field value by providing custom values for the desired fields.<br>
+<br>
+Below sample code shows the 2 instance factory methods added to the generated ImmutableExamReport Record class:
+
+```java
+@java.lang.SuppressWarnings("unchecked")
+public ImmutableExamReport with(java.util.Map&lt;String, Object&gt; fieldsNameValuePairs) {
+    return new ImmutableExamReport((int) fieldsNameValuePairs.getOrDefault(CANDIDATE_ID, this.candidateId()), (java.lang.String) fieldsNameValuePairs.getOrDefault(FULL_NAME, this.fullName()), (com.bayor.froporec.annotation.client.factorymthdsdemo.factorymthds.ContactInfo) fieldsNameValuePairs.getOrDefault(CONTACT_INFO, this.contactInfo()), (java.lang.Integer) fieldsNameValuePairs.getOrDefault(EXAM_ID, this.examId()), (java.lang.String) fieldsNameValuePairs.getOrDefault(SUBMITTED_EXAM_CONTENT, this.submittedExamContent()), (java.time.LocalDate) fieldsNameValuePairs.getOrDefault(EXAM_DATE, this.examDate()), (java.lang.Double) fieldsNameValuePairs.getOrDefault(SCORE, this.score()), (java.lang.Boolean) fieldsNameValuePairs.getOrDefault(PASSED, this.passed()));
+}
+
+@java.lang.SuppressWarnings("unchecked")
+public &lt;T&gt; ImmutableExamReport with(String fieldName, T fieldValue) {
+    return new ImmutableExamReport(fieldName.equals(CANDIDATE_ID) ? (int) fieldValue : this.candidateId(), fieldName.equals(FULL_NAME) ? (java.lang.String) fieldValue : this.fullName(), fieldName.equals(CONTACT_INFO) ? (com.bayor.froporec.annotation.client.factorymthdsdemo.factorymthds.ContactInfo) fieldValue : this.contactInfo(), fieldName.equals(EXAM_ID) ? (java.lang.Integer) fieldValue : this.examId(), fieldName.equals(SUBMITTED_EXAM_CONTENT) ? (java.lang.String) fieldValue : this.submittedExamContent(), fieldName.equals(EXAM_DATE) ? (java.time.LocalDate) fieldValue : this.examDate(), fieldName.equals(SCORE) ? (java.lang.Double) fieldValue : this.score(), fieldName.equals(PASSED) ? (java.lang.Boolean) fieldValue : this.passed());
+}
+```
+
+<br>
+<br>
+<br>
+
 
 ## Sample POJO and Record classes for testing
 [https://github.com/mohamed-ashraf-bayor/froporec-annotation-client](https://github.com/mohamed-ashraf-bayor/froporec-annotation-client)
