@@ -224,6 +224,7 @@ public static ImmutableExamReport buildWith(com.bayor.froporec.annotation.client
     return new ImmutableExamReport((int) fieldsNameValuePairs.getOrDefault(CANDIDATE_ID, immutableExamReport.candidateId()), (java.lang.String) fieldsNameValuePairs.getOrDefault(FULL_NAME, immutableExamReport.fullName()), (com.bayor.froporec.annotation.client.factorymthdsdemo.factorymthds.ContactInfo) fieldsNameValuePairs.getOrDefault(CONTACT_INFO, immutableExamReport.contactInfo()), (java.lang.Integer) fieldsNameValuePairs.getOrDefault(EXAM_ID, immutableExamReport.examId()), (java.lang.String) fieldsNameValuePairs.getOrDefault(SUBMITTED_EXAM_CONTENT, immutableExamReport.submittedExamContent()), (java.time.LocalDate) fieldsNameValuePairs.getOrDefault(EXAM_DATE, immutableExamReport.examDate()), (java.lang.Double) fieldsNameValuePairs.getOrDefault(SCORE, immutableExamReport.score()), (java.lang.Boolean) fieldsNameValuePairs.getOrDefault(PASSED, immutableExamReport.passed()));
 }
 ```
+
 <p>
 The generated instance factory methods are convenient for creating new instances of the generated Record class, with data from the current instance, and with the possibility of 'overriding' any field value by providing custom values for the desired fields.<br>
 <br>
