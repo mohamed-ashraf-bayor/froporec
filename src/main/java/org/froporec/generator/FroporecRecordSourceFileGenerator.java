@@ -117,7 +117,7 @@ public final class FroporecRecordSourceFileGenerator implements RecordSourceFile
         fieldsGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement, NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList, IS_SUPER_RECORD, isSuperRecord));
         recordClassContent.append(CLOSING_PARENTHESIS + SPACE);
         // list all provided superinterfaces
-        superInterfacesGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement));
+        superInterfacesGenerator.generateCode(recordClassContent, Map.of(ANNOTATED_ELEMENT, annotatedElement, IS_SUPER_RECORD, isSuperRecord));
         recordClassContent.append(SPACE + OPENING_BRACE + NEW_LINE);
         // fields names constants declarations
         fieldsNamesConstantsGenerator.generateCode(recordClassContent, Map.of(NON_VOID_METHODS_ELEMENTS_LIST, nonVoidMethodsElementsList, IS_SUPER_RECORD, isSuperRecord));
