@@ -67,6 +67,11 @@ public interface StringGenerator {
     String RECORD = "Record";
 
     /**
+     * "or"
+     */
+    String OR = "or";
+
+    /**
      * "Immutable"
      */
     String IMMUTABLE = "Immutable";
@@ -185,6 +190,11 @@ public interface StringGenerator {
      * "public"
      */
     String PUBLIC = "public";
+
+    /**
+     * "package"
+     */
+    String PACKAGE = "package";
 
     /**
      * "get" - Starting string of Pojos non-boolean getters
@@ -306,7 +316,7 @@ public interface StringGenerator {
         var allChars = fieldName.toCharArray();
         var constantNameChars = new StringBuilder().append(toUpperCase(allChars[0]));
         for (int i = 1; i < allChars.length; i++) {
-            constantNameChars.append(isUpperCase(allChars[i]) ? UNDERSCORE + toUpperCase(allChars[i]) : toUpperCase(allChars[i]));
+            constantNameChars.append(isUpperCase(allChars[i]) ? UNDERSCORE + allChars[i] : toUpperCase(allChars[i]));
         }
         return constantNameChars.toString();
     }

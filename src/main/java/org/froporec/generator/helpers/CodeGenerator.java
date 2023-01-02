@@ -120,10 +120,11 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
                 ).stream()
                 .map(Element.class::cast)
                 .filter(element -> ElementKind.METHOD.equals(element.getKind()))
+                .filter(element -> (!TypeKind.VOID.equals(((ExecutableElement) element).getReturnType().getKind())))
                 .filter(element -> element.getSimpleName().toString().startsWith(GET) || element.getSimpleName().toString().startsWith(IS))
                 .filter(element -> stream(methodsToExclude).noneMatch(excludedMeth ->
-                        element.toString().contains(excludedMeth + OPENING_PARENTHESIS)))
-                .filter(element -> ((ExecutableElement) element).getParameters().isEmpty())
+                        element.toString().contains(excludedMeth + OPENING_PARENTHESIS))) // exclude known Object methds
+                .filter(element -> ((ExecutableElement) element).getParameters().isEmpty()) // only methods with no params
                 .toList();
     }
 
@@ -134,8 +135,9 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
      * @return the qualified name of the fully immutable record class being generated from an annotated Record class. ex: "Immutable"+RecordClassName
      */
     static String immutableRecordQualifiedName(String qualifiedClassName) {
+        var lastDotIdx = qualifiedClassName.lastIndexOf(DOT);
         return qualifiedClassName.contains(DOT)
-                ? qualifiedClassName.substring(0, qualifiedClassName.lastIndexOf(DOT)) + DOT + IMMUTABLE + qualifiedClassName.substring(qualifiedClassName.lastIndexOf(DOT) + 1)
+                ? qualifiedClassName.substring(0, lastDotIdx) + DOT + IMMUTABLE + qualifiedClassName.substring(lastDotIdx + 1)
                 : IMMUTABLE + qualifiedClassName;
     }
 

@@ -29,16 +29,20 @@ import javax.lang.model.element.ElementKind;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiPredicate;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
+import static org.froporec.generator.helpers.CodeGenerator.nonVoidMethodsElementsList;
 import static org.froporec.generator.helpers.StringGenerator.ALSO_CONVERT_ATTRIBUTE;
 import static org.froporec.generator.helpers.StringGenerator.AT_SIGN;
 import static org.froporec.generator.helpers.StringGenerator.IMMUTABLE;
 import static org.froporec.generator.helpers.StringGenerator.MERGE_WITH_ATTRIBUTE;
+import static org.froporec.generator.helpers.StringGenerator.OR;
 import static org.froporec.generator.helpers.StringGenerator.POJO;
 import static org.froporec.generator.helpers.StringGenerator.RECORD;
+import static org.froporec.generator.helpers.StringGenerator.SPACE;
 import static org.froporec.generator.helpers.StringGenerator.SUPER_RECORD;
 
 /**
@@ -51,7 +55,7 @@ public sealed interface AnnotationProcessor permits FroporecAnnotationProcessor 
     /**
      * Warning message displayed during code compilation, indicating annotated elements skipped during generation process
      */
-    String SKIPPED_ELEMENTS_WARNING_MSG_FORMAT = "\t> Skipped %s annotated elements (must be %s classes):%n\t\t%s";
+    String SKIPPED_ELEMENTS_WARNING_MSG_FORMAT = "\t> Skipped %s annotated elements (must be %s classes with at least 1 field):%n\t\t%s";
 
     /**
      * Separator used while displaying each one of the generated or skipped filenames
@@ -74,6 +78,24 @@ public sealed interface AnnotationProcessor permits FroporecAnnotationProcessor 
     String GENERATION_FAILURE_MSG = "\t> Error generating";
 
     /**
+     * Identifies &#64;{@link org.froporec.annotations.Record}-annotated elements which are NOT actual Pojo classes
+     */
+    BiPredicate<ProcessingEnvironment, Element> RECORD_ANNOTATED_SKIPPED_ELEMENTS = (processingEnv, element)
+            -> !ElementKind.CLASS.equals(processingEnv.getTypeUtils().asElement(element.asType()).getKind());
+
+    /**
+     * Identifies &#64;{@link org.froporec.annotations.Immutable}-annotated elements which are NOT actual Record classes
+     */
+    BiPredicate<ProcessingEnvironment, Element> IMMUTABLE_ANNOTATED_SKIPPED_ELEMENTS = (processingEnv, element)
+            -> !ElementKind.RECORD.equals(processingEnv.getTypeUtils().asElement(element.asType()).getKind());
+
+    /**
+     * Checks whether the provided {@link Element} is empty (no fields/attributes present in the annotated Pojo or Record definition
+     */
+    BiPredicate<ProcessingEnvironment, Element> EMPTY_CLASS_OR_RECORD_ELEMENTS = (processingEnv, element)
+            -> nonVoidMethodsElementsList(element, processingEnv).isEmpty();
+
+    /**
      * Notifies the Annotation Processor main class with a message intended to be displayed as a Warning
      *
      * @param warningMsg a String object containing the warning message
@@ -93,7 +115,7 @@ public sealed interface AnnotationProcessor permits FroporecAnnotationProcessor 
                                                                      RecordSourceFileGenerator recordSourceFileGenerator,
                                                                      ProcessingEnvironment processingEnv) {
         var skippedElements = annotatedElementsMap.keySet().stream()
-                .filter(element -> !ElementKind.CLASS.equals(processingEnv.getTypeUtils().asElement(element.asType()).getKind()))
+                .filter(element -> RECORD_ANNOTATED_SKIPPED_ELEMENTS.or(EMPTY_CLASS_OR_RECORD_ELEMENTS).test(processingEnv, element))
                 .toList();
         if (!skippedElements.isEmpty()) {
             notifyWarning(format(
@@ -126,7 +148,7 @@ public sealed interface AnnotationProcessor permits FroporecAnnotationProcessor 
                                                                         RecordSourceFileGenerator recordSourceFileGenerator,
                                                                         ProcessingEnvironment processingEnv) {
         var skippedElements = annotatedElementsMap.keySet().stream()
-                .filter(element -> !ElementKind.RECORD.equals(processingEnv.getTypeUtils().asElement(element.asType()).getKind()))
+                .filter(element -> IMMUTABLE_ANNOTATED_SKIPPED_ELEMENTS.or(EMPTY_CLASS_OR_RECORD_ELEMENTS).test(processingEnv, element))
                 .toList();
         if (!skippedElements.isEmpty()) {
             notifyWarning(format(
@@ -159,14 +181,13 @@ public sealed interface AnnotationProcessor permits FroporecAnnotationProcessor 
                                                                           RecordSourceFileGenerator recordSourceFileGenerator,
                                                                           ProcessingEnvironment processingEnv) {
         var skippedElements = annotatedElementsMap.keySet().stream()
-                .filter(element -> !ElementKind.RECORD.equals(processingEnv.getTypeUtils().asElement(element.asType()).getKind()))
-                .filter(element -> !ElementKind.CLASS.equals(processingEnv.getTypeUtils().asElement(element.asType()).getKind()))
+                .filter(element -> RECORD_ANNOTATED_SKIPPED_ELEMENTS.and(IMMUTABLE_ANNOTATED_SKIPPED_ELEMENTS).or(EMPTY_CLASS_OR_RECORD_ELEMENTS).test(processingEnv, element))
                 .toList();
         if (!skippedElements.isEmpty()) {
             notifyWarning(format(
                     SKIPPED_ELEMENTS_WARNING_MSG_FORMAT,
                     AT_SIGN + SUPER_RECORD,
-                    POJO + " or " + RECORD,
+                    POJO + SPACE + OR + SPACE + RECORD,
                     skippedElements.stream().map(Object::toString).collect(joining(GENERATION_REPORT_ELEMENTS_SEPARATOR))
             ));
         }

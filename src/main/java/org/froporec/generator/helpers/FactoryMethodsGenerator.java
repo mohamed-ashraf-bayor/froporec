@@ -80,7 +80,7 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
      */
     private static final String CANONICAL_CONSTRUCTOR_PARAMS_REGEX = "this\\((.*?)\\);";
 
-    private final ProcessingEnvironment processingEnvironment;
+    private final ProcessingEnvironment processingEnv;
 
     private final Map<String, Set<Element>> allElementsTypesToConvertByAnnotation;
 
@@ -92,20 +92,20 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
     /**
      * FactoryMethodsGenerator constructor. Instantiates needed instance of {@link CustomConstructorGenerator} and {@link CollectionsGenerator}
      *
-     * @param processingEnvironment                 {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
+     * @param processingEnv                         {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
      * @param allElementsTypesToConvertByAnnotation {@link Set} of {@link Element} instances grouped by the annotation String representation
      */
-    public FactoryMethodsGenerator(ProcessingEnvironment processingEnvironment,
+    public FactoryMethodsGenerator(ProcessingEnvironment processingEnv,
                                    Map<String, Set<Element>> allElementsTypesToConvertByAnnotation) {
-        this.processingEnvironment = processingEnvironment;
+        this.processingEnv = processingEnv;
         this.allElementsTypesToConvertByAnnotation = allElementsTypesToConvertByAnnotation;
-        this.customConstructorGenerator = new CustomConstructorGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation, null);
-        this.collectionsGenerator = new CollectionsGenerator(this.processingEnvironment, this.allElementsTypesToConvertByAnnotation);
+        this.customConstructorGenerator = new CustomConstructorGenerator(this.processingEnv, this.allElementsTypesToConvertByAnnotation, null);
+        this.collectionsGenerator = new CollectionsGenerator(this.processingEnv, this.allElementsTypesToConvertByAnnotation);
     }
 
     private void buildFactoryMethods(StringBuilder recordClassContent, Element annotatedElement, List<Element> nonVoidMethodsElementsList) {
 
-        var annotatedTypeElement = (TypeElement) processingEnvironment.getTypeUtils().asElement(annotatedElement.asType());
+        var annotatedTypeElement = (TypeElement) processingEnv.getTypeUtils().asElement(annotatedElement.asType());
         var annotatedElementQualifiedName = annotatedTypeElement.getQualifiedName().toString();
         var annotatedElementFieldName = lowerCase1stChar(annotatedTypeElement.getSimpleName().toString());
 
@@ -151,7 +151,7 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
                                         //"(<returnType>) fieldsNameValuePairs.getOrDefault("<fieldName>", <defaultValue>)"
                                         FACTORY_METHODS_FIELDS_MAP_USE_FORMAT,
                                         fieldNameAndTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap, allElementsTypesToConvertByAnnotation,
-                                                processingEnvironment, collectionsGenerator).get(fieldName(nonVoidMethodElement).get()),
+                                                processingEnv, collectionsGenerator).get(fieldName(nonVoidMethodElement).get()),
                                         javaConstantNamingConvention(fieldName(nonVoidMethodElement).get()),
                                         defaultReturnValueForMethod(nonVoidMethodElement)
                                 ))
@@ -176,7 +176,7 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
                                         // "(returnType) fieldsNameValuePairs.getOrDefault("<fieldName>", <annotatedElementFieldName.getterMthd>())"
                                         FACTORY_METHODS_FIELDS_MAP_USE_FORMAT,
                                         fieldNameAndTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap, allElementsTypesToConvertByAnnotation,
-                                                processingEnvironment, collectionsGenerator).get(fieldName(nonVoidMethodElement).get()),
+                                                processingEnv, collectionsGenerator).get(fieldName(nonVoidMethodElement).get()),
                                         javaConstantNamingConvention(fieldName(nonVoidMethodElement).get()),
                                         stream(paramsFromCanonicalConstructorCall)
                                                 .filter(param -> param.contains(annotatedElementFieldName + DOT + nonVoidMethodElement))
@@ -202,7 +202,7 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
                                         // "(<returnType>) fieldsNameValuePairs.getOrDefault("<fieldName>", <generatedRecordFieldName.accessorMthd>())"
                                         FACTORY_METHODS_FIELDS_MAP_USE_FORMAT,
                                         fieldNameAndTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap, allElementsTypesToConvertByAnnotation,
-                                                processingEnvironment, collectionsGenerator).get(fieldName(nonVoidMethodElement).get()),
+                                                processingEnv, collectionsGenerator).get(fieldName(nonVoidMethodElement).get()),
                                         javaConstantNamingConvention(fieldName(nonVoidMethodElement).get()),
                                         method1stParamName + DOT + fieldName(nonVoidMethodElement).get() + OPENING_PARENTHESIS + CLOSING_PARENTHESIS
                                 ))
@@ -224,7 +224,7 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
                                         //"(<returnType>) fieldsNameValuePairs.getOrDefault("<fieldName>", this.<fieldValueFromRecordAccesorMthd()>)"
                                         FACTORY_METHODS_FIELDS_MAP_USE_FORMAT,
                                         fieldNameAndTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap, allElementsTypesToConvertByAnnotation,
-                                                processingEnvironment, collectionsGenerator).get(fieldName(nonVoidMethodElement).get()),
+                                                processingEnv, collectionsGenerator).get(fieldName(nonVoidMethodElement).get()),
                                         javaConstantNamingConvention(fieldName(nonVoidMethodElement).get()),
                                         THIS + DOT + fieldName(nonVoidMethodElement).get() + OPENING_PARENTHESIS + CLOSING_PARENTHESIS
                                 ))
@@ -247,7 +247,7 @@ public final class FactoryMethodsGenerator implements CodeGenerator {
                                         FACTORY_METHOD_FIELD_NAME_AND_USE_FORMAT,
                                         javaConstantNamingConvention(fieldName(nonVoidMethodElement).get()),
                                         fieldNameAndTypePair(nonVoidMethodElement, nonVoidMethodsElementsReturnTypesMap, allElementsTypesToConvertByAnnotation,
-                                                processingEnvironment, collectionsGenerator).get(fieldName(nonVoidMethodElement).get()),
+                                                processingEnv, collectionsGenerator).get(fieldName(nonVoidMethodElement).get()),
                                         fieldName(nonVoidMethodElement).get()
                                 ))
                                 .collect(Collectors.joining(COMMA + SPACE)),
