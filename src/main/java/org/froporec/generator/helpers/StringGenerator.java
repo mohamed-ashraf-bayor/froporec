@@ -47,7 +47,7 @@ public interface StringGenerator {
     String SPACE = " ";
 
     /**
-     * "@"
+     * "&#64;"
      */
     String AT_SIGN = "@";
 

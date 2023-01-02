@@ -93,12 +93,12 @@ public sealed interface CodeGenerator extends StringGenerator permits CustomCons
     void generateCode(StringBuilder recordClassContent, Map<String, Object> params);
 
     /**
-     * Returns a {@link java.util.List} of {@link Element} instances representing each non-void non-args methods of the
+     * Returns a {@link java.util.List} of {@link Element} instances representing each non-void no-args methods of the
      * provided annotated {@link Element} instance
      *
      * @param annotatedElement {@link Element} instance of the annotated Pojo or Record class
      * @param processingEnv    {@link ProcessingEnvironment} object, needed to access low-level information regarding the used annotations
-     * @return {@link java.util.List} of {@link Element} instances representing each non-void non-args methods of the
+     * @return {@link java.util.List} of {@link Element} instances representing each non-void no-args methods of the
      * provided annotated {@link Element} instance
      */
     static List<Element> nonVoidMethodsElementsList(Element annotatedElement, ProcessingEnvironment processingEnv) {
