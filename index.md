@@ -225,7 +225,7 @@ public static ImmutableExamReport buildWith(com.bayor.froporec.annotation.client
 }
 ```
 
-<p>
+<br>
 The generated instance factory methods are convenient for creating new instances of the generated Record class, with data from the current instance, and with the possibility of 'overriding' any field value by providing custom values for the desired fields.<br>
 <br>
 Below sample code shows the 2 instance factory methods added to the generated ImmutableExamReport Record class:<br>
