@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.froporec</groupId>
     <artifactId>froporec</artifactId>
-    <version>1.4</version>
+    <version>1.5-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Froporec</name>
@@ -23,7 +23,7 @@
         <connection>scm:git:git://github.com/mohamed-ashraf-bayor/froporec.git</connection>
         <developerConnection>scm:git:git@github.com:mohamed-ashraf-bayor/mohamed-ashraf-bayor.git</developerConnection>
         <url>https://github.com/mohamed-ashraf-bayor/froporec</url>
-        <tag>froporec-1.4</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <developers>
