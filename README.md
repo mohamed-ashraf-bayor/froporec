@@ -1,9 +1,17 @@
 # FROPOREC - From POJOs to Records
-Easy migration from POJOs to Records with Froporec annotation processor (min. Java 17 required)
+
+
+Froporec is a Java Annotation Processor, requiring a minimum of Java 17 and providing annotations which can be used to:
+- turn existing POJOs into Records: by generating Record classes with same data structure as the annotated POJO classes,
+- turn existing Records into "fully" immutable Records: one of the current limitations of Java Records is that a Record can contain either a mutable Collection object or a mutable POJO as part of its fields or attributes, making it only "partially" or "shallowly" immutable. Annotating such existing Record classes with Froporec will generate "fully" immutable versions, which can be used in your project to ensure data security. 
+
+As of v1.4 Froporec also provides a bunch of "convenient" Factory Methods which are really helpful while handling the creation or use of several instances of the same Record class within the same program.
+
 
 <br>
+<br>
 
-> ### Froporec 1.4 released:
+> ### Latest Release: Froporec 1.4
 > - Added **5 Static Factory Methods** and **2 Instance Factory Methods** to all generated Record classes (except for SuperRecord classes).
 >   - The generated static factory methods are convenient for creating new instances of the generated Record class, with data from either instances of the POJO (or Record) class being converted, or instances of the Record class being generated, with the possibility of 'overriding' the instances fields values by combining with the use of a Map of custom values for each field.
 >   - The generated instance factory methods are convenient for creating new instances of the generated Record class, with data from the current instance, and with the possibility of 'overriding' any field value by providing custom values for the desired fields. 
