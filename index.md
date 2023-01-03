@@ -1,6 +1,7 @@
 Froporec is a Java Annotation Processor, requiring a minimum of Java 17 and providing annotations which can be used to:
 - turn existing POJOs into Records: by generating Record classes with same data structure as the annotated POJO classes,
-- turn existing Records into "fully" immutable Records: one of the current limitations of Java Records is that a Record can contain either a mutable Collection object or a mutable POJO as part of its fields or attributes, making it only "partially" or "shallowly" immutable. Annotating such existing Record classes with Froporec will generate "fully" immutable versions, which can be used in your project to ensure data security. 
+- turn existing Records into "fully" immutable Records: one of the current limitations of Java Records is that a Record can contain either a mutable Collection object or a mutable POJO as part of its fields or attributes, making it only "partially" or "shallowly" immutable. Annotating such existing Record classes with Froporec will generate "fully" immutable versions, which can be used in your project to ensure data security.
+- "extend" a Record class by expanding its data structure with fields or attributes from other POJO or Record classes from the same project: another current limitation of Java Records is their inability to be extended or extend other classes as they are final by default. Froporec provides an annotation to bypass such a limitation.
 
 As of v1.4 Froporec also provides a bunch of "convenient" Factory Methods which are really helpful while handling the creation or use of several instances of the same Record class within the same program.
 
