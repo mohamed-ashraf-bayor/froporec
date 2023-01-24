@@ -12,7 +12,7 @@ As of v1.4 Froporec also provides a bunch of "convenient" Factory Methods which 
 <br>
 <br>
 
-> ### Latest Release: Froporec 1.4
+> ### Froporec 1.4 released:
 > - Added **5 Static Factory Methods** and **2 Instance Factory Methods** to all generated Record classes (except for SuperRecord classes).
 >   - The generated static factory methods are convenient for creating new instances of the generated Record class, with data from either instances of the POJO (or Record) class being converted, or instances of the Record class being generated, with the possibility of 'overriding' the instances fields values by combining with the use of a Map of custom values for each field.
 >   - The generated instance factory methods are convenient for creating new instances of the generated Record class, with data from the current instance, and with the possibility of 'overriding' any field value by providing custom values for the desired fields. 
@@ -25,7 +25,7 @@ As of v1.4 Froporec also provides a bunch of "convenient" Factory Methods which 
 
 ## Videos
 
-v1.4 - Factory Methods: [Coming Soon](https://www.youtube.com/channel/UCLhc2NBAbsw-WDJBlsxFCEg)
+v1.4 - Factory Methods: [https://youtu.be/JuCiI4M86CM](https://youtu.be/JuCiI4M86CM)
 
 Code Migration to Java 17 using FROPOREC and JISEL: [https://youtu.be/iML8EjMIDLc](https://youtu.be/iML8EjMIDLc)
 
