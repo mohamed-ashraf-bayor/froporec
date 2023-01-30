@@ -13,7 +13,7 @@ As of v1.4 Froporec also provides a bunch of "convenient" Factory Methods which 
 > - Added **5 Static Factory Methods** and **2 Instance Factory Methods** to all generated Record classes (except for SuperRecord classes).
 >   - The generated static factory methods are convenient for creating new instances of the generated Record class, with data from either instances of the POJO (or Record) class being converted, or instances of the Record class being generated, with the possibility of 'overriding' the instances fields values by combining with the use of a Map of custom values for each field.
 >   - The generated instance factory methods are convenient for creating new instances of the generated Record class, with data from the current instance, and with the possibility of 'overriding' any field value by providing custom values for the desired fields. 
-> - Added **Constants Declarations** for fields names, in all generated Record classes (except for SuperRecord classes). Each constant is a String literal with its value being the name of one of the fields of the generated Record class. They are used by the generated factory methods, and can also be accessed from anywhere in your project.<br>
+> - Added **Constants Declarations** for fields names, in all generated Record classes (except for SuperRecord classes). Each constant is a String literal with its value being the name of one of the fields of the generated Record class. They are used by the generated factory methods, and can also be accessed from anywhere in your project.
 > - Major improvement of collections handling.
 > - Minor bug fixes.
 
