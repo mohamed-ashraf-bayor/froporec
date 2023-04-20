@@ -168,7 +168,7 @@ Important Note: the annotation should be used ONLY on POJO or Record classes cre
 
 <br>
 
-> The **alsoConvert** attribute available for both @Record and @Immutable, allows specifying additional types to be transformed into their fully immutable equivalent.
+> The **alsoConvert** attribute available for both @Record and @Immutable, allows specifying additional types to be transformed into their deeply immutable equivalent.
 > The provided alsoConvert array value may contain a mix of your existing Records or POJOs .class values.
 
 > The **superInterfaces** attribute available for all annotations, allows specifying a list of interfaces to be implemented by the generated Record class.<br>
