@@ -25,6 +25,8 @@ As of v1.4 Froporec also provides a bunch of "convenient" Factory Methods which 
 
 ## Videos
 
+Froporec Java Library (April 2023 Presentation): [https://youtu.be/oiW8qLifdIQ](https://youtu.be/oiW8qLifdIQ)
+
 v1.4 - Factory Methods: [https://youtu.be/JuCiI4M86CM](https://youtu.be/JuCiI4M86CM)
 
 Code Migration to Java 17 using FROPOREC and JISEL: [https://youtu.be/iML8EjMIDLc](https://youtu.be/iML8EjMIDLc)
