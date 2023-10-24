@@ -74,6 +74,11 @@ For other build tools, please check: [Maven Central](https://search.maven.org/ar
 
 <br>
 
+## Javadoc
+[https://javadoc.io/doc/org.froporec/froporec/latest/froporec](https://javadoc.io/doc/org.froporec/froporec/latest/froporec)
+
+<br>
+
 ## Provided Annotations
 
 <br>
