@@ -38,6 +38,7 @@ Project's Pitch (v1.0): [https://youtu.be/IC0aS_biaMs](https://youtu.be/IC0aS_bi
 
 ## Installation
 
+<a href="#install"></a>
 If you are running a Maven project, add the latest release dependency to your pom.xml
 ```xml
 <dependency>
@@ -275,4 +276,4 @@ Contribute to the project's growth by reporting issues or making improvement sug
 <br>
 <br>
 
-###### &#169; 2021-2023, [Froporec](https://github.com/mohamed-ashraf-bayor/froporec) is an open source project, currently distributed under the [MIT License](https://github.com/mohamed-ashraf-bayor/froporec/blob/master/LICENSE)
+###### &#169; 2021-2025, [Froporec](https://github.com/mohamed-ashraf-bayor/froporec) is an open source project, currently distributed under the [MIT License](https://github.com/mohamed-ashraf-bayor/froporec/blob/master/LICENSE)
