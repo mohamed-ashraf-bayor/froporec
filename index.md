@@ -38,7 +38,6 @@ Project's Pitch (v1.0): [https://youtu.be/IC0aS_biaMs](https://youtu.be/IC0aS_bi
 
 ## Installation
 
-<a href="#install"></a>
 If you are running a Maven project, add the latest release dependency to your pom.xml
 ```xml
 <dependency>
