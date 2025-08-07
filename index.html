@@ -83,10 +83,14 @@ class Person {
   // ...
 }
 
-Person jane = new Person("Jane", 28); // assuming all-args constructor exists
+// Create new instance of Person POJO class
+Person jane = new Person();
+jane.setName("Jane");
+jane.setAge(28);
 
-// PersonRecord is a record class generated at compile-time
-PersonRecord janeRecord = new PersonRecord(jane); // can be instantiated, passing jane (POJO) instance
+// PersonRecord record class generated at compile-time,
+// can be instantiated, passing the POJO instance
+PersonRecord janeRecord = new PersonRecord(jane); 
 
 // Create new record from existing
 PersonRecord youngerJane = jane.with("age", 12);</code></pre>
