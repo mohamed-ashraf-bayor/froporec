@@ -74,18 +74,22 @@
         </a>
       </div>
     </div>
-    <pre><code class="language-java">record Profile(String name, int age) { }
+    <pre><code class="language-java">
 
 @Record
-class MutableProfile {
+class Person {
   String name;
   int age;
+  // ...
 }
 
-MutableProfile jane = new MutableProfile("Jane", 28);
+Person jane = new Person("Jane", 28); // assuming all-args constructor exists
 
-// Generated at compile-time ➜ ProfileRecord
-ProfileRecord pr = ProfileRecord.buildWith(jane);</code></pre>
+// PersonRecord is a record class generated at compile-time
+PersonRecord janeRecord = new PersonRecord(jane); // can be instantiated, passing jane (POJO) instance
+
+// Create new record from existing
+PersonRecord youngerJane = jane.with("age", 12);</code></pre>
   </div>
 </header>
 
